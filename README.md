@@ -5,7 +5,7 @@ classic 4X (explore, expand, exploit, and exterminate) 16-bit Windows space
 strategy game developed by Jeff Johnson and Jeff McBride circa 1996.  This
 project is not endorsed by the original authors or publishers in any way.
 
-The primary tenents of this project are:
+The primary tenets this project are:
 
 1.  Create an open game.  This means freely distributable, modifiable, and
     playable (cross-platform, modular, extensible).
@@ -29,11 +29,11 @@ The primary tenents of this project are:
     clone efforts, people who have done analysis and documentation of the 
     original game, and anyone who helps in some way to hit the finish line.
 
-This clone is written in Python, with QT (Pyside) as a graphics framework.
+This clone is written in Python, with QT (PySide) as a graphics framework.
 Much of the data transfer is done in JSON with emphasis on modular components
 to allow for future extensions.
 
-Though the original game has simplistic graphics and basic overall gameplay,
+Though the original game has simplistic graphics and basic overall game-play,
 there are many complexities to it that make it a difficult game to imitate.  As
 such, the developers of this clone are always actively seeking feedback and bug 
 reports to improve the quality of this clone.
