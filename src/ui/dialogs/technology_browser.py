@@ -349,6 +349,51 @@ class TechnologyBrowser(QDialog):
             TechnologyId.GalaxyScoop
         ]
 
+        sd_mines = [
+            TechnologyId.MineDispenser40,
+            TechnologyId.MineDispenser80,
+            TechnologyId.MineDispenser130,
+            TechnologyId.HeavyDispenser50,
+            TechnologyId.HeavyDispenser110,
+            TechnologyId.HeavyDispenser200,
+            TechnologyId.SpeedTrap30,
+            TechnologyId.SpeedTrap50
+        ]
+
+        arm_miners = [
+            TechnologyId.RoboMidgetMiner,
+            TechnologyId.RoboUltraMiner
+        ]
+
+        normal_miners = [
+            TechnologyId.RoboMiner,
+            TechnologyId.RoboMaxiMiner,
+            TechnologyId.RoboSuperMiner
+        ]
+
+        normal_gates = [
+            TechnologyId.Stargate100_250,
+            TechnologyId.Stargate150_600,
+            TechnologyId.Stargate300_500
+        ]
+
+        it_gates = [
+            TechnologyId.StargateAny_300,
+            TechnologyId.Stargate100_Any,
+            TechnologyId.StargateAny_800,
+            TechnologyId.StargateAny_Any
+        ]
+
+        pp_mass_drivers = [
+            TechnologyId.MassDriver5,
+            TechnologyId.MassDriver6,
+            TechnologyId.SuperDriver8,
+            TechnologyId.SuperDriver9,
+            TechnologyId.UltraDriver11,
+            TechnologyId.UltraDriver12,
+            TechnologyId.UltraDriver13
+        ]
+
         if tech_id in planetary_scanners_and_defenses:
             self.information_message.setText(
                 Language_Map["scanner-defense-AR-restriction"])
@@ -415,6 +460,38 @@ class TechnologyBrowser(QDialog):
         elif tech_id == TechnologyId.OrbitalConstructionModule:
             self.information_message.setText(
                 Language_Map["ar-only-part"])
+        elif tech_id in sd_mines:
+            self.information_message.setText(
+                Language_Map["sd-mine"])
+        elif tech_id == TechnologyId.MineDispenser50:
+            self.information_message.setText(
+                Language_Map["war-monger-restriction"])
+        elif tech_id == TechnologyId.SpeedTrap20:
+            self.information_message.setText(
+                Language_Map["speed-trap-20"])
+        elif tech_id in arm_miners:
+            self.information_message.setText(
+                Language_Map["arm-robot"])
+        elif tech_id in normal_miners:
+            self.information_message.setText(
+                Language_Map["obrm-restriction"])
+        elif tech_id == TechnologyId.OrbitalAdjuster:
+            self.information_message.setText(
+                Language_Map["claim-adjuster-part"])
+        elif tech_id in normal_gates:
+            self.information_message.setText(
+                Language_Map["hyper-expansion-restriction"])
+        elif tech_id in it_gates:
+            self.information_message.setText(
+                Language_Map["it-stargate"])
+        elif tech_id in pp_mass_drivers:
+            self.information_message.setText(
+                Language_Map["pp-mass-driver"])
+        elif (tech_id == TechnologyId.PickPocketScanner or
+              tech_id == TechnologyId.ChameleonScanner or
+              tech_id == TechnologyId.RobberBaronScanner):
+            self.information_message.setText(
+                Language_Map["super-stealth-scanner"])
         else:
             self.information_message.setText("")
 

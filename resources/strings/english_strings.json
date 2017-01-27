@@ -65,7 +65,7 @@
 
     "predefined-race-descriptions": [
         "<p>The Antethereals excel at remote mining and laying mine fields.  They reproduce quickly and are efficient with their resources.  Their range of habitable planets is small, however, and their war, engine, and penetrating scanner technologies are limited.</p>",
-        "<p>The Humanoids are the jack of all trades.  They grow quickly and can survive on most planets.  They can compete well, but have no serious advantanges or disadvantages.</p>",
+        "<p>The Humanoids are the jack of all trades.  They grow quickly and can survive on most planets.  They can compete well, but have no serious advantages or disadvantages.</p>",
         "<p>The Insectoids have unusual habitation requirements - they are immune to temperature and gravity, but have to find planets with extreme radiation requirements.  They are war-like and grow well enough if given enough space to take hold.  They must be aggressive to survive.</p>",
         "<p>The Nucleotids can live just about anywhere.  They prefer to sneak up and steal enemy resources, but they are also good at remote mining.  They do not grow very fast and research does not come easy to them.</p>",
         "<p>The Rabbitoids grow... like rabbits.  They are good at terraforming worlds to keep up their growth rate and good with their resources.  They have basic remote mining capability and cannot build penetrating scanners, but they should be able to colonize most of the universe anyway.</p>",
@@ -239,7 +239,7 @@
     "primary_racial_trait_names": [
         "Claim Adjuster",
         "Jack of All Trades",
-        "Interstellar Traveller",
+        "Interstellar Traveler",
         "Inner Strength",
         "Space Demolition",
         "War Monger",
@@ -305,7 +305,7 @@
         "Mine Dispenser 80",
         "Mine Dispenser 130",
         "Heavy Dispenser 50",
-        "Heavy Dispsener 110",
+        "Heavy Dispenser 110",
         "Heavy Dispenser 200",
         "Speed Trap 20",
         "Speed Trap 30",
@@ -545,28 +545,46 @@
         "Smaugarian Peeping Tom"
     ],
 
-    "scanner-defense-AR-restriction": "Planetary scanners and defenses are not available to 'Alternate Reality' races.",
-    "penetrating-scanner-restriction": "This scanner will be unavailable if you have the lesser racial trait 'No Advanced Scanners'",
-    "advanced-defenses-restriction": "This planetary defense is unavailable with the primary racial trait of 'War Monger' or 'Alternate Reality'",
+    "scanner-defense-AR-restriction": "Planetary scanners and defenses are unavailable to races with the 'Alternate Reality' primary racial trait",
+    "advanced-defenses-restriction": "This planetary defense is unavailable to races with either the 'War Monger' or 'Alternate Reality' primary racial trait",
+    "inner-strength-smart-bomb-restriction": "This bomb is unavailable to races with the 'Inner Strength' primary racial trait",
+    "colonization-module-restriction": "This part is unavailable to races with the 'Alternate Reality' primary racial trait",
+    "war-monger-restriction": "This part is unavailable to races with the 'War Monger' primary racial trait",
+    "hyper-expansion-restriction": "Stargates are unavailable to races with the 'Hyper Expansion' primary racial trait",
+
+    "penetrating-scanner-restriction": "This scanner is unavailable to races that have the lesser racial trait 'No Advanced Scanners'",
+    "no-ram-scoop-engine-restriction": "This engine is unavailable to races that have the lesser racial trait 'No Ramscoop Engines'",
+    "speed-trap-20": "This mine requires the primary racial trait 'Space Demolition' or 'Inner Strength'",
+    "obrm-restriction": "This robot miner is unavailable to races that have the lesser racial trait 'Only Basic Remote Mining'",
+
     "inner-strength-armor": "This armor requires the primary racial trait 'Inner Strength'",
     "super-stealth-armor": "This armor requires the primary racial trait 'Super Stealth'",
+
     "inner-strength-part": "This part requires the primary racial trait 'Inner Strength'",
     "war-monger-part": "This part requires the primary racial trait 'War Monger'",
     "claim-adjuster-part": "This part requires the primary racial trait 'Claim Adjuster'",
-    "inner-strength-smart-bomb-restriction": "This bomb will not be available if the primary racial trait is 'Inner Strength'",
-    "super-stealth-cloak": "This cloak requires the primary racial trait 'Super Stealth'",
-    "inner-strength-jammer": "This jamming device requires the primary racial trait 'Inner Strength'",
+    "ar-only-part": "This part requires the primary racial trait 'Alternate Reality'",
+
+    "inner-strength-device": "This device requires the primary racial trait 'Inner Strength'",
     "hyper-expansion-device": "This device requires the primary racial trait 'Hyper Expansion'",
     "space-demolition-device": "This device requires the primary racial trait 'Space Demolition'",
-    "inner-strength-device": "This device requires the primary racial trait 'Inner Strength'",
     "interstellar-traveler-device": "This device requires the primary racial trait 'Interstellar Traveler'",
-    "settlers-delight-engine": "This engine can only be mounted on the Mini-Colonizer Hull and requires the primary racial trait 'Hyper Expansion'",
+
+    "it-stargate": "This stargate requires the primary racial trait 'Interstellar Traveler'",
+    "pp-mass-driver": "This mass driver requires the primary racial trait 'Packet Physics'",
+    "super-stealth-cloak": "This cloak requires the primary racial trait 'Super Stealth'",
+    "super-stealth-scanner": "This scanner requires the primary racial trait 'Super Stealth'",
+
+    "arm-robot": "This robot miner requires the lesser racial trait 'Advanced Remote Mining'",
+
     "ife-engine": "This engine requires the lesser racial trait 'Improved Fuel Efficiency'",
     "no-ram-scoop-engine": "This engine requires the lesser racial trait 'No Ram Scoop Engines'",
-    "radiating-engine":  "This engine creates powerful waves of radiation and will kill some of your colonists if the midpoint of your race's Radiation band is not at least 85mR",
-    "no-ram-scoop-engine-restriction": "This engine will be unavailable if you have the lesser racial trait 'No Ramscoop Engines'",
-    "colonization-module-restriction": "This part is not available to 'Alternate Reality' races",
-    "ar-only-part": "This part requires the primary racial trait 'Alternate Reality'",
+
+    "inner-strength-jammer": "This jamming device requires the primary racial trait 'Inner Strength'",
+    "sd-mine": "This mine requires the primary racial trait 'Space Demolition'",
+
+    "settlers-delight-engine": "This engine can only be mounted on the Mini-Colonizer Hull and requires the primary racial trait 'Hyper Expansion'",
+    "radiating-engine":  "This engine creates powerful waves of radiation and will kill some colonists if the midpoint of the race's Radiation band is not at least 85mR",
 
     "original-game-strings": [
         "The {0!s} colonists you dropped on {1} were massacred by the ground troops of {2}.",
@@ -696,7 +714,7 @@
         "{0} has built a new {1} planetary scanner.",
         "{0} has been loaded with {1!s} of {2} by the mining robots of {3} working on {4}.",
         "A battle took place at {0}. Press the Goto button to view the recording of the battle.",
-        "Tip: You can hide unimportant messages by clicking the checkmark in the messages titlebar. You can reshow these messages at any time by clicking on the magnifying glass in the titlebar.",
+        "Tip: You can hide unimportant messages by clicking the checkmark in the messages title bar. You can reshow these messages at any time by clicking on the magnifying glass in the title bar.",
         "Tip: To add waypoints, select a ship, then click on the desired destination while holding down the Shift key. You can also drag existing waypoints to move them to a new location.",
         "Tip: To design your own ships, press 'F4', select 'Available Hull Types', pick one from the dropdown, and hit the 'Copy' button.",
         "Tip: Popup help is available over many of the displayed statistics. For example you can click on planet statistics in the summary window to get additional details.",
@@ -862,7 +880,7 @@
         "{0} is currently unable to improve the value of {1} beyond {2!s}%.",
         "{0} has retro-bombed {1}, undoing {2!s}% of its terraforming.",
         "{0} has orders to terraform beyond the maximum allowed. The orders have been reduced to the maximum allowable.",
-        "The Mystery Trader has unexplicably changed his course and/or speed. Perhaps something startled him?",
+        "The Mystery Trader has inexplicably changed his course and/or speed. Perhaps something startled him?",
         "Your mineral packet has permanently {0} the default {1} on {2} by {3!s}%.",
         "A mineral packet has permanently {0} the default {1} on {2} by {3!s}%.",
         "Your mineral packet has {0} the {1} on {2} to {3!s}.",
@@ -892,7 +910,7 @@
         "{0} snub your attempted gift and refuse the fleet.",
         "{0} has successfully been given to {1}.",
         "{0} have given you {1}.",
-        "{0} has been absorbed by the Mystery Trader. In return, you have been given {1!s} of the Trader's auxillary ships for your own use.",
+        "{0} has been absorbed by the Mystery Trader. In return, you have been given {1!s} of the Trader's auxiliary ships for your own use.",
         "{0} has been absorbed by the Mystery Trader. In return, the trader tried to give you a ship, but you were unable to store the design records necessary for upkeep.",
         "A mass packet appears to be on a collision course with {0}, which currently is unable to safely catch the packet.",
         "Your starbase at {0} is scheduled to complete all remaining production items this year.",

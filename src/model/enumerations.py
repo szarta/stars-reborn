@@ -640,7 +640,8 @@ TechnologyCategoryMapping = {
         TechnologyId.RoboMiner,
         TechnologyId.RoboMaxiMiner,
         TechnologyId.RoboSuperMiner,
-        TechnologyId.RoboUltraMiner
+        TechnologyId.RoboUltraMiner,
+        TechnologyId.OrbitalAdjuster
     ],
     9: [
         TechnologyId.Stargate100_250,
