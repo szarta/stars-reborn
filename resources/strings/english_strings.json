@@ -537,7 +537,16 @@
                 "Starbase Hulls",
                 "Terraforming",
                 "Torpedoes"
-            ]
+            ],
+
+            "fine-details": {
+                "armor-strength": "Armor Strength",
+                "power": "Power",
+                "range": "Range",
+                "initiative": "Initiative",
+                "fielded-kelarium": "This armor also acts as part shield which will absorb 50 damage points.",
+                "depleted-neutronium": "This armor decreases the range at which enemy ships can see the ship by 25%."
+            }
         }
     },
 
@@ -574,11 +583,24 @@
     "pp-mass-driver": "This mass driver requires the primary racial trait 'Packet Physics'",
     "super-stealth-cloak": "This cloak requires the primary racial trait 'Super Stealth'",
     "super-stealth-scanner": "This scanner requires the primary racial trait 'Super Stealth'",
-
+    "inner-strength-shield": "This shield requires the primary racial trait 'Inner Strength'",
+    "super-stealth-shield": "This shield requires the primary racial trait 'Super Stealth'",
+    "inner-strength-hull": "This hull requires the primary racial trait 'Inner Strength'",
+    "joat-hull": "This hull will have a built-in scanner for races with the primary racial trait 'Jack of All Trades'",
+    "war-monger-hull": "This hull requires the primary racial trait 'War Monger'",
+    "super-stealth-hull": "This hull requires the primary racial trait 'Super Stealth'",
+    "hyper-expansion-hull": "This hull requires the primary racial trait 'Hyper Expansion'",
+    "arm-hull": "This hull requires the lesser racial trait 'Advanced Remote Mining'",
+    "obrm-hull-restriction": "This hull is unavailable to races that have the lesser racial trait 'Only Basic Remote Mining'",
+    "sd-hull": "This hull requires the primary racial trait 'Space Demolition'",
     "arm-robot": "This robot miner requires the lesser racial trait 'Advanced Remote Mining'",
+    "improved-starbases-hull": "This starbase hull requires the lesser racial trait 'Improved Starbases'",
+    "ar-starbase-hull": "This starbase hull requires the primary racial trait 'Alternate Reality'",
+    "total-terraforming-tech": "Total terraforming requires the lesser racial trait 'Total Terraforming'",
 
     "ife-engine": "This engine requires the lesser racial trait 'Improved Fuel Efficiency'",
     "no-ram-scoop-engine": "This engine requires the lesser racial trait 'No Ram Scoop Engines'",
+    "capital-ship-missiles": "Capital ship missiles do twice the stated damage if the enemy ship has no remaining shields.",
 
     "inner-strength-jammer": "This jamming device requires the primary racial trait 'Inner Strength'",
     "sd-mine": "This mine requires the primary racial trait 'Space Demolition'",

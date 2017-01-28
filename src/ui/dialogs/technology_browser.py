@@ -69,8 +69,12 @@ class TechnologyBrowser(QDialog):
         for i in xrange(ResearchAreas.Total):
             self.tech_requirements.append(QLabel())
 
-        self.no_requirements = QLabel(Language_Map["tech-no-requirements"])
-        self.available_tech = QLabel(Language_Map["tech-available"])
+        self.no_requirements = QLabel("<b>{0}</b>".format(
+            Language_Map["tech-no-requirements"]))
+
+        self.available_tech = QLabel("<b>{0}</b>".format(
+            Language_Map["tech-available"]))
+
         self.research_cost = QLabel()
 
         self.technology_requirements_pane = QBoxLayout(QBoxLayout.TopToBottom)
@@ -113,22 +117,24 @@ class TechnologyBrowser(QDialog):
         technology_overview_layout.addWidget(self.technology_image_label)
 
         mineral_label_layout = QBoxLayout(QBoxLayout.TopToBottom)
-        ironium_label = QLabel(
-            Language_Map["minerals"][Minerals.Ironium].title())
+        ironium_label = QLabel("<b>{0}</b>".format(
+            Language_Map["minerals"][Minerals.Ironium].title()))
+
         ironium_label.setStyleSheet("QLabel { color: #0000ff }")
         mineral_label_layout.addWidget(ironium_label)
 
-        boranium_label = QLabel(
-            Language_Map["minerals"][Minerals.Boranium].title())
+        boranium_label = QLabel("<b>{0}</b>".format(
+            Language_Map["minerals"][Minerals.Boranium].title()))
         boranium_label.setStyleSheet("QLabel { color: #008000 }")
         mineral_label_layout.addWidget(boranium_label)
 
-        germanium_label = QLabel(
-            Language_Map["minerals"][Minerals.Germanium].title())
+        germanium_label = QLabel("<b>{0}</b>".format(
+            Language_Map["minerals"][Minerals.Germanium].title()))
         germanium_label.setStyleSheet("QLabel { color: #ffff00 }")
         mineral_label_layout.addWidget(germanium_label)
 
-        resources_label = QLabel(Language_Map["resources"].title())
+        resources_label = QLabel("<b>{0}</b>".format(
+            Language_Map["resources"].title()))
         resources_label.setStyleSheet("QLabel { color: #000000 }")
         mineral_label_layout.addWidget(resources_label)
         mineral_label_layout.addStretch(1)
@@ -254,7 +260,7 @@ class TechnologyBrowser(QDialog):
 
         if (isinstance(current_tech, Part) or
            isinstance(current_tech, ShipHull)):
-            self.mass_value.setText("Mass: {0!s}kT".format(
+            self.mass_value.setText("<b>Mass:</b> {0!s}kT".format(
                 current_tech.mass))
         else:
             self.mass_value.setText("")
@@ -264,6 +270,7 @@ class TechnologyBrowser(QDialog):
         self.set_technology_message(tech_id)
 
     def set_technology_fine_details(self, tech_id):
+        current_tech = Technologies[tech_id]
         fine_details_are_graphs = [
             TechnologyId.SDI,
             TechnologyId.MissileBattery,
@@ -300,6 +307,61 @@ class TechnologyBrowser(QDialog):
                 dummy_widget.setLayout(old_layout)
 
             self.technology_fine_details_pane.setLayout(layout)
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Armor]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+            armor_strength = QLabel("<b>{0}:</b> {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["armor-strength"],
+                current_tech.armor_value))
+            layout.addWidget(armor_strength)
+
+            if tech_id == TechnologyId.FieldedKelarium:
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["fielded-kelarium"])
+
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+            elif tech_id == TechnologyId.DepletedNeutronium:
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["depleted-neutronium"])
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.BeamWeapons]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            power = QLabel("<b>{0}:</b> {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["power"],
+                current_tech.power))
+            layout.addWidget(power)
+
+            range = QLabel("<b>{0}:</b> {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["range"],
+                current_tech.range))
+            layout.addWidget(range)
+
+            initiative = QLabel("<b>{0}:</b> {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["initiative"],
+                current_tech.initiative))
+            layout.addWidget(initiative)
+
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+
+
+ 
+            
 
     def set_technology_message(self, tech_id):
         planetary_scanners_and_defenses = [
@@ -392,6 +454,24 @@ class TechnologyBrowser(QDialog):
             TechnologyId.UltraDriver11,
             TechnologyId.UltraDriver12,
             TechnologyId.UltraDriver13
+        ]
+
+        tt_tech = [
+            TechnologyId.TotalTerraform3,
+            TechnologyId.TotalTerraform5,
+            TechnologyId.TotalTerraform7,
+            TechnologyId.TotalTerraform10,
+            TechnologyId.TotalTerraform15,
+            TechnologyId.TotalTerraform20,
+            TechnologyId.TotalTerraform25,
+            TechnologyId.TotalTerraform30
+        ]
+
+        missiles = [
+            TechnologyId.JihadMissile,
+            TechnologyId.JuggernautMissile,
+            TechnologyId.DoomsdayMissile,
+            TechnologyId.ArmageddonMissile
         ]
 
         if tech_id in planetary_scanners_and_defenses:
@@ -492,6 +572,58 @@ class TechnologyBrowser(QDialog):
               tech_id == TechnologyId.RobberBaronScanner):
             self.information_message.setText(
                 Language_Map["super-stealth-scanner"])
+        elif tech_id == TechnologyId.CrobySharmor:
+            self.information_message.setText(
+                Language_Map["inner-strength-shield"])
+        elif tech_id == TechnologyId.ShadowShield:
+            self.information_message.setText(
+                Language_Map["super-stealth-shield"])
+        elif (tech_id == TechnologyId.SuperFreighter or
+              tech_id == TechnologyId.FuelTransport):
+            self.information_message.setText(
+                Language_Map["inner-strength-hull"])
+        elif (tech_id == TechnologyId.Scout or
+              tech_id == TechnologyId.Frigate or
+              tech_id == TechnologyId.Destroyer):
+            self.information_message.setText(
+                Language_Map["joat-hull"])
+        elif (tech_id == TechnologyId.BattleCruiser or
+              tech_id == TechnologyId.Dreadnought):
+            self.information_message.setText(
+                Language_Map["war-monger-hull"])
+        elif (tech_id == TechnologyId.Rogue or
+              tech_id == TechnologyId.StealthBomber):
+            self.information_message.setText(
+                Language_Map["super-stealth-hull"])
+        elif (tech_id == TechnologyId.MiniColonyShip or
+              tech_id == TechnologyId.MetaMorph):
+            self.information_message.setText(
+                Language_Map["hyper-expansion-hull"])
+        elif (tech_id == TechnologyId.MidgetMiner or
+              tech_id == TechnologyId.Miner or
+              tech_id == TechnologyId.UltraMiner):
+            self.information_message.setText(
+                Language_Map["arm-hull"])
+        elif tech_id == TechnologyId.MaxiMiner:
+            self.information_message.setText(
+                Language_Map["obrm-hull-restriction"])
+        elif (tech_id == TechnologyId.MiniMineLayer or
+              tech_id == TechnologyId.SuperMineLayer):
+            self.information_message.setText(
+                Language_Map["sd-hull"])
+        elif (tech_id == TechnologyId.SpaceDock or
+              tech_id == TechnologyId.UltraStation):
+            self.information_message.setText(
+                Language_Map["improved-starbases-hull"])
+        elif tech_id == TechnologyId.DeathStar:
+            self.information_message.setText(
+                Language_Map["ar-starbase-hull"])
+        elif tech_id in tt_tech:
+            self.information_message.setText(
+                Language_Map["total-terraforming-tech"])
+        elif tech_id in missiles:
+            self.information_message.setText(
+                Language_Map["capital-ship-missiles"])
         else:
             self.information_message.setText("")
 
@@ -503,7 +635,7 @@ class TechnologyBrowser(QDialog):
         for i in xrange(ResearchAreas.Total):
             if current_tech.requirements[i] > 0:
                 self.tech_requirements[i].setVisible(True)
-                self.tech_requirements[i].setText("{0}: {1!s}".format(
+                self.tech_requirements[i].setText("<b>{0}:</b> {1!s}".format(
                     Language_Map["tech-abbreviations"][i],
                     current_tech.requirements[i]))
 

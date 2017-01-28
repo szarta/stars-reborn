@@ -731,7 +731,11 @@ TechnologyCategoryMapping = {
         TechnologyId.MiniMiner,
         TechnologyId.Miner,
         TechnologyId.MaxiMiner,
-        TechnologyId.UltraMiner
+        TechnologyId.UltraMiner,
+        TechnologyId.MiniMineLayer,
+        TechnologyId.SuperMineLayer,
+        TechnologyId.Nubian,
+        TechnologyId.MetaMorph
     ],
     14: [
         TechnologyId.OrbitalFort,
