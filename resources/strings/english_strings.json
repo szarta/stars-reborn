@@ -550,8 +550,11 @@
                 "sapper": "This weapon will only damage shields.  It has no effect on armor.",
                 "gatling-gun": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 496 mines per year.",
                 "gatling-neutrino-cannon": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 1280 mines per year.",
-                "big-mutha-cannon": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 3264 mines per year."
-
+                "big-mutha-cannon": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 3264 mines per year.",
+                "normal-bomb-with-minimum": "This bomb will kill approximately {0!s}% of a planet's population each year.  If a planet has no defenses, this bomb is guaranteed to kill at least {1!s}.\n\nThis bomb will destroy approximately {2!s} of a planet's mines, factories, and/or defenses each year.",
+                "normal-bomb-no-minimum": "This bomb will kill approximately {0!s}% of a planet's population each year.\n\nThis bomb will destroy approximately {1!s} of a planet's mines, factories, and/or defenses each year.",
+                "smart-bomb": "This bomb will kill approximately {0!s}% of a planet's population each year.  Smart bombs are not strictly additive and have no minimum kill value.  Defenses are less effective against these bombs.\n\nThis bomb will not damage a planet's mines or factories.",
+                "retro-bomb": "This bomb does not kill colonists or destroy installations.  This bomb 'unterraforms' planets toward their original state up to 1% per variable per year.  Planetary defenses have no effect on this bomb."
             }
         }
     },

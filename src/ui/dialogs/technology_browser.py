@@ -384,8 +384,38 @@ class TechnologyBrowser(QDialog):
                 extra_label.setWordWrap(True)
                 layout.addWidget(extra_label)
 
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
 
+            self.technology_fine_details_pane.setLayout(layout)
 
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Bombs]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            label = QLabel()
+            label.setWordWrap(True)
+
+            if tech_id == TechnologyId.RetroBomb:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["retro-bomb"])
+            elif current_tech.smart:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["smart-bomb"].format(
+                    current_tech.colonist_kill_percent,
+                    current_tech.buildings_destroyed))
+            else:
+                if current_tech.minimum_colonists_killed > 0:
+                    label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["normal-bomb-with-minimum"].format(
+                        current_tech.colonist_kill_percent,
+                        current_tech.minimum_colonists_killed,
+                        current_tech.buildings_destroyed))
+                else:
+                    label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["normal-bomb-no-minimum"].format(
+                        current_tech.colonist_kill_percent,
+                        current_tech.buildings_destroyed))
+
+            layout.addWidget(label)
 
             layout.addStretch(1)
             if self.technology_fine_details_pane.layout():
