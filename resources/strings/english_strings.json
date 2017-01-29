@@ -545,7 +545,13 @@
                 "range": "Range",
                 "initiative": "Initiative",
                 "fielded-kelarium": "This armor also acts as part shield which will absorb 50 damage points.",
-                "depleted-neutronium": "This armor decreases the range at which enemy ships can see the ship by 25%."
+                "depleted-neutronium": "This armor decreases the range at which enemy ships can see the ship by 25%.",
+                "mini-gun": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 208 mines per year.",
+                "sapper": "This weapon will only damage shields.  It has no effect on armor.",
+                "gatling-gun": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 496 mines per year.",
+                "gatling-neutrino-cannon": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 1280 mines per year.",
+                "big-mutha-cannon": "This weapon hits all targets in range each time it is fired.  This weapon also makes an excellent mine sweeper capable of sweeping 3264 mines per year."
+
             }
         }
     },

@@ -351,6 +351,42 @@ class TechnologyBrowser(QDialog):
                 current_tech.initiative))
             layout.addWidget(initiative)
 
+            if tech_id == TechnologyId.MiniGun:
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["mini-gun"])
+
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+            elif (tech_id == TechnologyId.PulsedSapper or
+                  tech_id == TechnologyId.PhasedSapper or
+                  tech_id == TechnologyId.SyncroSapper):
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["sapper"])
+
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+            elif tech_id == TechnologyId.GatlingGun:
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["gatling-gun"])
+
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+            elif tech_id == TechnologyId.GatlingNeutrinoCannon:
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["gatling-neutrino-cannon"])
+
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+            elif tech_id == TechnologyId.BigMuthaCannon:
+                extra_label = QLabel(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["big-mutha-cannon"])
+
+                extra_label.setWordWrap(True)
+                layout.addWidget(extra_label)
+
+
+
+
             layout.addStretch(1)
             if self.technology_fine_details_pane.layout():
                 dummy_widget = QLabel()
@@ -360,8 +396,8 @@ class TechnologyBrowser(QDialog):
             self.technology_fine_details_pane.setLayout(layout)
 
 
- 
-            
+
+
 
     def set_technology_message(self, tech_id):
         planetary_scanners_and_defenses = [
