@@ -562,7 +562,15 @@
                 "capacitor": "Increases the damage of all beam weapons on the ship by {0!s}%.",
                 "energy-dampener": "Slows all ships in combat by 1 square of movement.",
                 "tachyon-detector": "Reduces the effectiveness of other players' cloaks by 5%.",
-                "anti-matter-generator": "Acts as a 200mg anti-matter fuel tank and generates 50mg of fuel every year."
+                "anti-matter-generator": "Acts as a 200mg anti-matter fuel tank and generates 50mg of fuel every year.",
+                "colonization-module": "This module allows a ship to colonize a planet and will dismantle the ship upon arrival and convert it into supplies for the colonists.",
+                "orbital-construction-module": "This module contains an empty orbital hull that can be deployed in orbit of an uninhabited planet.  It also contains viral weapons capable of killing 2000 enemy colonists per year.",
+                "cargo-pod": "This pod increases the cargo capacity of the ship by {0!s}kT.",
+                "fuel-tank": "This pod increases the fuel capacity of the ship by {0!s}mg.",
+                "maneuvering-jet": "Increases speed in battle by 1/4 square of movement.",
+                "overthruster": "Increases speed in battle by 1/2 square of movement.",
+                "beam-deflector": "This deflector decreases the damage to the ship done by beam weapons by up to 10%"
+
             }
         }
     },

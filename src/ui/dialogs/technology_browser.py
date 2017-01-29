@@ -464,6 +464,39 @@ class TechnologyBrowser(QDialog):
 
             self.technology_fine_details_pane.setLayout(layout)
 
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Mechanical]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            label = QLabel()
+            label.setWordWrap(True)
+
+            if tech_id == TechnologyId.ColonizationModule:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["colonization-module"])
+            elif tech_id == TechnologyId.OrbitalConstructionModule:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["orbital-construction-module"])
+            elif (tech_id == TechnologyId.CargoPod or
+                  tech_id == TechnologyId.SuperCargoPod):
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["cargo-pod"].format(current_tech.cargo))
+            elif (tech_id == TechnologyId.FuelTank or
+                  tech_id == TechnologyId.SuperFuelTank):
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["fuel-tank"].format(current_tech.fuel))
+            elif tech_id == TechnologyId.ManeuveringJet:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["maneuvering-jet"])
+            elif tech_id == TechnologyId.Overthruster:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["overthruster"])
+            elif tech_id == TechnologyId.BeamDeflector:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["beam-deflector"])
+ 
+            layout.addWidget(label)
+
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+
 
 
 
