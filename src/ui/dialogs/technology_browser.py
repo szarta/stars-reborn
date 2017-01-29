@@ -425,6 +425,44 @@ class TechnologyBrowser(QDialog):
 
             self.technology_fine_details_pane.setLayout(layout)
 
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Electrical]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            label = QLabel()
+            label.setWordWrap(True)
+
+            if tech_id == TechnologyId.TransportCloaking:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["transport-cloak"])
+            elif hasattr(current_tech, 'cloaking'):
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["normal-cloak"].format(current_tech.cloaking))
+            elif (tech_id == TechnologyId.BattleComputer or
+                  tech_id == TechnologyId.BattleSuperComputer or
+                  tech_id == TechnologyId.BattleNexus):
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["computer"].format(
+                    current_tech.torpedo_accuracy,
+                    current_tech.initiative))
+            elif hasattr(current_tech, 'jamming'):
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["jammer"].format(current_tech.jamming))
+            elif (tech_id == TechnologyId.EnergyCapacitor or
+                  tech_id == TechnologyId.FluxCapacitor):
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["capacitor"].format(current_tech.beam_damage))
+            elif tech_id == TechnologyId.EnergyDampener:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["energy-dampener"])
+            elif tech_id == TechnologyId.TachyonDetector:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["tachyon-detector"])
+            elif tech_id == TechnologyId.AntiMatterGenerator:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["anti-matter-generator"])
+
+                
+            layout.addWidget(label)
+
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
 
 
 

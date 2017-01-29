@@ -554,7 +554,15 @@
                 "normal-bomb-with-minimum": "This bomb will kill approximately {0!s}% of a planet's population each year.  If a planet has no defenses, this bomb is guaranteed to kill at least {1!s}.\n\nThis bomb will destroy approximately {2!s} of a planet's mines, factories, and/or defenses each year.",
                 "normal-bomb-no-minimum": "This bomb will kill approximately {0!s}% of a planet's population each year.\n\nThis bomb will destroy approximately {1!s} of a planet's mines, factories, and/or defenses each year.",
                 "smart-bomb": "This bomb will kill approximately {0!s}% of a planet's population each year.  Smart bombs are not strictly additive and have no minimum kill value.  Defenses are less effective against these bombs.\n\nThis bomb will not damage a planet's mines or factories.",
-                "retro-bomb": "This bomb does not kill colonists or destroy installations.  This bomb 'unterraforms' planets toward their original state up to 1% per variable per year.  Planetary defenses have no effect on this bomb."
+                "retro-bomb": "This bomb does not kill colonists or destroy installations.  This bomb 'unterraforms' planets toward their original state up to 1% per variable per year.  Planetary defenses have no effect on this bomb.",
+                "transport-cloak": "Cloaks unarmed hulls, reducing the range at which scanners detect them by up to 75%.",
+                "normal-cloak": "Cloaks any ship, reducing the range by which scanners detect it by up to {0!s}%.",
+                "computer": "This component increases the accuracy of the ship's torpedoes by {0!s}% and increases its initiative by {1!s}.  If the enemy ship has jammers, this computer acts to offset their effects.",
+                "jammer": "Has a {0!s}% chance to deflect incoming torpedoes.  Deflected torpedoes will still reduce shields (if any by 1/8 the damage value).",
+                "capacitor": "Increases the damage of all beam weapons on the ship by {0!s}%.",
+                "energy-dampener": "Slows all ships in combat by 1 square of movement.",
+                "tachyon-detector": "Reduces the effectiveness of other players' cloaks by 5%.",
+                "anti-matter-generator": "Acts as a 200mg anti-matter fuel tank and generates 50mg of fuel every year."
             }
         }
     },
