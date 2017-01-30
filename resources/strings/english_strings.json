@@ -569,7 +569,9 @@
                 "fuel-tank": "This pod increases the fuel capacity of the ship by {0!s}mg.",
                 "maneuvering-jet": "Increases speed in battle by 1/4 square of movement.",
                 "overthruster": "Increases speed in battle by 1/2 square of movement.",
-                "beam-deflector": "This deflector decreases the damage to the ship done by beam weapons by up to 10%"
+                "beam-deflector": "This deflector decreases the damage to the ship done by beam weapons by up to 10%",
+                "orbital-adjuster": "This modified mining robot terraforms inhabited planets by 1% per year.  It has a positive effect on friendly planets and a negative effect on neutral and enemy planets.  It also provides 25% cloaking to the ship.",
+                "remote-mining-robot": "This module contains robots capable of mining up to {0!s}kT of each mineral (depending on concentration) from an uninhabited planet the ship is orbiting.  The fleet must have orders set to 'Remote Mining'."
 
             }
         }

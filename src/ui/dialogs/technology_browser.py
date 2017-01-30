@@ -453,7 +453,7 @@ class TechnologyBrowser(QDialog):
             elif tech_id == TechnologyId.AntiMatterGenerator:
                 label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["anti-matter-generator"])
 
-                
+
             layout.addWidget(label)
 
             layout.addStretch(1)
@@ -486,7 +486,7 @@ class TechnologyBrowser(QDialog):
                 label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["overthruster"])
             elif tech_id == TechnologyId.BeamDeflector:
                 label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["beam-deflector"])
- 
+
             layout.addWidget(label)
 
             layout.addStretch(1)
@@ -496,6 +496,28 @@ class TechnologyBrowser(QDialog):
                 dummy_widget.setLayout(old_layout)
 
             self.technology_fine_details_pane.setLayout(layout)
+
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.MiningRobots]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            label = QLabel()
+            label.setWordWrap(True)
+
+            if tech_id == TechnologyId.OrbitalAdjuster:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["orbital-adjuster"])
+            else:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["remote-mining-robot"].format(current_tech.mining_value))
+
+            layout.addWidget(label)
+
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+
 
 
 
