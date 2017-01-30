@@ -264,6 +264,7 @@
 
     "resources": "resources",
     "colonists": "colonists",
+    "warp": "warp",
 
     "technology-names": [
         "Viewer 50",
@@ -571,8 +572,22 @@
                 "overthruster": "Increases speed in battle by 1/2 square of movement.",
                 "beam-deflector": "This deflector decreases the damage to the ship done by beam weapons by up to 10%",
                 "orbital-adjuster": "This modified mining robot terraforms inhabited planets by 1% per year.  It has a positive effect on friendly planets and a negative effect on neutral and enemy planets.  It also provides 25% cloaking to the ship.",
-                "remote-mining-robot": "This module contains robots capable of mining up to {0!s}kT of each mineral (depending on concentration) from an uninhabited planet the ship is orbiting.  The fleet must have orders set to 'Remote Mining'."
-
+                "remote-mining-robot": "This module contains robots capable of mining up to {0!s}kT of each mineral (depending on concentration) from an uninhabited planet the ship is orbiting.  The fleet must have orders set to 'Remote Mining'.",
+                "mines-per-year-label": "Mines Laid Per Year",
+                "safe-speed-label": "Maximum Safe Speed",
+                "chance-hit-label": "Chance per Light Year of a Hit",
+                "dmg-per-ship-label": "Damage to Each Hit",
+                "min-dmg-to-fleet-label": "Minimum Damage Done to Fleet",
+                "parens-explanation": "Numbers in parenthesis are for fleets containing a ship with ram scoop engines.  Note that the chance of hitting a mine goes up the % listed for EACH warp that exceeds the safe speed.",
+                "stargate-desc": "Allows fleets without cargo to jump to any other planet with a stargate in a single year.",
+                "stargate-warning-both": "Warning:  Ships up to {0!s}kT might be successfully gated up to {1!s} l.y. but exceeding the stated limits will cause damage to the fleet.",
+                "stargate-warning-infinite-range": "Warning:  Ships up to {0!s}kT might be successfully gated, but exceeding the stated limits will cause damage to the fleet.",
+                "stargate-warning-infinite-mass": "Warning:  Ships might be successfully gated up to {0!s} l.y. but exceeding the stated limits will cause damage to the fleet.",
+                "safe-hull-mass-label": "Safe Hull Mass",
+                "safe-range-label": "Safe Range",
+                "stargate-any-label": "Unlimited",
+                "mass-driver-desc": "Allows planets to fling mineral packets at other planets.",
+                "mass-driver-warning": "Warning:  The receiving planet must have a mass driver or it will take damage."
             }
         }
     },

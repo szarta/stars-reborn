@@ -21,6 +21,8 @@ from src.data import Language_Map
 from src.data import Technologies
 from src.model.technology import Part
 from src.model.technology import ShipHull
+from src.model.technology import Stargate
+from src.model.technology import MassDriver
 from src.model.enumerations import TechnologyId
 from src.model.enumerations import TechnologyCategory
 from src.model.enumerations import TechnologyCategoryMapping
@@ -497,6 +499,61 @@ class TechnologyBrowser(QDialog):
 
             self.technology_fine_details_pane.setLayout(layout)
 
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.MineLayers]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            mines_per_year = QLabel()
+            maximum_safe_speed = QLabel()
+            chance_ly_of_hit = QLabel()
+            dmg_per_ship = QLabel()
+            min_fleet_dmg = QLabel()
+            remaining_label = QLabel()
+            remaining_label.setWordWrap(True)
+
+            mines_per_year.setText("<b>{0}:</b>  {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["mines-per-year-label"],
+                current_tech.mines_per_year))
+
+            maximum_safe_speed.setText("<b>{0}:</b>  {1} {2!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["safe-speed-label"],
+                Language_Map["warp"].title(),
+                current_tech.min_safe_warp))
+
+            chance_ly_of_hit.setText("<b>{0}:</b>  {1}%".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["chance-hit-label"],
+                current_tech.hit_chance_per_ly))
+
+            dmg_per_ship.setText("<b>{0}:</b>  {1!s} ({2!s}) / engine".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["dmg-per-ship-label"],
+                current_tech.dmg_ship_no_ram_scoop,
+                current_tech.dmg_ship_ram_scoop))
+
+            min_fleet_dmg.setText("<b>{0}:</b>  {1!s} ({2!s})".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["min-dmg-to-fleet-label"],
+                current_tech.min_dmg_fleet_no_ram_scoop,
+                current_tech.min_dmg_fleet_ram_scoop))
+
+
+
+            remaining_label.setText(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["parens-explanation"])
+
+            layout.addWidget(mines_per_year)
+            layout.addWidget(maximum_safe_speed)
+            layout.addWidget(chance_ly_of_hit)
+            layout.addWidget(dmg_per_ship)
+            layout.addWidget(min_fleet_dmg)
+            layout.addWidget(remaining_label)
+            layout.addStretch(1)
+
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+
+
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.MiningRobots]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
 
@@ -510,6 +567,74 @@ class TechnologyBrowser(QDialog):
 
             layout.addWidget(label)
 
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Orbital]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+            if isinstance(current_tech, Stargate):
+                l1 = QLabel(Language_Map["ui"]["technology-browser"]["fine-details"]["stargate-desc"])
+                l1.setWordWrap(True)
+
+                mass = "{0!s}".format(current_tech.safe_mass)
+                if current_tech.safe_mass == float("inf"):
+                    mass = Language_Map["ui"]["technology-browser"]["fine-details"]["stargate-any-label"]
+
+                l2 = QLabel("<b>{0}:</b>  {1!s}".format(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["safe-hull-mass-label"],
+                    mass))
+
+                range = "{0!s}".format(current_tech.safe_range)
+                if current_tech.safe_range == float("inf"):
+                    range = Language_Map["ui"]["technology-browser"]["fine-details"]["stargate-any-label"]
+
+                l3 = QLabel("<b>{0}:</b>  {1!s}".format(
+                    Language_Map["ui"]["technology-browser"]["fine-details"]["safe-range-label"],
+                    range))
+
+                l4 = QLabel()
+                l4.setWordWrap(True)
+
+                if (current_tech.safe_mass == float("inf") and
+                    current_tech.safe_range == float("inf")):
+                    l4.setText("")
+                elif current_tech.safe_mass == float("inf"):
+                    l4.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["stargate-warning-infinite-mass"].format(
+                        5 * current_tech.safe_range))
+                elif current_tech.safe_range == float("inf"):
+                    l4.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["stargate-warning-infinite-range"].format(
+                        5 * current_tech.safe_mass))
+                else:
+                    l4.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["stargate-warning-both"].format(
+                        5 * current_tech.safe_mass,
+                        5 * current_tech.safe_range))
+
+                layout.addWidget(l1)
+                layout.addWidget(l2)
+                layout.addWidget(l3)
+                layout.addWidget(l4)
+
+            elif isinstance(current_tech, MassDriver):
+                l1 = QLabel(Language_Map["ui"]["technology-browser"]["fine-details"]["mass-driver-desc"])
+                l1.setWordWrap(True)
+
+                l2 = QLabel("<b>{0}:</b>  {1!s}".format(
+                    Language_Map["warp"].title(),
+                    current_tech.warp))
+
+                l3 = QLabel(Language_Map["ui"]["technology-browser"]["fine-details"]["mass-driver-warning"])
+                l3.setWordWrap(True)
+
+                layout.addWidget(l1)
+                layout.addWidget(l2)
+                layout.addWidget(l3)
+ 
             layout.addStretch(1)
             if self.technology_fine_details_pane.layout():
                 dummy_widget = QLabel()

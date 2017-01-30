@@ -7,6 +7,7 @@
     :license: MIT, see LICENSE.txt for more details.
 """
 from enumerations import BombType
+from enumerations import MineType
 
 
 class ShipDesign(object):
@@ -97,6 +98,28 @@ class MineLayer(Part):
 
         self.mines_per_year = mines_per_year
         self.mine_type = mine_type
+
+        if(self.mine_type == MineType.Normal):
+            self.min_safe_warp = 4
+            self.hit_chance_per_ly = 0.3
+            self.dmg_ship_no_ram_scoop = 100
+            self.dmg_ship_ram_scoop = 125
+            self.min_dmg_fleet_no_ram_scoop = 500
+            self.min_dmg_fleet_ram_scoop = 600
+        elif(self.mine_type == MineType.Heavy):
+            self.min_safe_warp = 6
+            self.hit_chance_per_ly = 1.0
+            self.dmg_ship_no_ram_scoop = 500
+            self.dmg_ship_ram_scoop = 600
+            self.min_dmg_fleet_no_ram_scoop = 2000
+            self.min_dmg_fleet_ram_scoop = 2500
+        elif(self.mine_type == MineType.Speed):
+            self.min_safe_warp = 5
+            self.hit_chance_per_ly = 3.5
+            self.dmg_ship_no_ram_scoop = 0
+            self.dmg_ship_ram_scoop = 0
+            self.min_dmg_fleet_no_ram_scoop = 0
+            self.min_dmg_fleet_ram_scoop = 0
 
 
 class Scanner(Part):
