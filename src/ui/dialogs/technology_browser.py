@@ -643,8 +643,42 @@ class TechnologyBrowser(QDialog):
 
             self.technology_fine_details_pane.setLayout(layout)
 
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Torpedoes]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
 
+            l1 = QLabel()
+            l2 = QLabel()
+            l3 = QLabel()
+            l4 = QLabel()
 
+            l1.setText("<b>{0}:</b>  {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["power"],
+                current_tech.power))
+
+            l2.setText("<b>{0}:</b>  {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["range"],
+                current_tech.range))
+
+            l3.setText("<b>{0}:</b>  {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["initiative"],
+                current_tech.initiative))
+
+            l4.setText("<b>{0}:</b>  {1!s}".format(
+                Language_Map["ui"]["technology-browser"]["fine-details"]["accuracy"],
+                current_tech.accuracy))
+
+            layout.addWidget(l1)
+            layout.addWidget(l2)
+            layout.addWidget(l3)
+            layout.addWidget(l4)
+
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
 
 
     def set_technology_message(self, tech_id):
