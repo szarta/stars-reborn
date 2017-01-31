@@ -588,7 +588,9 @@
                 "safe-range-label": "Safe Range",
                 "stargate-any-label": "Unlimited",
                 "mass-driver-desc": "Allows planets to fling mineral packets at other planets.",
-                "mass-driver-warning": "Warning:  The receiving planet must have a mass driver or it will take damage."
+                "mass-driver-warning": "Warning:  The receiving planet must have a mass driver or it will take damage.",
+                "non-penetrating-scanner": "Enemy fleets not orbiting a planet can be detected up to {0!s} light years away.",
+                "penetrating-scanner": "Enemy fleets not orbiting a planet can be detected up to {0!s} light years away.\n\nThis scanner can determine a planet's basic stats from a distance of {1!s} light years.  The scanner will also spot enemy planets attempting to hide behind planets within range."
             }
         }
     },

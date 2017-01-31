@@ -296,6 +296,16 @@ class TechnologyBrowser(QDialog):
             TechnologyId.GalaxyScoop
         ]
 
+        penetrating_scanners = [
+            TechnologyId.Snooper320X,
+            TechnologyId.Snooper400X,
+            TechnologyId.Snooper500X,
+            TechnologyId.Snooper620X,
+            TechnologyId.FerretScanner,
+            TechnologyId.DolphinScanner,
+            TechnologyId.ElephantScanner
+        ]
+
         if tech_id in fine_details_are_graphs:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
             label = QLabel()
@@ -635,6 +645,28 @@ class TechnologyBrowser(QDialog):
                 layout.addWidget(l2)
                 layout.addWidget(l3)
  
+            layout.addStretch(1)
+            if self.technology_fine_details_pane.layout():
+                dummy_widget = QLabel()
+                old_layout = self.technology_fine_details_pane.layout()
+                dummy_widget.setLayout(old_layout)
+
+            self.technology_fine_details_pane.setLayout(layout)
+
+        elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Planetary]:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+            label = QLabel()
+            label.setWordWrap(True)
+
+            if tech_id in penetrating_scanners:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["penetrating-scanner"].format(
+                   current_tech.basic_range,
+                   current_tech.penetrating_range))
+            else:
+                label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["non-penetrating-scanner"].format(
+                    current_tech.basic_range))
+
+            layout.addWidget(label)
             layout.addStretch(1)
             if self.technology_fine_details_pane.layout():
                 dummy_widget = QLabel()
