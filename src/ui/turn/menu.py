@@ -3,7 +3,7 @@
 
     Defines helper functions to build up the turn editor menu.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 from PySide.QtGui import QAction

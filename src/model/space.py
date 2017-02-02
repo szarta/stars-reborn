@@ -129,3 +129,9 @@ class Ship(SpaceObject):
 
     def is_escort(self):
         return False
+
+
+def set_player_homeworld(player, planet):
+    planet.homeworld = True
+    planet.owner = player.id
+    planet.has_been_colonized = True

@@ -2,9 +2,10 @@
     game.py
 
     :author: Brandon Arrendondo
-    :license: MIT
+    :license: MIT, see LICENSE.txt for more details.
 """
 from enumerations import StartingYear
+from turn import Turn
 
 
 class Game:
@@ -24,3 +25,10 @@ class Game:
 
         self.victory_conditions = []
         self.history = {}
+        self.turn = None
+
+
+def read_game(filepath):
+    g = Game()
+    g.turn = Turn()
+    return g

@@ -20,6 +20,8 @@ from enumerations import BasePopulation
 from enumerations import LesserRacialTrait
 from enumerations import LeftoverPointsOption
 
+from universe import universe_is_tiny
+
 
 class Race(object):
     def __init__(self):
@@ -42,7 +44,7 @@ class Race(object):
         self.gravity_min = 0.0
         self.gravity_max = 0.0
 
-        self.growth_rate = GrowthRateParameter.Minimum
+        self._growth_rate = GrowthRateParameter.Minimum
 
         self._resource_production = ResourceProductionParameter.Minimum
         self._factory_production = FactoryProductionParameter.Minimum
@@ -176,13 +178,6 @@ class Race(object):
 
     def habitable_world_estimation(self):
         return 0.0
-
-    def starting_population(self):
-        lsp = LesserRacialTrait.LowStartingPopulation
-        if lsp in self.lesser_racial_traits:
-            return int(.70 * BasePopulation)
-        else:
-            return BasePopulation
 
     def recalculate_points(self):
         points = 0
@@ -387,3 +382,16 @@ def get_bounded_value(param_name, val, min, max):
         return max
     else:
         return val
+
+
+def get_starting_population(race, universe):
+    population = BasePopulation
+
+    if (race.primary_racial_trait == PrimaryRacialTrait.InterstellarTraveler
+       and universe_is_tiny(universe)):
+        population -= 5000
+
+    if LesserRacialTrait.Low_Starting_Population in race.lesser_racial_traits:
+        population *= 0.7
+
+    return population

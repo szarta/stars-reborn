@@ -63,6 +63,8 @@
         "Silicanoids"
     ],
 
+    "random": "random",
+
     "predefined-race-descriptions": [
         "<p>The Antethereals excel at remote mining and laying mine fields.  They reproduce quickly and are efficient with their resources.  Their range of habitable planets is small, however, and their war, engine, and penetrating scanner technologies are limited.</p>",
         "<p>The Humanoids are the jack of all trades.  They grow quickly and can survive on most planets.  They can compete well, but have no serious advantages or disadvantages.</p>",
@@ -510,11 +512,35 @@
 
     "tech-requirements-title": "Tech Req.",
 
+    "game-name": "Stars Reborn",
+
     "ui": {
         "general": {
             "close": "&Close",
             "previous": "Previous",
-            "next": "Next"
+            "next": "Next",
+            "new-game": "&New Game",
+            "load-game": "&Load Game",
+            "about": "&About",
+            "exit": "E&xit",
+            "cancel": "&Cancel",
+            "create-game": "C&reate Game",
+            "help": "&Help",
+            "advanced-game": "&Advanced Game",
+            "begin-tutorial": "&Begin Tutorial"
+         },
+
+        "intro": {
+            "tutorial-run-before-text": "The tutorial has been run before.",
+            "tutorial-run-before-informative": "Would you like to destroy the game and start at the beginning?"
+         },
+
+        "new-game": {
+            "title": "New Basic Game Creation",
+            "advanced-game-title": "Advanced Game",
+            "advanced-game-description": "Use the advanced game dialog to fine tune the settings to create a new game.  The advanced game dialog can also be used to create a multiplayer game.",
+            "difficulty-level-title": "Difficulty Level",
+            "universe-size-title": "Universe Size"
          },
 
         "technology-browser": {

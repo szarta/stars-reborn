@@ -3,44 +3,42 @@
 
     Contains all the data and capabilities needed for the game's about dialog.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 from PySide.QtGui import QDialog
 from PySide.QtGui import QBoxLayout
 from PySide.QtGui import QPushButton
 from PySide.QtGui import QLabel
-from PySide.QtGui import QPixmap
 from PySide.QtGui import QTextEdit
 from PySide.QtCore import Qt
 
+from src.model.enumerations import ResourcePaths
 from src._version import __version__
-
-License_File = "LICENSE.txt"
-Credits_File = "resources/generated_credits.html"
+from src.data import Language_Map
 
 
 class LicenseDialog(QDialog):
     def __init__(self, parent=None):
         super(LicenseDialog, self).__init__(parent)
-        self.close_button = QPushButton("&Close")
+        self.close_button = QPushButton(
+            Language_Map["ui"]["general"]["close"])
 
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("Stars Reborn License")
+        self.setWindowTitle("{0} License".format(
+            Language_Map["game-name"]))
+
         self.setGeometry(150, 150, 640, 480)
 
         main_layout = QBoxLayout(QBoxLayout.TopToBottom, self)
 
         license_string = ""
-        with open(License_File) as f:
+        with open(ResourcePaths.LicenseFile) as f:
             license_string = "".join(f.readlines())
 
-        license_string = '<pre>' + \
-                         license_string + '</pre>'
-
-        license_label = QTextEdit(license_string)
+        license_label = QTextEdit("<pre>{0}</pre>".format(license_string))
         license_label.setReadOnly(True)
         main_layout.addWidget(license_label)
 
@@ -58,15 +56,19 @@ class CreditsDialog(QDialog):
         super(CreditsDialog, self).__init__(parent)
 
         self.setGeometry(150, 150, 640, 480)
-        self.close_button = QPushButton("&Close")
+        self.close_button = QPushButton(
+            Language_Map["ui"]["general"]["close"])
+
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("Stars Reborn Credits")
+        self.setWindowTitle("{0} Credits".format(
+            Language_Map["game-name"]))
+
         main_layout = QBoxLayout(QBoxLayout.TopToBottom, self)
 
         credits_string = ""
-        with open(Credits_File) as f:
+        with open(ResourcePaths.CreditsPath) as f:
             credits_string = "".join(f.readlines())
 
         credits_label = QTextEdit(credits_string)
@@ -83,34 +85,26 @@ class CreditsDialog(QDialog):
 
 
 class AboutDialog(QDialog):
-    """
-    This is the about dialog for this application.  It is responsible for:
-
-        * Identifying the application
-        * Showing the version information
-        * Showing copyright/license information
-        * Providing author/contact information
-        * Linking to the application webpage
-    """
     def __init__(self, parent=None):
-        """
-        Builds all display components used for this UI.
-        """
         super(AboutDialog, self).__init__(parent)
         self.setGeometry(200, 200, 300, 200)
 
         self.credits_button = QPushButton("C&redits")
         self.license_button = QPushButton("&License")
-        self.close_button = QPushButton("&Close")
+        self.close_button = QPushButton(
+            Language_Map["ui"]["general"]["close"])
 
         self.init_ui()
 
     def init_ui(self):
+        self.setWindowTitle("About {0}".format(
+            Language_Map["game-name"]))
 
-        self.setWindowTitle("About Stars Reborn")
         main_layout = QBoxLayout(QBoxLayout.TopToBottom, self)
 
-        about_logo = QLabel("Stars Reborn")
+        about_logo = QLabel("{0}".format(
+            Language_Map["game-name"]))
+
         about_logo.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(about_logo)
 
@@ -118,7 +112,7 @@ class AboutDialog(QDialog):
         description_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(description_label)
 
-        prog = "Stars Reborn"
+        prog = Language_Map["game-name"]
         version_string = __version__ % ({"prog": prog})
         version_label = QLabel("Version: {0!s}".format(version_string))
         version_label.setAlignment(Qt.AlignCenter)

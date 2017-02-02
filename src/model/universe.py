@@ -5,7 +5,7 @@
     interact with a game universe.
 
     :author: Brandon Arrendondo
-    :license: MIT
+    :license: MIT, see LICENSE.txt for more details.
 """
 
 
@@ -20,3 +20,10 @@ class Universe:
         self.mineral_packets = []
         self.wormholes = []
         self.salvage = []
+
+    def area(self):
+        return 0.0
+
+
+def universe_is_tiny(universe):
+    return universe.area < 400.0

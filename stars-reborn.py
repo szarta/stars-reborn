@@ -2,6 +2,8 @@
 """
     stars-reborn.py
 
+    Entry point for the game.
+
     :author: Brandon Arrendondo
     :license: MIT
 """
@@ -10,10 +12,12 @@ import argparse
 import logging
 
 from PySide.QtGui import QApplication
+
 from src._version import __version__
 from src.data import load_language_map
 from src.data import load_technologies
 from src.ui import intro
+from src.model.enumerations import ResourcePaths
 
 default_log_format = "%(filename)s:%(levelname)s:%(asctime)s] %(message)s"
 
@@ -35,8 +39,8 @@ def main(argv):
     else:
         logging.getLogger().setLevel(logging.INFO)
 
-    load_language_map("resources/strings/english_strings.json")
-    load_technologies("resources/data/technologies.dat")
+    load_language_map(ResourcePaths.EnglishLanguageMap)
+    load_technologies(ResourcePaths.TechnologyData)
 
     app = QApplication(sys.argv)
     ex = intro.IntroUI()

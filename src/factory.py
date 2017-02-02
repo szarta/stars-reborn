@@ -33,8 +33,11 @@ from model.enumerations import PrebuiltShipDesign
 
 from model.universe import Universe
 from model.space import Planet
+from model.game import Game
 
 from model.race import Race
+from model.player import Player
+from model.space import set_player_homeworld
 from model.enumerations import PredefinedRaces
 from model.enumerations import ComputerRaces
 from model.enumerations import LesserRacialTrait
@@ -43,6 +46,19 @@ from model.enumerations import LeftoverPointsOption
 from model.enumerations import ResearchCostOption
 
 from data import Language_Map
+
+
+def build_tutorial_game():
+    tut = Game()
+    tut.save_name = "Tutorial"
+    tut.universe = build_tutorial_universe()
+
+    p1 = Player(0, createHumanoid())
+    tut.players[p1.id] = p1
+    set_player_homeworld(p1, tut.universe.planets[14])
+
+    #p2 = Player(1,
+    #set_player_homeworld(p2, tut.universe.planets[11])
 
 
 def build_tutorial_universe():
@@ -99,8 +115,6 @@ def build_tutorial_universe():
     p.radiation_level = 44
     tutorial_universe.planets[p.id] = p
 
-    # Player is the humanoid race
-    # This is the player's homeworld to start
     p = Planet(14, (237, 127), "Stove Top")
     p.boranium_concentration = 70
     p.germanium_concentration = 84
@@ -2657,8 +2671,7 @@ def createAntethereal():
 
 def createHumanoid():
     r = Race()
-    r.name = Language_Map[
-        "predefined-race-singular-names"][PredefinedRaces.Humanoid]
+    r.name = Language_Map["predefined-race-singular-names"][PredefinedRaces.Humanoid]
 
     r.plural_name = Language_Map[
         "predefined-race-plural-names"][PredefinedRaces.Humanoid]
@@ -2825,7 +2838,7 @@ def createRabbitoid():
     r.icon = 1
 
     r.leftover_points = LeftoverPointsOption.Defenses
-    r.primary_racial_trait = PrimaryRacialTrait.InterstellarTraveller
+    r.primary_racial_trait = PrimaryRacialTrait.InterstellarTraveler
 
     r.lesser_racial_traits = [
         LesserRacialTrait.ImprovedFuelEfficiency,

@@ -3,7 +3,7 @@
 
     The widget for displaying planet image.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 import glob
@@ -12,15 +12,13 @@ from PySide.QtGui import QWidget
 from PySide.QtGui import QBoxLayout
 from PySide.QtGui import QLabel
 from PySide.QtGui import QFrame
-from PySide.QtCore import Qt
 from PySide.QtGui import QPixmap
 from PySide.QtGui import QPushButton
-from PySide.QtGui import QSpinBox
 from PySide.QtGui import QIcon
+from PySide.QtCore import Qt
 
-from objects.planet import PlanetDataHistory
-
-Hide_Arrow_Path = "resources/hide_arrow.png"
+from src.model.enumerations import ResourcePaths
+from src.data import Language_Map
 
 
 class PlanetImage(QWidget):
@@ -30,13 +28,18 @@ class PlanetImage(QWidget):
 
         self.details_hidden = False
 
-        self.planet_list = glob.glob("resources/planets/*.png")
-        self.previous_button = QPushButton("Previous")
-        self.next_button = QPushButton("Next")
+        self.planet_list = glob.glob("{0}/*.png".format(
+            ResourcePaths.PlanetsPath))
+
+        self.previous_button = QPushButton(
+            Language_Map["ui"]["general"]["previous"])
+
+        self.next_button = QPushButton(
+            Language_Map["ui"]["general"]["next"])
 
         self.hide_button = QPushButton()
         self.hide_button.clicked.connect(self.hide_details)
-        arrow_pixmap = QPixmap(Hide_Arrow_Path)
+        arrow_pixmap = QPixmap(ResourcePaths.HideArrowPath)
         arrow_icon = QIcon(arrow_pixmap)
         self.hide_button.setIcon(arrow_icon)
         self.hide_button.setIconSize(arrow_pixmap.rect().size())
@@ -57,17 +60,16 @@ class PlanetImage(QWidget):
         planet_name_layout.addWidget(self.planet_name, 1)
         planet_name_layout.addWidget(hide_button_frame)
 
-
         self.planet_picture = QLabel()
         self.planet_picture.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
         self.hideable_widget = QFrame()
         self.hideable_widget.setFrameStyle(QFrame.Panel | QFrame.Raised)
-        
+
         side_layout = QBoxLayout(QBoxLayout.LeftToRight)
         side_layout.addStretch(1)
         side_layout.addWidget(self.planet_picture)
-        
+
         button_layout = QBoxLayout(QBoxLayout.TopToBottom)
         button_layout.addWidget(self.previous_button)
         button_layout.addWidget(self.next_button)

@@ -3,7 +3,7 @@
 
     Contains all of the data and capabilities needed for the central GUI.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 import os
@@ -12,19 +12,21 @@ from PySide.QtGui import QLabel
 from PySide.QtGui import QSplitter
 from PySide.QtCore import Qt
 
-
-from ui.dialogs import about
-from ui.dialogs.race import RaceWizard
+from src.ui.dialogs import about
 from space import SpaceMap
 from resourceinfo import PlanetInfo
 from planetimage import PlanetImage
 import menu
 import toolbar
 
-from objects.game import read_game
+from src.model.game import read_game
 
-from parameters.view import ZoomLevel
-from parameters.view import PlanetView
+from src.model.enumerations import ZoomLevel
+from src.model.enumerations import PlanetView
+
+from src.data import Language_Map
+
+#from src.ui.dialogs.race import RaceWizard
 
 
 class ViewOptions:
@@ -35,7 +37,7 @@ class ViewOptions:
         self.planet_names_overlay = True
 
     def zoom_multiplier(self):
-        return ZoomLevel.values()[self.zoom_level]
+        return ZoomLevel.multipliers()[self.zoom_level]
 
 
 class CoreUI(QMainWindow):
@@ -52,7 +54,8 @@ class CoreUI(QMainWindow):
         player_id = self.game.active_player_id
         player = universe.players[player_id]
         race_name = player.race.name
-        self.title = "Stars Reborn - {0} - {1} - {2}".format(
+        self.title = "{0} - {1} - {2} - {3}".format(
+            Language_Map["game-name"],
             self.game.name,
             race_name,
             os.path.basename(turn_file))
@@ -140,8 +143,9 @@ class CoreUI(QMainWindow):
         player_id = self.game.active_player_id
         player = self.game.universe.players[player_id]
 
-        race_view_dialog = RaceWizard(self, player.race, True)
-        race_view_dialog.exec_()
+        #race_view_dialog = RaceWizard(self, player.race, True)
+        #race_view_dialog.exec_()
+        print "Race wizard!"
 
     def handle_open_game(self):
         print "Open game!"

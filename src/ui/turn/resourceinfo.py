@@ -1,24 +1,23 @@
 """
-    ui.turn.resourceinfo
+    resourceinfo.py
 
     The widget for displaying planet resource info.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 from PySide.QtGui import QWidget
 from PySide.QtGui import QBoxLayout
 from PySide.QtGui import QLabel
 from PySide.QtGui import QFrame
-from PySide.QtCore import Qt
 from PySide.QtGui import QPixmap
+from PySide.QtCore import Qt
 
-from objects.planet import PlanetDataHistory
+from src.model.enumerations import ResourcePaths
+from src.model.enumerations import NeverSeenPlanet
 
-UNKNOWN_PLANET_ICON = "resources/undiscovered_planet.png"
 
 class PlanetInfo(QWidget):
-
     def __init__(self, planet, race):
         super(PlanetInfo, self).__init__()
         self.race = race
@@ -32,7 +31,7 @@ class PlanetInfo(QWidget):
         self.planet_details = QWidget()
         planet_details_layout = QBoxLayout(QBoxLayout.TopToBottom)
         first_pane = QBoxLayout(QBoxLayout.LeftToRight)
-        
+
         self.planet_value = QLabel()
         self.report_age = QLabel()
 
@@ -51,11 +50,10 @@ class PlanetInfo(QWidget):
 
         main_layout.addWidget(self.planet_details)
 
-
         self.unknown_planet_label = QLabel()
         self.unknown_planet_label.setAlignment(Qt.AlignCenter)
         self.unknown_planet_label.setPixmap(
-            QPixmap(UNKNOWN_PLANET_ICON))
+            QPixmap(ResourcePaths.UnknownPlanetPath))
 
         main_layout.addWidget(self.unknown_planet_label)
 
@@ -68,14 +66,14 @@ class PlanetInfo(QWidget):
             self.target_planet.name)
 
         self.planet_name.setText(summary_text)
-        if(planet.years_since == PlanetDataHistory.Never_Seen):
+        if(planet.years_since == NeverSeenPlanet):
             self.unknown_planet_label.show()
             self.planet_details.hide()
         else:
             value = self.target_planet.calculate_value(self.race)
             color = "red"
             if(value > 0):
-                color="green"
+                color = "green"
 
             val_txt = '<font size="8pt">Value:  </font>'
             val_txt += '<font size="8pt" color="{0}">{1!s}%</font>'.format(
@@ -105,4 +103,3 @@ class PlanetInfo(QWidget):
 
             self.unknown_planet_label.hide()
             self.planet_details.show()
-

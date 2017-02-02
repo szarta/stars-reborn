@@ -3,7 +3,7 @@
 
     Contains all the data and capabilities needed for race creation.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 from PySide.QtGui import QDialog

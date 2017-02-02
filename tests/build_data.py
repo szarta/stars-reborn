@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-    build_factory.py
+    build_data.py
 
     :author: Brandon Arrendondo
     :license: MIT
@@ -13,6 +13,9 @@ import gzip
 import time
 
 from src.factory import build_technology
+from src.factory import build_tutorial_game
+
+from src.data import load_language_map
 
 __version__ = "%(prog)s 1.0.0 (Rel: 09 Jan 2017)"
 default_log_format = "%(filename)s:%(levelname)s:%(asctime)s] %(message)s"
@@ -35,16 +38,18 @@ def main(argv):
     else:
         logging.getLogger().setLevel(logging.INFO)
 
+    load_language_map("resources/strings/english_strings.json")
+
     start_time = time.time()
     tech = build_technology()
     build_time = time.time() - start_time
 
-    f = gzip.open("tech.pickle", "wb")
+    f = gzip.open("technologies.dat", "wb")
     f.write(jsonpickle.encode(tech, keys=True))
     f.close()
 
     start_time = time.time()
-    f = gzip.open("tech.pickle", "rb")
+    f = gzip.open("technologies.dat", "rb")
     contents = f.read()
     f.close()
     new_tech = jsonpickle.decode(contents, keys=True)
@@ -53,6 +58,11 @@ def main(argv):
     print "Build time {0!s}, Load time {1!s}".format(build_time, load_time)
     print "Built {0!s}, Loaded {1!s} technologies.".format(
         len(tech), len(new_tech))
+
+    tutorial = build_tutorial_game()
+    f = gzip.open("tutorial.dat", "wb")
+    f.write(jsonpickle.encode(tutorial, keys=True))
+    f.close()
 
 
 if __name__ == "__main__":

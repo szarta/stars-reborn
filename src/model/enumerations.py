@@ -9,6 +9,17 @@
 class ResourcePaths:
     IntroLogo = "resources/images/stars-reborn.png"
     TechnologyIcons = "resources/images/technology"
+    SaveGamePath = "saved-games"
+    LicenseFile = "LICENSE.txt"
+    CreditsPath = "resources/generated_credits.html"
+    UnknownPlanetPath = "resources/images/undiscovered_planet.png"
+    HideArrowPath = "resources/images/hide_arrow.png"
+    PlanetsPath = "resource/images/planets"
+    EnglishLanguageMap = "resources/strings/english_strings.json"
+    TechnologyData = "resources/data/technologies.dat"
+
+
+TutorialGameName = "tutorial"
 
 
 class TechnologyId:
@@ -893,7 +904,7 @@ class GrowthRateParameter:
 class PrimaryRacialTrait:
     ClaimAdjuster = 0
     JackOfAllTrades = 1
-    InterstellarTraveller = 2
+    InterstellarTraveler = 2
     InnerStrength = 3
     SpaceDemolition = 4
     WarMonger = 5
@@ -993,6 +1004,7 @@ class DensityLevel:
     Normal = 1
     Dense = 2
     Packed = 3
+    Default = Normal
 
 
 class ShipType:
@@ -1038,6 +1050,9 @@ class BombType:
     Smart = 1
 
 
+NeverSeenPlanet = -1
+
+
 class MineType:
     Normal = 0
     Heavy = 2
@@ -1051,6 +1066,7 @@ class PredefinedRaces:
     Nucleotid = 3
     Rabbitoid = 4
     Silicanoid = 5
+    Default = Humanoid
 
 
 class ComputerArchetypes:

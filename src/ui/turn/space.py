@@ -3,7 +3,7 @@
 
     The widget for displaying and interacting with space and the objects in it.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 import json

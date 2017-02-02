@@ -3,11 +3,9 @@
 
     Contains all the data and capabilities needed for new game creation.
 
-    :copyright: (c) 2015 by Brandon Arrendondo.
+    :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
-import os
-
 from PySide.QtGui import QDialog
 from PySide.QtGui import QBoxLayout
 from PySide.QtGui import QStackedLayout
@@ -17,22 +15,24 @@ from PySide.QtGui import QTextEdit
 from PySide.QtGui import QLineEdit
 from PySide.QtGui import QLabel
 from PySide.QtGui import QFrame
-from PySide.QtGui import QFileDialog
 from PySide.QtCore import Qt
 
-from parameters.game import GameDifficulty
-from parameters.game import GameplayOptions
-from parameters.game import GameplayOptionsContainer
+from src.model.enumerations import GameDifficulty
+from src.model.enumerations import UniverseSize
+from src.model.enumerations import DensityLevel
 
-from parameters.universe import UniverseSize
-from parameters.universe import UniverseDensity
+from src.model.enumerations import PredefinedRaces
+from src.ui import helpers
 
-from parameters.races import PredefinedRaces
-from ui import helpers
+from src.data import Language_Map
 
-# temporary - will need to be the location of place where we can find saved
-# exported settings
-SETTINGS_DIRECTORY = "/home/brandon"
+
+class NewBasicGameButtons:
+    CreateGame = 0
+    Cancel = 1
+    Help = 2
+    AdvancedGame = 3
+    BeginTutorial = 4
 
 
 class NewBasicGameDialog(QDialog):
@@ -50,12 +50,6 @@ class NewBasicGameDialog(QDialog):
 
         The game tutorial can also be launched from this dialog.
     """
-    CREATE_GAME_BUTTON_ID = 0
-    CANCEL_BUTTON_ID = 1
-    HELP_BUTTON_ID = 2
-    ADVANCED_GAME_ID = 3
-    BEGIN_TUTORIAL_ID = 4
-
     def __init__(self, parent=None):
         super(NewBasicGameDialog, self).__init__(parent)
 
@@ -67,15 +61,12 @@ class NewBasicGameDialog(QDialog):
         self.bind_user_controls()
 
     def init_user_controls(self):
-        """
-        Sets up all important user controls on this form.
-        """
         buttons = [
-            "C&reate Game",
-            "&Cancel",
-            "&Help",
-            "&Advanced Game",
-            "&Begin Tutorial"
+            Language_Map["ui"]["general"]["create-game"],
+            Language_Map["ui"]["general"]["cancel"],
+            Language_Map["ui"]["general"]["help"],
+            Language_Map["ui"]["general"]["advanced-game"],
+            Language_Map["ui"]["general"]["begin-tutorial"]
         ]
 
         self.push_buttons = helpers.build_push_button_group(buttons)
@@ -84,39 +75,46 @@ class NewBasicGameDialog(QDialog):
         self.race_desc.setFixedHeight(135)
         self.race_desc.setReadOnly(True)
 
+        race_selection_arr = [
+            x.title() for x in Language_Map["predefined-race-singular-names"]]
+
+        race_selection_arr.append(
+            Language_Map["random"].title())
+
         self.race_combo = QComboBox()
-        self.race_combo.addItems(PredefinedRaces.names())
+        self.race_combo.addItems(race_selection_arr)
         self.race_combo.setCurrentIndex(PredefinedRaces.Default)
 
         self.handle_race_combo()
 
-        self.difficulties = helpers.build_radio_group(GameDifficulty.names())
-        self.difficulties.button(GameDifficulty.Default).setChecked(True)
+        self.difficulties = helpers.build_radio_group(
+            [x.title() for x in Language_Map["difficulty-levels"]])
 
-        self.universe_sizes = helpers.build_radio_group(UniverseSize.names())
+        self.difficulties.button(
+            GameDifficulty.Default).setChecked(True)
+
+        self.universe_sizes = helpers.build_radio_group(
+            [x.title() for x in Language_Map["universe-sizes"]])
+
         self.universe_sizes.button(UniverseSize.Default).setChecked(True)
 
     def bind_user_controls(self):
-        """
-        Binds all user controls used by this form to their handlers.
-        """
         self.push_buttons.buttonClicked.connect(self.handle_button_clicked)
         self.race_combo.currentIndexChanged.connect(self.handle_race_combo)
 
     def init_ui(self):
-        """
-        Builds up the user interface - laying out the user controls on this
-        form, any relevant tabbed frames, titles, icons, etc.
-        """
-        self.setWindowTitle("New Basic Game Creation")
+        self.setWindowTitle(
+            Language_Map["ui"]["new-game"]["title"])
 
         difficulty_group = \
-            helpers.build_button_group_box(self.difficulties,
-                                           "Difficulty Level")
+            helpers.build_button_group_box(
+                self.difficulties,
+                Language_Map["ui"]["new-game"]["difficulty-level-title"])
 
         universe_size_group = \
-            helpers.build_button_group_box(self.universe_sizes,
-                                           "Universe Size")
+            helpers.build_button_group_box(
+                self.universe_sizes,
+                Language_Map["ui"]["new-game"]["universe-size-title"])
 
         left_layout = QBoxLayout(QBoxLayout.TopToBottom)
         left_layout.addWidget(difficulty_group)
@@ -130,19 +128,19 @@ class NewBasicGameDialog(QDialog):
         player_race_group.setLayout(player_race_box)
 
         advanced_game_box = QBoxLayout(QBoxLayout.TopToBottom)
-        advanced_game_group = QGroupBox("Advanced Game")
-        advanced_game_description = """
-        <p>Use the advanced game dialog to fine tune the settings to create a
-        new game.  The advanced game dialog is also used to create multiplayer
-        games.</p>
-        """
+        advanced_game_group = QGroupBox(
+            Language_Map["ui"]["new-game"]["advanced-game-title"])
+
+        advanced_game_description = "<p>{0}</p>".format(
+            Language_Map["ui"]["new-game"]["advanced-game-description"])
+
         advanced_game_label = QTextEdit(advanced_game_description)
         advanced_game_label.setFixedHeight(75)
         advanced_game_label.setReadOnly(True)
 
         advanced_game_box.addWidget(advanced_game_label)
         advanced_game_box.addWidget(
-            self.push_buttons.button(self.ADVANCED_GAME_ID))
+            self.push_buttons.button(NewBasicGameButtons.AdvancedGame))
 
         advanced_game_group.setLayout(advanced_game_box)
 
@@ -156,17 +154,17 @@ class NewBasicGameDialog(QDialog):
 
         button_layout = QBoxLayout(QBoxLayout.LeftToRight)
         button_layout.addWidget(
-            self.push_buttons.button(self.HELP_BUTTON_ID))
+            self.push_buttons.button(NewBasicGameButtons.Help))
 
         button_layout.addWidget(
-            self.push_buttons.button(self.BEGIN_TUTORIAL_ID))
+            self.push_buttons.button(NewBasicGameButtons.BeginTutorial))
 
         button_layout.addStretch(1)
         button_layout.addWidget(
-            self.push_buttons.button(self.CREATE_GAME_BUTTON_ID))
+            self.push_buttons.button(NewBasicGameButtons.CreateGame))
 
         button_layout.addWidget(
-            self.push_buttons.button(self.CANCEL_BUTTON_ID))
+            self.push_buttons.button(NewBasicGameButtons.Cancel))
 
         main_layout = QBoxLayout(QBoxLayout.TopToBottom, self)
         main_layout.addLayout(side_layouts)
@@ -175,22 +173,25 @@ class NewBasicGameDialog(QDialog):
     def handle_race_combo(self):
         selectedIndex = self.race_combo.currentIndex()
 
-        description = PredefinedRaces.race(selectedIndex).description
-        self.race_desc.setHtml(description)
+        if selectedIndex < len(Language_Map["predefined-race-singular-names"]):
+            self.race_desc.setHtml(
+                Language_Map["predefined-race-descriptions"][selectedIndex])
+        else:
+            self.race_desc.setHtml("<p />")
 
     def handle_button_clicked(self, button):
         button_id = self.push_buttons.id(button)
-        if(button_id == self.HELP_BUTTON_ID):
+        if(button_id == NewBasicGameButtons.Help):
             print "help!"
-        elif(button_id == self.CANCEL_BUTTON_ID):
+        elif(button_id == NewBasicGameButtons.Cancel):
             self.reject()
         else:
             usize = self.universe_sizes.checkedId()
             difficulty = self.difficulties.checkedId()
 
-            if(button_id == self.ADVANCED_GAME_ID):
+            if(button_id == NewBasicGameButtons.AdvancedGame):
                 self.launch_advanced_game = True
-            elif(button_id == self.BEGIN_TUTORIAL_ID):
+            elif(button_id == NewBasicGameButtons.BeginTutorial):
                 self.begin_tutorial = True
 
             self.accept()
@@ -261,13 +262,15 @@ class NewAdvancedGameDialog(QDialog):
 
         self.nav_buttons = helpers.build_push_button_group(buttons)
 
-        checks = GameplayOptions.names()
+        checks = list(Language_Map["gameplay-option-names"])
         self.game_options = helpers.build_checkbox_group(checks)
         self.game_options.setExclusive(False)
         self.setup_game_options_state()
 
-        self.densities = helpers.build_radio_group(UniverseDensity.names())
-        self.densities.button(UniverseDensity.Default).setChecked(True)
+        self.densities = helpers.build_radio_group(
+            Language_Map["density-levels"])
+
+        self.densities.button(DensityLevel.Default).setChecked(True)
 
         self.tabbed_layout = QStackedLayout()
 
@@ -333,36 +336,6 @@ class NewAdvancedGameDialog(QDialog):
         else:
             prev_button.setEnabled(True)
             next_button.setEnabled(True)
-
-    def handle_import_settings(self):
-        """
-        Import saved settings from a file.
-        """
-        (file_name, selected_filter) = \
-            QFileDialog.getOpenFileName(self,
-                                        "Import Settings",
-                                        SETTINGS_DIRECTORY,
-                                        "Settings Files (*.cfg)")
-
-        if file_name and os.path.exists(file_name):
-
-            try:
-                with open(file_name):
-                    print "opened file"
-
-            except IOError:
-                print "Failed to read settings file."
-
-    def handle_export_settings(self):
-        """
-        Export current settings to a file.
-        """
-        (file_name, selected_filter) = \
-            QFileDialog.getSaveFileName(self,
-                                        "Export Settings",
-                                        SETTINGS_DIRECTORY,
-                                        "Settings Files (*.cfg)")
-        print file_name
 
     def handle_create_game(self):
         """

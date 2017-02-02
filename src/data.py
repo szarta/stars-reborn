@@ -1,7 +1,8 @@
 """
     data.py
 
-    The loaders and cont
+    Contains and owns the loading and in-memory storage of all of the
+    pre-defined game data.
 
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
@@ -25,3 +26,9 @@ def load_technologies(filepath):
     contents = f.read()
     f.close()
     Technologies.update(jsonpickle.decode(contents, keys=True))
+
+
+def generate_tutorial(tutorial_filepath):
+    """ Unpacks the tutorial file into the associated game files.
+    """
+    pass
