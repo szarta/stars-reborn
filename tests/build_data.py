@@ -14,6 +14,7 @@ import time
 
 from src.factory import build_technology
 from src.factory import build_tutorial_game
+from src.factory import build_computer_races
 
 from src.data import load_language_map
 
@@ -63,6 +64,12 @@ def main(argv):
     f = gzip.open("tutorial.dat", "wb")
     f.write(jsonpickle.encode(tutorial, keys=True))
     f.close()
+
+    computer_races = build_computer_races()
+    f = gzip.open("ai_races.dat", "wb")
+    f.write(jsonpickle.encode(computer_races, keys=True))
+    f.close()
+
 
 
 if __name__ == "__main__":

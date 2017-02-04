@@ -57,8 +57,9 @@ def build_tutorial_game():
     tut.players[p1.id] = p1
     set_player_homeworld(p1, tut.universe.planets[14])
 
-    #p2 = Player(1,
-    #set_player_homeworld(p2, tut.universe.planets[11])
+    p2 = Player(1, createRobotoidExpert())
+    set_player_homeworld(p2, tut.universe.planets[11])
+    return tut
 
 
 def build_tutorial_universe():
@@ -2611,7 +2612,7 @@ def build_computer_races():
     Robotoid - HE
     Turindrone - SS
     Automitron - IS
-    Rototill - CA
+    Rototil - CA
     Cybertron - PP
     Macinti - AR
 
@@ -2634,10 +2635,10 @@ def build_computer_races():
     races[ComputerRaces.AutomitronTough] = createAutomitronTough()
     races[ComputerRaces.AutomitronExpert] = createAutomitronExpert()
 
-    races[ComputerRaces.RototillEasy] = createRototillEasy()
-    races[ComputerRaces.RototillNormal] = createRototillNormal()
-    races[ComputerRaces.RototillTough] = createRototillTough()
-    races[ComputerRaces.RototillExpert] = createRototillExpert()
+    races[ComputerRaces.RototilEasy] = createRototilEasy()
+    races[ComputerRaces.RototilNormal] = createRototilNormal()
+    races[ComputerRaces.RototilTough] = createRototilTough()
+    races[ComputerRaces.RototilExpert] = createRototilExpert()
 
     races[ComputerRaces.CybertronEasy] = createCybertronEasy()
     races[ComputerRaces.CybertronNormal] = createCybertronNormal()
@@ -2973,10 +2974,10 @@ def createRobotoidEasy():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.RobotoidEasy]
+        "computer-race-singular-names"][ComputerRaces.RobotoidEasy]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.RobotoidEasy]
+        "computer-race-plural-names"][ComputerRaces.RobotoidEasy]
 
     r.icon = 27
 
@@ -3020,10 +3021,10 @@ def createRobotoidNormal():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.RobotoidNormal]
+        "computer-race-singular-names"][ComputerRaces.RobotoidNormal]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.RobotoidNormal]
+        "computer-race-plural-names"][ComputerRaces.RobotoidNormal]
 
     r.icon = 27
 
@@ -3066,10 +3067,10 @@ def createRobotoidTough():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.RobotoidTough]
+        "computer-race-singular-names"][ComputerRaces.RobotoidTough]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.RobotoidTough]
+        "computer-race-plural-names"][ComputerRaces.RobotoidTough]
 
     r.icon = 27
 
@@ -3112,10 +3113,10 @@ def createRobotoidExpert():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.RobotoidExpert]
+        "computer-race-singular-names"][ComputerRaces.RobotoidExpert]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.RobotoidExpert]
+        "computer-race-plural-names"][ComputerRaces.RobotoidExpert]
 
     r.icon = 27
 
@@ -3158,10 +3159,10 @@ def createTurindroneEasy():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.TurindroneEasy]
+        "computer-race-singular-names"][ComputerRaces.TurindroneEasy]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.TurindroneEasy]
+        "computer-race-plural-names"][ComputerRaces.TurindroneEasy]
 
     r.icon = 27
 
@@ -3212,10 +3213,10 @@ def createTurindroneNormal():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.TurindroneNormal]
+        "computer-race-singular-names"][ComputerRaces.TurindroneNormal]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.TurindroneNormal]
+        "computer-race-plural-names"][ComputerRaces.TurindroneNormal]
 
     r.icon = 27
 
@@ -3266,10 +3267,10 @@ def createTurindroneTough():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.TurindroneTough]
+        "computer-race-singular-names"][ComputerRaces.TurindroneTough]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.TurindroneTough]
+        "computer-race-plural-names"][ComputerRaces.TurindroneTough]
 
     r.icon = 27
 
@@ -3320,10 +3321,10 @@ def createTurindroneExpert():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.TurindroneExpert]
+        "computer-race-singular-names"][ComputerRaces.TurindroneExpert]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.TurindroneExpert]
+        "computer-race-plural-names"][ComputerRaces.TurindroneExpert]
 
     r.icon = 27
 
@@ -3372,10 +3373,10 @@ def createAutomitronEasy():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.AutomitronEasy]
+        "computer-race-singular-names"][ComputerRaces.AutomitronEasy]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.AutomitronEasy]
+        "computer-race-plural-names"][ComputerRaces.AutomitronEasy]
 
     r.icon = 27
 
@@ -3427,10 +3428,10 @@ def createAutomitronNormal():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.AutomitronNormal]
+        "computer-race-singular-names"][ComputerRaces.AutomitronNormal]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.AutomitronNormal]
+        "computer-race-plural-names"][ComputerRaces.AutomitronNormal]
 
     r.icon = 27
 
@@ -3482,10 +3483,10 @@ def createAutomitronTough():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.AutomitronTough]
+        "computer-race-singular-names"][ComputerRaces.AutomitronTough]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.AutomitronTough]
+        "computer-race-plural-names"][ComputerRaces.AutomitronTough]
 
     r.icon = 27
 
@@ -3537,10 +3538,10 @@ def createAutomitronExpert():
     r = Race()
 
     r.name = Language_Map[
-        "predefined-race-singular-names"][ComputerRaces.AutomitronExpert]
+        "computer-race-singular-names"][ComputerRaces.AutomitronExpert]
 
     r.plural_name = Language_Map[
-        "predefined-race-plural-names"][ComputerRaces.AutomitronExpert]
+        "computer-race-plural-names"][ComputerRaces.AutomitronExpert]
 
     r.icon = 27
 
@@ -3586,49 +3587,665 @@ def createAutomitronExpert():
     return r
 
 
-def createRototillEasy():
-    pass
+def createRototilEasy():
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.RototilEasy]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.RototilEasy]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.ClaimAdjuster
+    r.lesser_racial_traits = [
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.CheapEngines,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation,
+        LesserRacialTrait.BleedingEdgeTechnology
+    ]
+
+    r.gravity_min = 0.58
+    r.gravity_max = 1.72
+    r.gravity_immune = False
+
+    r.temperature_min = -76
+    r.temperature_max = 76
+    r.temperature_immune = False
+
+    r.radiation_min = 31
+    r.radiation_max = 69
+    r.radiation_immune = False
+
+    r.growth_rate = 15
+
+    r.resource_production = 1000
+    r.factory_production = 10
+    r.factory_cost = 10
+    r.colonists_operate_factories = 10
+    r.factory_cheap_germanium = False
+    r.mine_production = 14
+    r.mine_cost = 5
+    r.colonists_operate_mines = 14
+
+    r.energy_cost = ResearchCostOption.Expensive
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Expensive
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Expensive
+    r.construction_cost = ResearchCostOption.Expensive
+    r.expensive_tech_boost = True
+    return r
 
 
-def createRototillNormal():
-    pass
+def createRototilNormal():
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.RototilNormal]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.RototilNormal]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.ClaimAdjuster
+    r.lesser_racial_traits = [
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation,
+        LesserRacialTrait.BleedingEdgeTechnology
+    ]
+
+    r.gravity_min = 0.58
+    r.gravity_max = 1.72
+    r.gravity_immune = False
+
+    r.temperature_min = -76
+    r.temperature_max = 76
+    r.temperature_immune = False
+
+    r.radiation_min = 31
+    r.radiation_max = 69
+    r.radiation_immune = False
+
+    r.growth_rate = 15
+
+    r.resource_production = 800
+    r.factory_production = 12
+    r.factory_cost = 10
+    r.colonists_operate_factories = 12
+    r.factory_cheap_germanium = False
+    r.mine_production = 14
+    r.mine_cost = 5
+    r.colonists_operate_mines = 12
+
+    r.energy_cost = ResearchCostOption.Expensive
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Cheap
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Expensive
+    r.construction_cost = ResearchCostOption.Expensive
+    r.expensive_tech_boost = True
+    return r
 
 
-def createRototillTough():
-    pass
+def createRototilTough():
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.RototilTough]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.RototilTough]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.ClaimAdjuster
+    r.lesser_racial_traits = [
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation,
+        LesserRacialTrait.BleedingEdgeTechnology
+    ]
+
+    r.gravity_min = 0.40
+    r.gravity_max = 2.48
+    r.gravity_immune = False
+
+    r.temperature_min = -104
+    r.temperature_max = 104
+    r.temperature_immune = False
+
+    r.radiation_min = 25
+    r.radiation_max = 75
+    r.radiation_immune = False
+
+    r.growth_rate = 15
+
+    r.resource_production = 800
+    r.factory_production = 12
+    r.factory_cost = 10
+    r.colonists_operate_factories = 12
+    r.factory_cheap_germanium = False
+    r.mine_production = 14
+    r.mine_cost = 5
+    r.colonists_operate_mines = 12
+
+    r.energy_cost = ResearchCostOption.Expensive
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Cheap
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Expensive
+    r.construction_cost = ResearchCostOption.Expensive
+    r.expensive_tech_boost = True
+    return r
 
 
-def createRototillExpert():
-    pass
+def createRototilExpert():
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.RototilExpert]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.RototilExpert]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.ClaimAdjuster
+    r.lesser_racial_traits = [
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation,
+        LesserRacialTrait.BleedingEdgeTechnology
+    ]
+
+    r.gravity_immune = True
+
+    r.temperature_min = -104
+    r.temperature_max = 104
+    r.temperature_immune = False
+
+    r.radiation_min = 25
+    r.radiation_max = 75
+    r.radiation_immune = False
+
+    r.growth_rate = 15
+
+    r.resource_production = 800
+    r.factory_production = 15
+    r.factory_cost = 10
+    r.colonists_operate_factories = 15
+    r.factory_cheap_germanium = False
+    r.mine_production = 15
+    r.mine_cost = 5
+    r.colonists_operate_mines = 15
+
+    r.energy_cost = ResearchCostOption.Expensive
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Cheap
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Expensive
+    r.construction_cost = ResearchCostOption.Expensive
+    r.expensive_tech_boost = True
+    return r
 
 
 def createCybertronEasy():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.CybertronEasy]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.CybertronEasy]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.PacketPhysics
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.LowStartingPopulation
+    ]
+
+    r.gravity_min = 0.36
+    r.gravity_max = 2.72
+    r.gravity_immune = False
+
+    r.temperature_min = -112
+    r.temperature_max = 112
+    r.temperature_immune = False
+
+    r.radiation_min = 22
+    r.radiation_max = 78
+    r.radiation_immune = False
+
+    r.growth_rate = 12
+
+    r.resource_production = 1000
+    r.factory_production = 9
+    r.factory_cost = 18
+    r.colonists_operate_factories = 9
+    r.factory_cheap_germanium = False
+    r.mine_production = 9
+    r.mine_cost = 18
+    r.colonists_operate_mines = 9
+
+    r.energy_cost = ResearchCostOption.Normal
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Expensive
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Expensive
+    r.construction_cost = ResearchCostOption.Normal
+    r.expensive_tech_boost = True
+    return r
 
 
 def createCybertronNormal():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.CybertronNormal]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.CybertronNormal]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.PacketPhysics
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation
+    ]
+
+    r.gravity_min = 0.29
+    r.gravity_max = 3.44
+    r.gravity_immune = False
+
+    r.temperature_min = -124
+    r.temperature_max = 124
+    r.temperature_immune = False
+
+    r.radiation_min = 19
+    r.radiation_max = 81
+    r.radiation_immune = False
+
+    r.growth_rate = 17
+
+    r.resource_production = 1000
+    r.factory_production = 10
+    r.factory_cost = 13
+    r.colonists_operate_factories = 19
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 10
+    r.colonists_operate_mines = 7
+
+    r.energy_cost = ResearchCostOption.Normal
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Normal
+    r.electronics_cost = ResearchCostOption.Normal
+    r.weapons_cost = ResearchCostOption.Expensive
+    r.construction_cost = ResearchCostOption.Normal
+    r.expensive_tech_boost = True
+    return r
 
 
 def createCybertronTough():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.CybertronTough]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.CybertronTough]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.PacketPhysics
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.MineralAlchemy,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation
+    ]
+
+    r.gravity_min = 0.27
+    r.gravity_max = 3.68
+    r.gravity_immune = False
+
+    r.temperature_min = -128
+    r.temperature_max = 128
+    r.temperature_immune = False
+
+    r.radiation_min = 18
+    r.radiation_max = 82
+    r.radiation_immune = False
+
+    r.growth_rate = 17
+
+    r.resource_production = 1000
+    r.factory_production = 14
+    r.factory_cost = 10
+    r.colonists_operate_factories = 20
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 10
+    r.colonists_operate_mines = 6
+
+    r.energy_cost = ResearchCostOption.Normal
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Cheap
+    r.electronics_cost = ResearchCostOption.Normal
+    r.weapons_cost = ResearchCostOption.Normal
+    r.construction_cost = ResearchCostOption.Normal
+    r.expensive_tech_boost = False
+    return r
 
 
 def createCybertronExpert():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.CybertronExpert]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.CybertronExpert]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.MineralConcentration
+
+    r.primary_racial_trait = PrimaryRacialTrait.PacketPhysics
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.MineralAlchemy,
+        LesserRacialTrait.OnlyBasicRemoteMining,
+        LesserRacialTrait.NoAdvancedScanners,
+        LesserRacialTrait.LowStartingPopulation
+    ]
+
+    r.gravity_min = 0.25
+    r.gravity_max = 3.92
+    r.gravity_immune = False
+
+    r.temperature_min = -132
+    r.temperature_max = 132
+    r.temperature_immune = False
+
+    r.radiation_min = 17
+    r.radiation_max = 83
+    r.radiation_immune = False
+
+    r.growth_rate = 19
+
+    r.resource_production = 1000
+    r.factory_production = 15
+    r.factory_cost = 9
+    r.colonists_operate_factories = 25
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 10
+    r.colonists_operate_mines = 5
+
+    r.energy_cost = ResearchCostOption.Cheap
+    r.propulsion_cost = ResearchCostOption.Expensive
+    r.biotechnology_cost = ResearchCostOption.Normal
+    r.electronics_cost = ResearchCostOption.Normal
+    r.weapons_cost = ResearchCostOption.Cheap
+    r.construction_cost = ResearchCostOption.Cheap
+    r.expensive_tech_boost = False
+    return r
 
 
 def createMacintiEasy():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.MacintiEasy]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.MacintiEasy]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.SurfaceMinerals
+
+    r.primary_racial_trait = PrimaryRacialTrait.AlternateReality
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.ImprovedStarbases,
+        LesserRacialTrait.GeneralizedResearch,
+        LesserRacialTrait.CheapEngines
+    ]
+
+    r.gravity_min = 0.31
+    r.gravity_max = 3.20
+    r.gravity_immune = False
+
+    r.temperature_min = -120
+    r.temperature_max = 120
+    r.temperature_immune = False
+
+    r.radiation_min = 20
+    r.radiation_max = 80
+    r.radiation_immune = False
+
+    r.growth_rate = 10
+
+    r.resource_production = 1600
+    r.factory_production = 10
+    r.factory_cost = 10
+    r.colonists_operate_factories = 10
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 5
+    r.colonists_operate_mines = 10
+
+    r.energy_cost = ResearchCostOption.Normal
+    r.propulsion_cost = ResearchCostOption.Normal
+    r.biotechnology_cost = ResearchCostOption.Normal
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Normal
+    r.construction_cost = ResearchCostOption.Normal
+    r.expensive_tech_boost = False
+    return r
 
 
 def createMacintiNormal():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.MacintiNormal]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.MacintiNormal]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.SurfaceMinerals
+
+    r.primary_racial_trait = PrimaryRacialTrait.AlternateReality
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.ImprovedStarbases,
+        LesserRacialTrait.GeneralizedResearch,
+        LesserRacialTrait.CheapEngines
+    ]
+
+    r.gravity_min = 0.31
+    r.gravity_max = 3.20
+    r.gravity_immune = False
+
+    r.temperature_min = -120
+    r.temperature_max = 120
+    r.temperature_immune = False
+
+    r.radiation_min = 20
+    r.radiation_max = 80
+    r.radiation_immune = False
+
+    r.growth_rate = 10
+
+    r.resource_production = 1600
+    r.factory_production = 10
+    r.factory_cost = 10
+    r.colonists_operate_factories = 10
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 5
+    r.colonists_operate_mines = 10
+
+    r.energy_cost = ResearchCostOption.Normal
+    r.propulsion_cost = ResearchCostOption.Normal
+    r.biotechnology_cost = ResearchCostOption.Normal
+    r.electronics_cost = ResearchCostOption.Expensive
+    r.weapons_cost = ResearchCostOption.Normal
+    r.construction_cost = ResearchCostOption.Normal
+    r.expensive_tech_boost = False
+    return r
 
 
 def createMacintiTough():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.MacintiTough]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.MacintiTough]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.SurfaceMinerals
+
+    r.primary_racial_trait = PrimaryRacialTrait.AlternateReality
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.AdvancedRemoteMining,
+        LesserRacialTrait.ImprovedStarbases,
+        LesserRacialTrait.GeneralizedResearch,
+        LesserRacialTrait.UltimateRecycling,
+        LesserRacialTrait.MineralAlchemy
+    ]
+
+    r.gravity_min = 0.22
+    r.gravity_max = 4.40
+    r.gravity_immune = False
+
+    r.temperature_min = -140
+    r.temperature_max = 140
+    r.temperature_immune = False
+
+    r.radiation_min = 15
+    r.radiation_max = 85
+    r.radiation_immune = False
+
+    r.growth_rate = 17
+
+    r.resource_production = 1000
+    r.factory_production = 10
+    r.factory_cost = 10
+    r.colonists_operate_factories = 10
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 5
+    r.colonists_operate_mines = 10
+
+    r.energy_cost = ResearchCostOption.Cheap
+    r.propulsion_cost = ResearchCostOption.Normal
+    r.biotechnology_cost = ResearchCostOption.Normal
+    r.electronics_cost = ResearchCostOption.Normal
+    r.weapons_cost = ResearchCostOption.Normal
+    r.construction_cost = ResearchCostOption.Normal
+    r.expensive_tech_boost = False
+    return r
 
 
 def createMacintiExpert():
-    pass
+    r = Race()
+
+    r.name = Language_Map[
+        "computer-race-singular-names"][ComputerRaces.MacintiExpert]
+
+    r.plural_name = Language_Map[
+        "computer-race-plural-names"][ComputerRaces.MacintiExpert]
+
+    r.icon = 27
+
+    r.leftover_points = LeftoverPointsOption.SurfaceMinerals
+
+    r.primary_racial_trait = PrimaryRacialTrait.AlternateReality
+    r.lesser_racial_traits = [
+        LesserRacialTrait.ImprovedFuelEfficiency,
+        LesserRacialTrait.TotalTerraforming,
+        LesserRacialTrait.AdvancedRemoteMining,
+        LesserRacialTrait.ImprovedStarbases,
+        LesserRacialTrait.GeneralizedResearch,
+        LesserRacialTrait.UltimateRecycling,
+        LesserRacialTrait.MineralAlchemy
+    ]
+
+    r.gravity_min = 0.22
+    r.gravity_max = 4.40
+    r.gravity_immune = False
+
+    r.temperature_min = -140
+    r.temperature_max = 140
+    r.temperature_immune = False
+
+    r.radiation_min = 15
+    r.radiation_max = 85
+    r.radiation_immune = False
+
+    r.growth_rate = 20
+
+    r.resource_production = 1000
+    r.factory_production = 10
+    r.factory_cost = 10
+    r.colonists_operate_factories = 10
+    r.factory_cheap_germanium = False
+    r.mine_production = 10
+    r.mine_cost = 5
+    r.colonists_operate_mines = 10
+
+    r.energy_cost = ResearchCostOption.Cheap
+    r.propulsion_cost = ResearchCostOption.Normal
+    r.biotechnology_cost = ResearchCostOption.Normal
+    r.electronics_cost = ResearchCostOption.Normal
+    r.weapons_cost = ResearchCostOption.Normal
+    r.construction_cost = ResearchCostOption.Cheap
+    r.expensive_tech_boost = False
+    return r
