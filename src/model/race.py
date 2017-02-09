@@ -4,8 +4,6 @@
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
-import logging
-
 from enumerations import ResearchCostOption
 from enumerations import ResourceProductionParameter
 from enumerations import FactoryProductionParameter
@@ -19,6 +17,8 @@ from enumerations import GrowthRateParameter
 from enumerations import BasePopulation
 from enumerations import LesserRacialTrait
 from enumerations import LeftoverPointsOption
+
+from src.util import get_bounded_value
 
 from universe import universe_is_tiny
 
@@ -78,7 +78,7 @@ class Race(object):
     @resource_production.setter
     def resource_production(self, value):
         val = int(value)
-        assert(val % 100 == 0)
+        assert(val % ResourceProductionParameter.Step == 0)
 
         min = ResourceProductionParameter.Minimum
         max = ResourceProductionParameter.Maximum
@@ -369,19 +369,6 @@ def calculate_habitat_advantage_points(radiation_immune, radiation_min,
     # TODO: radiation calculation
 
     return total_points
-
-
-def get_bounded_value(param_name, val, min, max):
-    if val < min:
-        logging.debug("Bounded val {0}: {1} is < {2}.  Choosing {2}.".format(
-            param_name, val, min))
-        return min
-    elif val > max:
-        logging.debug("Bounded val {0}: {1} is > {2}.  Choosing {2}.".format(
-            param_name, val, max))
-        return max
-    else:
-        return val
 
 
 def get_starting_population(race, universe):

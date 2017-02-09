@@ -10,8 +10,7 @@ from enumerations import PrimaryRacialTrait
 from enumerations import LesserRacialTrait
 
 
-class Player:
-
+class Player(object):
     def __init__(self, id, race):
         self.race = race
         self.id = id
@@ -99,6 +98,13 @@ class Player:
         return (self.energy_tech_level + self.propulsion_tech_level +
                 self.biotechnology_tech_level + self.electronics_tech_level +
                 self.weapons_tech_level + self.construction_tech_level)
+
+
+class CPU(Player):
+    def __init__(self, id, race, difficulty_level, strategy):
+        Player.__init__(self, id, race)
+        self.difficulty_level = difficulty_level
+        self.strategy = strategy
 
 
 def total_cost_to_next_level(current_level, total_tech_levels, cost_percent,

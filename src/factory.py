@@ -34,9 +34,12 @@ from model.enumerations import PrebuiltShipDesign
 from model.universe import Universe
 from model.space import Planet
 from model.game import Game
+from model.game import VictoryConditions
+from model.game import VictoryConditionParameters
 
 from model.race import Race
 from model.player import Player
+from model.player import CPU
 from model.space import set_player_homeworld
 from model.enumerations import PredefinedRaces
 from model.enumerations import ComputerRaces
@@ -44,6 +47,7 @@ from model.enumerations import LesserRacialTrait
 from model.enumerations import PrimaryRacialTrait
 from model.enumerations import LeftoverPointsOption
 from model.enumerations import ResearchCostOption
+from model.enumerations import CPUDifficulties
 
 from data import Language_Map
 
@@ -53,11 +57,18 @@ def build_tutorial_game():
     tut.save_name = "Tutorial"
     tut.universe = build_tutorial_universe()
 
+    vc = VictoryConditions()
+    vc.conditions_needed = 1
+    vc.condition_enabled[VictoryConditions.HighestScoreYears] = True
+    vc.set_victory_parameter(VictoryConditionParameters.HighestScoreYears, 30)
+    vc.set_victory_parameter(VictoryConditionParameters.MinimumYears, 30)
+    tut.victory_conditions = vc
+
     p1 = Player(0, createHumanoid())
     tut.players[p1.id] = p1
     set_player_homeworld(p1, tut.universe.planets[14])
 
-    p2 = Player(1, createRobotoidExpert())
+    p2 = CPU(1, createRobotoidExpert(), CPUDifficulties.Expert, None)
     set_player_homeworld(p2, tut.universe.planets[11])
     return tut
 
