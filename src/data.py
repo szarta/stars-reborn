@@ -28,7 +28,9 @@ def load_technologies(filepath):
     Technologies.update(jsonpickle.decode(contents, keys=True))
 
 
-def generate_tutorial(tutorial_filepath):
-    """ Unpacks the tutorial file into the associated game files.
-    """
-    pass
+def load_tutorial_game(tutorial_filepath):
+    f = gzip.open(tutorial_filepath, "rb")
+    contents = f.read()
+    f.close()
+
+    return jsonpickle.decode(contents, keys=True)

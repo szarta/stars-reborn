@@ -19,7 +19,7 @@ from planetimage import PlanetImage
 import menu
 import toolbar
 
-from src.model.game import read_game
+#from src.model.game import read_game
 
 from src.model.enumerations import ZoomLevel
 from src.model.enumerations import PlanetView
@@ -49,7 +49,8 @@ class CoreUI(QMainWindow):
         self.focus_object = None
         self.interest_object = None
 
-        self.game = read_game(turn_file)
+        #self.game = read_game(turn_file)
+        self.game = None
         universe = self.game.universe
         player_id = self.game.active_player_id
         player = universe.players[player_id]

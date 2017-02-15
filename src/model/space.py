@@ -135,3 +135,5 @@ def set_player_homeworld(player, planet):
     planet.homeworld = True
     planet.owner = player.id
     planet.has_been_colonized = True
+
+    player.homeworld = planet.id

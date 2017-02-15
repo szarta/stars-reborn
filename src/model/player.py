@@ -15,6 +15,7 @@ class Player(object):
         self.race = race
         self.id = id
         self.cpu = False
+        self.homeworld = 0
 
         self.energy_tech_level = 0
         self.energy_tech_progress = 0
@@ -105,6 +106,7 @@ class CPU(Player):
         Player.__init__(self, id, race)
         self.difficulty_level = difficulty_level
         self.strategy = strategy
+        self.cpu = True
 
 
 def total_cost_to_next_level(current_level, total_tech_levels, cost_percent,

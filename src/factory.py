@@ -1,6 +1,9 @@
 """
     factory.py
 
+    The factory functions that generate many of the preconfigured data files
+    used by the game.
+
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """

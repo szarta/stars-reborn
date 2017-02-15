@@ -17,9 +17,18 @@ class ResourcePaths:
     PlanetsPath = "resource/images/planets"
     EnglishLanguageMap = "resources/strings/english_strings.json"
     TechnologyData = "resources/data/technologies.dat"
+    TutorialData = "resources/data/tutorial.dat"
 
 
 TutorialGameName = "tutorial"
+
+
+class GameStrings:
+    HidingMessages = 127
+    AddingWaypoints = 128
+    DesigningShips = 129
+    PopupHelp = 130
+    Homeworld = 169
 
 
 class TechnologyId:

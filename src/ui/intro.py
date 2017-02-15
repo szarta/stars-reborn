@@ -27,8 +27,9 @@ from dialogs import game
 
 from turn import editor
 
-from src.data import generate_tutorial
+from src.data import load_tutorial_game
 from src.data import Language_Map
+from src.model.turn import generate_turn_zero
 
 
 class IntroUI(QDialog):
@@ -115,7 +116,7 @@ class IntroUI(QDialog):
                     if(ret == QMessageBox.No):
                         return
 
-                generate_tutorial()
+                generate_turn_zero(load_tutorial_game(ResourcePaths.TutorialData))
 
                 player_turn_file = "{0}/{1}.m0".format(
                     ResourcePaths.SaveGamePath, TutorialGameName)

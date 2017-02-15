@@ -1,13 +1,13 @@
 """
     game.py
 
+    Information, classes, and functions related to the Game object.
+
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
 import logging
 from enumerations import StartingYear
-
-from turn import Turn
 
 from src.util import get_bounded_value
 
@@ -115,9 +115,3 @@ class Game:
         self.victory_conditions = None
         self.history = {}
         self.turn = None
-
-
-def read_game(filepath):
-    g = Game()
-    g.turn = Turn()
-    return g
