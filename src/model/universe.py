@@ -9,7 +9,7 @@
 """
 
 
-class Universe:
+class Universe(object):
     def __init__(self, playable_area):
         self.playable_area = playable_area
 
@@ -22,8 +22,7 @@ class Universe:
         self.salvage = []
 
     def area(self):
-        return 0.0
-
+        return self.playable_area.area()
 
 def universe_is_tiny(universe):
     return universe.area < 400.0

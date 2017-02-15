@@ -68,30 +68,30 @@ class Player(object):
             if(self.race.construction_cost == ResearchCostOption.Expensive):
                 self.construction_tech_level = max(self.construction_tech_level, 3)
 
-        if(self.race.primary_racial_trait == PrimaryRacialTrait.Interstellar_Traveler):
+        if(self.race.primary_racial_trait == PrimaryRacialTrait.InterstellarTraveler):
             self.propulsion_tech_level = max(self.propulsion_tech_level, 5)
             self.construction_tech_level = max(self.construction_tech_level, 5)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.Space_Demolition):
+        elif(self.race.primary_racial_trait == PrimaryRacialTrait.SpaceDemolition):
             self.propulsion_tech_level = max(self.propulsion_tech_level, 2)
             self.biotechnology_tech_level = max(self.biotechnology_tech_level, 2)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.War_Monger):
+        elif(self.race.primary_racial_trait == PrimaryRacialTrait.WarMonger):
             self.propulsion_tech_level = max(self.propulsion_tech_level, 1)
             self.energy_tech_level = max(self.energy_tech_level, 1)
             self.weapons_tech_level = max(self.weapons_tech_level, 6)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.Packet_Physics):
+        elif(self.race.primary_racial_trait == PrimaryRacialTrait.PacketPhysics):
             self.energy_tech_level = max(self.energy_tech_level, 4)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.Jack_Of_All_Trades):
+        elif(self.race.primary_racial_trait == PrimaryRacialTrait.JackOfAllTrades):
             self.energy_tech_level = max(self.energy_tech_level, 3)
             self.propulsion_tech_level = max(self.propulsion_tech_level, 3)
             self.biotechnology_tech_level = max(self.biotechnology_tech_level, 3)
             self.electronics_tech_level = max(self.electronics_tech_level, 3)
             self.weapons_tech_level = max(self.weapons_tech_level, 3)
             self.construction_tech_level = max(self.construction_tech_level, 3)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.Claim_Adjuster):
+        elif(self.race.primary_racial_trait == PrimaryRacialTrait.ClaimAdjuster):
             self.biotechnology_tech_level = max(self.biotechnology_tech_level, 6)
 
-        if(LesserRacialTrait.Improved_Fuel_Efficiency in self.race.lesser_racial_traits or
-           LesserRacialTrait.Cheap_Engines in self.race.lesser_racial_traits):
+        if(LesserRacialTrait.ImprovedFuelEfficiency in self.race.lesser_racial_traits or
+           LesserRacialTrait.CheapEngines in self.race.lesser_racial_traits):
             self.propulsion_tech_level += 1
 
     def total_tech_levels(self):

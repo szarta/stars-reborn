@@ -4,10 +4,12 @@
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
-import logging
+import jsonpickle
+import gzip
 
 from src.data import Language_Map
 from src.model.enumerations import GameStrings
+from src.race import get_starting_population
 
 
 class TurnMessageType:
@@ -30,11 +32,31 @@ class Turn:
         self.action_queue = []
 
 
-def generate_turn_zero(game):
+def generate_visible_universe(universe, normal_visibility_regions,
+                              penetrating_visibility_regions):
+    pass
+
+
+def generate_turn_zero(game, save_directory):
+
+    planet_ids = game.universe.planets.keys()
+    for planet_id in planet_ids:
+        planet = game.universe.planets[planet_id]
+        if(planet.owner is not None):
+            owner_player = game.universe.players[planet.owner]
+            starting_population = get_starting_population(
+                owner_player.race, game.universe)
+
+            if(planet.homeworld):
+                planet.population = starting_population
+            else:
+                planet.population = starting_population / 2
+
+    turns = [Turn() for i in xrange(len(game.players))]
+
     for pid in game.players.keys():
         player = game.players[pid]
-
-        turn = Turn()
+        turn = turns[pid]
         turn.active_player = pid
 
         if(not player.cpu):
@@ -54,42 +76,28 @@ def generate_turn_zero(game):
                 TurnMessageType.Tip,
                 Language_Map["original-game-strings"][GameStrings.PopupHelp]))
 
-            print game.universe
             homeworld_name = game.universe.planets[player.homeworld].name
 
             turn.messages.append(TurnMessage(
                 TurnMessageType.Intro,
                 Language_Map["original-game-strings"][GameStrings.Homeworld].format(
                     homeworld_name),
-                { "location": game.universe.planets[player.homeworld].location }))
+                {"location": game.universe.planets[player.homeworld].location}))
 
+        player.apply_trait_adjustments()
 
-            p.apply_trait_adjustments()
+    for pid in game.players.keys():
+        turn = turns[pid]
+        turn.visible_universe = generate_visible_universe(
+            game.universe, player.get_normal_visibility_regions(),
+            player.get_penetrating_visibility_regions())
 
-            """
+    for pid in game.players.keys():
+        f = gzip.open("{0}/{1}.m{2!s}".format(
+            save_directory, game.save_name, pid))
+        f.write(jsonpickle.encode(turn[pid], keys=True))
+        f.close()
 
-    for pid in new_game.universe.planets:
-        planet = new_game.universe.planets[pid]
-
-        for player_id in new_game.universe.players:
-            planet.players_scan_data[player_id] = SnapshotData()
-
-        if(planet.owner_id != -1):
-            owner_player = new_game.universe.players[planet.owner_id]
-            if(planet.homeworld):
-                planet.population = owner_player.get_starting_population(new_game.universe.size)
-            else:
-                planet.population = owner_player.get_starting_population(new_game.universe.size) / 2
-
-    # prepare the turn files
-    for pid in new_game.universe.players:
-        player_game = generate_player_game(new_game, pid)
-
-        # finally add scanning
-        apply_scanning(new_game.universe, player_game.universe)
-
-        write_game(player_game)
-
-    new_game.save_name = "{0}.xy".format(new_game.save_name)
-    write_game(new_game)
-            """
+    f = gzip.open("{0}/{1}.xy".format(save_directory, game.save_name))
+    f.write(jsonpickle.encode(game, keys=True))
+    f.close()

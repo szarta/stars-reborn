@@ -33,4 +33,5 @@ def load_tutorial_game(tutorial_filepath):
     contents = f.read()
     f.close()
 
-    return jsonpickle.decode(contents, keys=True)
+    game = jsonpickle.decode(contents, keys=True)
+    return game

@@ -7,6 +7,8 @@
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
+from shapely.geometry import Polygon
+
 from model.technology import Technology
 from model.technology import Armor
 from model.technology import BeamWeapon
@@ -57,6 +59,7 @@ from data import Language_Map
 
 def build_tutorial_game():
     tut = Game()
+    tut.name = "Tutorial Game"
     tut.save_name = "Tutorial"
     tut.universe = build_tutorial_universe()
 
@@ -77,11 +80,7 @@ def build_tutorial_game():
 
 
 def build_tutorial_universe():
-    playable_area = []
-    playable_area.append((0, 0))
-    playable_area.append((0, 400))
-    playable_area.append((400, 400))
-    playable_area.append((400, 0))
+    playable_area = Polygon([(0, 0), (0, 400), (400, 400), (400, 0)])
 
     tutorial_universe = Universe(playable_area)
 

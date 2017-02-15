@@ -44,7 +44,10 @@ stars-reborn at the outset is designed to be cross-platform.  The game should
 run on any machine that can run:
 
  * Python 2.7+
- * PySide
+ * PySide - a Qt Python library (for rendering the graphical interface)
+ * shapely - a Python polygon library (for scanning calculations)
+ * numpy - an excellent Python math library (to speed up shapely calculations)
+ * jsonpickle - to quickly save and load Python objects (save games, etc)
 
 # Installation #
 
@@ -53,6 +56,8 @@ TBD.
 So far on Ubuntu, I have needed the following packages:
 
     sudo apt-get install python python-setuptools python-pyside qt4-dev-tools
+    sudo apt-get install libgeos-dev
+    sudo pip install jsonpickle numpy shapely[vectorized]==1.6b2
 
 # Useful Links #
 

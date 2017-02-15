@@ -97,7 +97,7 @@ class VictoryConditions:
             str(parameter), val, min, max)
 
 
-class Game:
+class Game(object):
     def __init__(self):
         self.name = ""
         self.save_name = "Game"
