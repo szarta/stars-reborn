@@ -116,7 +116,9 @@ class IntroUI(QDialog):
                     if(ret == QMessageBox.No):
                         return
 
-                generate_turn_zero(load_tutorial_game(ResourcePaths.TutorialData))
+                generate_turn_zero(
+                    load_tutorial_game(ResourcePaths.TutorialData),
+                    ResourcePaths.SaveGamePath)
 
                 player_turn_file = "{0}/{1}.m0".format(
                     ResourcePaths.SaveGamePath, TutorialGameName)

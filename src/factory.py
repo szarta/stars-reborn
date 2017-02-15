@@ -76,6 +76,7 @@ def build_tutorial_game():
 
     p2 = CPU(1, createRobotoidExpert(), CPUDifficulties.Expert, None)
     set_player_homeworld(p2, tut.universe.planets[11])
+    tut.players[p2.id] = p2
     return tut
 
 

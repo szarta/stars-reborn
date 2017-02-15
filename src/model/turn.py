@@ -9,7 +9,7 @@ import gzip
 
 from src.data import Language_Map
 from src.model.enumerations import GameStrings
-from src.race import get_starting_population
+from src.model.race import get_starting_population
 
 
 class TurnMessageType:
@@ -43,7 +43,8 @@ def generate_turn_zero(game, save_directory):
     for planet_id in planet_ids:
         planet = game.universe.planets[planet_id]
         if(planet.owner is not None):
-            owner_player = game.universe.players[planet.owner]
+            print planet.owner
+            owner_player = game.players[planet.owner]
             starting_population = get_starting_population(
                 owner_player.race, game.universe)
 
