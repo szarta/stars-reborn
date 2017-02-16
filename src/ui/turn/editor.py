@@ -49,8 +49,7 @@ class CoreUI(QMainWindow):
         self.focus_object = None
         self.interest_object = None
 
-        #self.game = read_game(turn_file)
-        self.game = None
+        self.game = read_game(turn_file)
         universe = self.game.universe
         player_id = self.game.active_player_id
         player = universe.players[player_id]

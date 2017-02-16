@@ -52,6 +52,12 @@ class Player(object):
     def adjust_ship_prototypes_for_racial_traits(self):
         print "adjust_ship_prototypes_for_racial_traits"
 
+    def get_normal_visibility_regions(self):
+        return []
+
+    def get_penetrating_visibility_regions(self):
+        return []
+
     def adjust_technology_levels_for_racial_traits(self):
 
         if(self.race.expensive_tech_boost):

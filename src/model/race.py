@@ -378,7 +378,7 @@ def get_starting_population(race, universe):
        and universe_is_tiny(universe)):
         population -= 5000
 
-    if LesserRacialTrait.Low_Starting_Population in race.lesser_racial_traits:
+    if LesserRacialTrait.LowStartingPopulation in race.lesser_racial_traits:
         population *= 0.7
 
     return population

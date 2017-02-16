@@ -24,7 +24,7 @@ class TurnMessage:
         self.action = action
 
 
-class Turn:
+class Turn(object):
     def __init__(self):
         self.active_player = 0
         self.visible_universe = None
@@ -34,7 +34,8 @@ class Turn:
 
 def generate_visible_universe(universe, normal_visibility_regions,
                               penetrating_visibility_regions):
-    pass
+
+    return universe
 
 
 def generate_turn_zero(game, save_directory):
@@ -43,7 +44,6 @@ def generate_turn_zero(game, save_directory):
     for planet_id in planet_ids:
         planet = game.universe.planets[planet_id]
         if(planet.owner is not None):
-            print planet.owner
             owner_player = game.players[planet.owner]
             starting_population = get_starting_population(
                 owner_player.race, game.universe)
@@ -94,11 +94,14 @@ def generate_turn_zero(game, save_directory):
             player.get_penetrating_visibility_regions())
 
     for pid in game.players.keys():
+        turn = turns[pid]
         f = gzip.open("{0}/{1}.m{2!s}".format(
-            save_directory, game.save_name, pid))
-        f.write(jsonpickle.encode(turn[pid], keys=True))
+            save_directory, game.save_name, pid), "wb")
+        f.write(jsonpickle.encode(turn, keys=True))
         f.close()
 
-    f = gzip.open("{0}/{1}.xy".format(save_directory, game.save_name))
+    f = gzip.open("{0}/{1}.xy".format(
+        save_directory, game.save_name), "wb")
+
     f.write(jsonpickle.encode(game, keys=True))
     f.close()

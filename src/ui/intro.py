@@ -116,6 +116,9 @@ class IntroUI(QDialog):
                     if(ret == QMessageBox.No):
                         return
 
+                if not os.path.exists(ResourcePaths.SaveGamePath):
+                    os.makedirs(ResourcePaths.SaveGamePath)
+
                 generate_turn_zero(
                     load_tutorial_game(ResourcePaths.TutorialData),
                     ResourcePaths.SaveGamePath)
