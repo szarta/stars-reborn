@@ -10,8 +10,8 @@
 
 
 class Universe(object):
-    def __init__(self, playable_area):
-        self.playable_area = playable_area
+    def __init__(self, playable_region):
+        self.playable_region = playable_region
 
         self.planets = {}
         self.fleets = []
@@ -23,6 +23,41 @@ class Universe(object):
 
     def area(self):
         return self.playable_area.area()
+
+    def svg_boundary(self, zoom_multiplier):
+        """
+        Boundary rectangle in which the universe exists.
+        """
+        (min_x, min_y, max_x, max_y) = self.playable_region.bounds
+
+        width_bound = (max_x * zoom_multiplier) + 25
+        height_bound = (max_y * zoom_multiplier) + 25
+
+        ret_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="{0}" height="{1}">'.format(
+            width_bound, height_bound)
+
+        #ret_svg += '<rect x="0" y="0" width="{0}" height="{1}" onmousemove="spaceCoord(evt.clientX, evt.clientY)" fill="black"/>'.format(width_bound, height_bound)
+        ret_svg += '<rect x="0" y="0" width="{0}" height="{1}" fill="black"/>'.format(
+            width_bound, height_bound)
+
+        return ret_svg
+
+    def to_svg(self, view_options, active_player):
+        zoom_multiplier = view_options.zoom_multiplier()
+
+        ret_svg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
+        ret_svg += self.svg_boundaries(zoom_multiplier)
+
+        # TODO: eventually put a purple zone around playable space, right now
+        # all space is rectangular and connected, in the future it could
+        # consist of many different polygons?
+
+        for pid in self.planets.keys():
+            ret_svg += self.planets[pid].to_svg(view_options, active_player)
+
+        ret_svg += "</svg>"
+        return ret_svg
+
 
 def universe_is_tiny(universe):
     return universe.area < 400.0

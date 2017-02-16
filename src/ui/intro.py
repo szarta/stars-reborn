@@ -10,6 +10,7 @@
     :license: MIT, see LICENSE.txt for more details.
 """
 import os
+import logging
 
 from PySide.QtGui import QDialog
 from PySide.QtGui import QPixmap
@@ -21,7 +22,7 @@ from PySide.QtGui import QPalette
 from dialogs import about
 
 from src.model.enumerations import ResourcePaths
-from src.model.enumerations import TutorialGameName
+from src.model.enumerations import TutorialGameSaveName
 from dialogs import game
 #from dialogs import race
 
@@ -101,10 +102,11 @@ class IntroUI(QDialog):
         if(success):
             if(new_game_dialog.begin_tutorial):
                 tutorial_path = "{0}/{1}.xy".format(
-                    ResourcePaths.SaveGamePath, TutorialGameName)
+                    ResourcePaths.SaveGamePath, TutorialGameSaveName)
 
                 if(os.path.exists(tutorial_path)):
-                    msgbox = QMessageBox()
+                    logging.debug("tutorial already exists!")
+                    msgbox = QMessageBox(self)
                     msgbox.setText(
                         Language_Map["ui"]["intro"]["tutorial-run-before-text"])
                     msgbox.setInformativeText(
@@ -119,16 +121,21 @@ class IntroUI(QDialog):
                 if not os.path.exists(ResourcePaths.SaveGamePath):
                     os.makedirs(ResourcePaths.SaveGamePath)
 
-                generate_turn_zero(
-                    load_tutorial_game(ResourcePaths.TutorialData),
-                    ResourcePaths.SaveGamePath)
+                tut_game = load_tutorial_game(ResourcePaths.TutorialData)
+                generate_turn_zero(tut_game, ResourcePaths.SaveGamePath)
+
+                print "i am here"
+                logging.debug("generated turn zero")
 
                 player_turn_file = "{0}/{1}.m0".format(
-                    ResourcePaths.SaveGamePath, TutorialGameName)
+                    ResourcePaths.SaveGamePath, TutorialGameSaveName)
 
-                self.main_editor = editor.CoreUI(player_turn_file)
-                self.main_editor.show()
-                self.hide()
+                logging.debug("player turn file = {0!s}".format(
+                    player_turn_file))
+
+                #self.main_editor = editor.CoreUI(player_turn_file)
+                #self.main_editor.show()
+                #self.hide()
 
             elif(new_game_dialog.launch_advanced_game):
                 print "Launch advanced game!"

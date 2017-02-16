@@ -6,10 +6,13 @@
 """
 import jsonpickle
 import gzip
+import logging
 
 from src.data import Language_Map
 from src.model.enumerations import GameStrings
 from src.model.race import get_starting_population
+from src.model.game import Game
+from src.model.player import Player
 
 
 class TurnMessageType:
@@ -27,19 +30,48 @@ class TurnMessage:
 class Turn(object):
     def __init__(self):
         self.active_player = 0
-        self.visible_universe = None
         self.messages = []
+
+        self.visible_game = None
         self.action_queue = []
 
 
-def generate_visible_universe(universe, normal_visibility_regions,
-                              penetrating_visibility_regions):
+def generate_visible_game(player, game):
+    visible_game = Game()
+    visible_game.name = game.name
+    visible_game.save_name = game.save_name
 
+    visible_game.year = game.year
+
+    visible_game.public_player_scores = game.public_player_scores
+    visible_game.random_events = game.random_events
+    visible_game.accelerated_play = game.accelerated_play
+    visible_game.slower_tech_advances = game.slower_tech_advances
+    visible_game.cpu_players_form_alliances = game.cpu_players_form_alliances
+
+    visible_game.victory_conditions = game.victory_conditions
+    visible_game.history = None
+
+    visible_game.players = {}
+    visible_game.players[player.id] = player
+
+    for i in game.players.keys():
+        if i != player.id:
+            p = Player(i)
+            visible_game.players[i] = p
+
+    visible_game.universe = generate_visible_universe(player, game.universe)
+    return visible_game
+
+
+def generate_visible_universe(player, universe):
     return universe
 
 
 def generate_turn_zero(game, save_directory):
 
+    logging.debug("generating turn zero")
+    logging.debug("setting up homeworlds")
     planet_ids = game.universe.planets.keys()
     for planet_id in planet_ids:
         planet = game.universe.planets[planet_id]
@@ -54,7 +86,9 @@ def generate_turn_zero(game, save_directory):
                 planet.population = starting_population / 2
 
     turns = [Turn() for i in xrange(len(game.players))]
+    game.turns = turns
 
+    logging.debug("building player messages")
     for pid in game.players.keys():
         player = game.players[pid]
         turn = turns[pid]
@@ -87,12 +121,13 @@ def generate_turn_zero(game, save_directory):
 
         player.apply_trait_adjustments()
 
+    logging.debug("generating player universes")
     for pid in game.players.keys():
+        player = game.players[pid]
         turn = turns[pid]
-        turn.visible_universe = generate_visible_universe(
-            game.universe, player.get_normal_visibility_regions(),
-            player.get_penetrating_visibility_regions())
+        turn.visible_game = generate_visible_game(player, game)
 
+    logging.debug("writing out player files")
     for pid in game.players.keys():
         turn = turns[pid]
         f = gzip.open("{0}/{1}.m{2!s}".format(
@@ -100,8 +135,19 @@ def generate_turn_zero(game, save_directory):
         f.write(jsonpickle.encode(turn, keys=True))
         f.close()
 
+    logging.debug("writing out master game file")
     f = gzip.open("{0}/{1}.xy".format(
         save_directory, game.save_name), "wb")
-
     f.write(jsonpickle.encode(game, keys=True))
     f.close()
+
+    logging.debug("done generating turn zero")
+
+
+def read_turn_file(filepath):
+    f = gzip.open(filepath, "rb")
+    contents = f.read()
+    f.close()
+
+    turn = jsonpickle.decode(contents, keys=True)
+    return turn

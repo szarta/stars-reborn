@@ -64,6 +64,7 @@
     ],
 
     "random": "random",
+    "tutorial-name": "Tutorial Game",
 
     "predefined-race-descriptions": [
         "<p>The Antethereals excel at remote mining and laying mine fields.  They reproduce quickly and are efficient with their resources.  Their range of habitable planets is small, however, and their war, engine, and penetrating scanner technologies are limited.</p>",

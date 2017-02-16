@@ -7,6 +7,7 @@
     :license: MIT, see LICENSE.txt for more details.
 """
 import os
+import logging
 from PySide.QtGui import QMainWindow
 from PySide.QtGui import QLabel
 from PySide.QtGui import QSplitter
@@ -19,7 +20,7 @@ from planetimage import PlanetImage
 import menu
 import toolbar
 
-#from src.model.game import read_game
+from src.model.turn import read_turn_file
 
 from src.model.enumerations import ZoomLevel
 from src.model.enumerations import PlanetView
@@ -44,24 +45,27 @@ class CoreUI(QMainWindow):
 
     def __init__(self, turn_file):
         super(CoreUI, self).__init__()
+        logging.debug("initializing UI")
 
         # TODO: will probably have to do this in the background
         self.focus_object = None
         self.interest_object = None
 
-        self.game = read_game(turn_file)
-        universe = self.game.universe
-        player_id = self.game.active_player_id
-        player = universe.players[player_id]
-        race_name = player.race.name
+        self.turn = read_turn_file()
+        self.game = self.turn.visible_game
+        self.universe = self.game.universe
+
+        self.active_player = self.game.players[self.turn.active_player]
+
         self.title = "{0} - {1} - {2} - {3}".format(
             Language_Map["game-name"],
             self.game.name,
-            race_name,
+            self.active_player.race.name,
             os.path.basename(turn_file))
 
         # TODO: check for saved view options
         self.view_options = ViewOptions()
+        logging.debug("loading view")
         self.init_ui()
 
     def init_ui(self, turn_file=None):
@@ -76,16 +80,12 @@ class CoreUI(QMainWindow):
 
         main_layout = QSplitter(Qt.Horizontal)
 
-        universe = self.game.universe
-        player_id = self.game.active_player_id
-        player = universe.players[player_id]
-
-        homeworld = universe.planets[universe.homeworlds[player_id]]
+        homeworld = self.universe.planets[self.active_player.homeworld]
         self.focus_object = homeworld
-        self.planet_info = PlanetInfo(homeworld, player.race)
+        self.planet_info = PlanetInfo(homeworld, self.active_player.race)
 
-        generated_svg = universe.to_svg(
-            self.view_options, self.game.active_player_id)
+        generated_svg = self.universe.to_svg(
+            self.view_options, self.active_player)
 
         self.space_map = SpaceMap(generated_svg)
 
@@ -110,7 +110,7 @@ class CoreUI(QMainWindow):
         self.statusBar().showMessage('Ready')
 
     def handle_planet_selected(self, pid):
-        planet = self.game.universe.planets[pid]
+        planet = self.universe.planets[pid]
 
         if(self.interest_object == planet):
             # TODO: change the left pane to have planet information
@@ -140,9 +140,6 @@ class CoreUI(QMainWindow):
         #dialog.exec_()
 
     def handle_current_race_wizard(self):
-        player_id = self.game.active_player_id
-        player = self.game.universe.players[player_id]
-
         #race_view_dialog = RaceWizard(self, player.race, True)
         #race_view_dialog.exec_()
         print "Race wizard!"
@@ -298,13 +295,11 @@ class CoreUI(QMainWindow):
         self.refresh_space()
 
     def handle_about(self):
-
         dialog = about.AboutDialog(self)
         dialog.exec_()
 
     def refresh_space(self):
-        if(self.game):
-            generated_svg = self.game.universe.to_svg(
-                self.view_options, self.game.active_player_id)
+        generated_svg = self.universe.to_svg(
+            self.view_options, self.active_player)
 
-            self.space_map.update_view(generated_svg)
+        self.space_map.update_view(generated_svg)

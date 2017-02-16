@@ -11,8 +11,8 @@ from enumerations import LesserRacialTrait
 
 
 class Player(object):
-    def __init__(self, id, race):
-        self.race = race
+    def __init__(self, id):
+        self.race = None
         self.id = id
         self.cpu = False
         self.homeworld = 0
@@ -108,8 +108,8 @@ class Player(object):
 
 
 class CPU(Player):
-    def __init__(self, id, race, difficulty_level, strategy):
-        Player.__init__(self, id, race)
+    def __init__(self, id, difficulty_level, strategy):
+        Player.__init__(self, id)
         self.difficulty_level = difficulty_level
         self.strategy = strategy
         self.cpu = True

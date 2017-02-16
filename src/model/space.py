@@ -6,11 +6,17 @@
 """
 import math
 
+from src.model.enumerations import NeverSeenPlanet
+from src.model.enumerations import PlanetView
+
 
 class SpaceObject(object):
     def __init__(self, id, location):
         self.id = id
         self.location = location
+
+    def to_svg(self):
+        return ""
 
     def distance_from(self, other):
 
@@ -62,7 +68,93 @@ class Planet(SpaceObject):
         self.has_been_colonized = False
         self.planetary_defense = 0
         self.player_scan_data = {}
-        self.years_since = 0
+        self.years_since = NeverSeenPlanet
+
+    def to_svg(self, view_options, current_player):
+        zoom_multiplier = view_options.zoom_multiplier()
+        planet_view = view_options.planet_view
+
+        ret_svg = ""
+
+        show_name = (zoom_multiplier > .5) and view_options.planet_names_overlay
+        x, y = self.location
+        x *= zoom_multiplier
+        y *= zoom_multiplier
+        ret_svg = '<g class="node" transform="translate({0!s},{1!s})" onmouseup="planetClick(evt, {3!s})">'.format(x, y, self.id, self.id)
+
+        ret_svg += '<rect pointer-events="visible" width="30" height="30" fill="none" transform="translate(-15, -15)" />'
+
+        if(self.years_since == NeverSeenPlanet):
+            ret_svg += "<rect width=\"5\" height=\"5\" fill=\"grey\" />"
+            if(show_name):
+                font_size = get_font_size(zoom_multiplier)
+                ret_svg += "<text style=\"fill: #ffffff; stroke: none; font-size:{0!s}px; font-weight: bold; font-family: Arial; text-anchor:middle;\" transform=\"translate(0, 20)\">".format(font_size)
+                ret_svg += self.name
+                ret_svg += "</text>"
+
+        else:
+            # use data - will be historical or current
+            if(planet_view == PlanetView.Normal):
+                friendly_ships = len(self.friendly_fleets) > 0
+                enemy_ships = len(self.enemy_fleets) > 0
+                starbase = not(self.related_starbase is None)
+
+                outline = ""
+                if (friendly_ships and enemy_ships):
+                    outline = '<circle r="10" stroke="purple" stroke-width="1" fill="none"/>'
+                elif(friendly_ships):
+                    outline = '<circle r="10" stroke="white" stroke-width="1" fill="none"/>'
+                elif(enemy_ships):
+                    outline = '<circle r="10" stroke="red" stroke-width="1" fill="none"/>'
+
+                ret_svg += outline
+
+                if(current_player.id == self.owner):
+                    ret_svg += ' <circle r="5" stroke="#366b01" stroke-width="2" fill="#05ff00"/>'
+                else:
+                    ret_svg += ' <circle r="5" stroke="#366b01" stroke-width="2" fill="red"/>'
+                    # TODO - deal with allies, assumes enemy for now
+
+                if(starbase):
+                    ret_svg += '<circle cx="6" cy="-4" r="3" fill="white"/>'
+
+                if(show_name):
+                    font_size = get_font_size(zoom_multiplier)
+                    ret_svg += "<text style=\"fill: #ffffff; stroke: none; font-size:{0!s}px; font-weight: bold; font-family: Arial; text-anchor:middle;\" transform=\"translate(0, 20)\">".format(font_size)
+                    ret_svg += self.name
+                    ret_svg += "</text>"
+            elif(planet_view == PlanetView.NoInfo):
+                ret_svg += "<rect width=\"5\" height=\"5\" fill=\"grey\" />"
+                if(show_name):
+                    font_size = get_font_size(zoom_multiplier)
+                    ret_svg += "<text style=\"fill: #ffffff; stroke: none; font-size:{0!s}px; font-weight: bold; font-family: Arial; text-anchor:middle;\" transform=\"translate(0, 20)\">".format(font_size)
+                    ret_svg += self.name
+                    ret_svg += "</text>"
+
+        ret_svg += "</g>"
+
+        """
+            elif(planet_view == PlanetView.SurfaceMinerals):
+
+            elif(planet_view == PlanetView.MineralConcentration):
+
+            elif(planet_view == PlanetView.PercentPopulation):
+
+            elif(planet_view == PlanetView.PopulationView):
+        """
+        return ret_svg
+
+
+def get_font_size(zoom_multiplier):
+    if(zoom_multiplier < 1.0):
+        return 11
+
+    if(zoom_multiplier == 4.0):
+        return 14
+
+    return 12
+
+
 
 
 class MineField(SpaceObject):

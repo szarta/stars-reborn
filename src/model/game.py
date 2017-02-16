@@ -113,5 +113,6 @@ class Game(object):
         self.cpu_players_form_alliances = False
 
         self.victory_conditions = None
-        self.history = {}
-        self.turn = None
+        self.history = None
+
+        self.turns = []

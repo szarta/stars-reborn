@@ -33,6 +33,7 @@ from model.technology import ShipDesign
 from model.enumerations import TechnologyId
 from model.enumerations import TechnologySlotType
 from model.enumerations import MineType
+from model.enuermations import TutorialGameSaveName
 
 from model.enumerations import PrebuiltShipDesign
 
@@ -59,8 +60,8 @@ from data import Language_Map
 
 def build_tutorial_game():
     tut = Game()
-    tut.name = "Tutorial Game"
-    tut.save_name = "Tutorial"
+    tut.name = Language_Map["tutorial-name"]
+    tut.save_name = TutorialGameSaveName
     tut.universe = build_tutorial_universe()
 
     vc = VictoryConditions()
@@ -70,11 +71,13 @@ def build_tutorial_game():
     vc.set_victory_parameter(VictoryConditionParameters.MinimumYears, 30)
     tut.victory_conditions = vc
 
-    p1 = Player(0, createHumanoid())
+    p1 = Player(0)
+    p1.race = createHumanoid()
     tut.players[p1.id] = p1
     set_player_homeworld(p1, tut.universe.planets[14])
 
-    p2 = CPU(1, createRobotoidExpert(), CPUDifficulties.Expert, None)
+    p2 = CPU(1, CPUDifficulties.Expert, None)
+    p2.race = createRobotoidExpert()
     set_player_homeworld(p2, tut.universe.planets[11])
     tut.players[p2.id] = p2
     return tut

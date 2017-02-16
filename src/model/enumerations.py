@@ -20,7 +20,7 @@ class ResourcePaths:
     TutorialData = "resources/data/tutorial.dat"
 
 
-TutorialGameName = "tutorial"
+TutorialGameSaveName = "Tutorial"
 
 
 class GameStrings:
