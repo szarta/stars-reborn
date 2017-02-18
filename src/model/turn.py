@@ -13,6 +13,8 @@ from src.model.enumerations import GameStrings
 from src.model.race import get_starting_population
 from src.model.game import Game
 from src.model.player import Player
+from src.model.universe import Universe
+from src.model.space import Planet
 
 
 class TurnMessageType:
@@ -65,7 +67,26 @@ def generate_visible_game(player, game):
 
 
 def generate_visible_universe(player, universe):
-    return universe
+    visible_universe = Universe(universe.playable_region)
+
+    for pid in universe.planets.keys():
+        p = universe.planets[pid]
+        if p.owner == player.id:
+            p.years_since = 0
+            visible_universe.planets[pid] = p
+        else:
+            visible_planet = Planet(p.id, p.location, p.name)
+            visible_universe.planets[pid] = visible_planet
+
+    apply_scanning(player, universe, visible_universe)
+    return visible_universe
+
+
+def apply_scanning(player, actual_universe, visible_universe):
+    """
+    Based on scanning, update universe information
+    """
+    pass
 
 
 def generate_turn_zero(game, save_directory):

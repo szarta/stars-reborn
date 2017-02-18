@@ -106,11 +106,11 @@ class Game(object):
         self.year = StartingYear
         self.players = {}
 
-        self.public_player_scores = False
-        self.random_events = True
-        self.accelerated_play = False
         self.slower_tech_advances = False
+        self.accelerated_play = False
+        self.random_events = True
         self.cpu_players_form_alliances = False
+        self.public_player_scores = False
 
         self.victory_conditions = None
         self.history = None

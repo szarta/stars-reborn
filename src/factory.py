@@ -61,7 +61,14 @@ def build_tutorial_game():
     tut = Game()
     tut.name = Language_Map["tutorial-name"]
     tut.save_name = TutorialGameSaveName
+
     tut.universe = build_tutorial_universe()
+
+    tut.slower_tech_advances = False
+    tut.accelerated_play = True
+    tut.random_events = False
+    tut.cpu_players_form_alliances = False
+    tut.public_player_scores = True
 
     vc = VictoryConditions()
     vc.conditions_needed = 1

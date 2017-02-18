@@ -847,6 +847,14 @@ class GameDifficulty:
     Default = Standard
 
 
+class PlayerPositions:
+    Close = 0
+    Moderate = 1
+    Farther = 2
+    Distant = 3
+    Default = Moderate
+
+
 class GameplayOptions:
     RandomEvents = 0
     PublicPlayerScores = 1

@@ -37,6 +37,9 @@ class Planet(SpaceObject):
         SpaceObject.__init__(self, id, location)
 
         self.name = name
+        self.reset_to_unknown()
+
+    def reset_to_unknown(self):
         self.owner = None
         self.homeworld = False
         self.population = 0
@@ -67,8 +70,9 @@ class Planet(SpaceObject):
 
         self.has_been_colonized = False
         self.planetary_defense = 0
-        self.player_scan_data = {}
         self.years_since = NeverSeenPlanet
+
+
 
     def to_svg(self, view_options, current_player):
         zoom_multiplier = view_options.zoom_multiplier()
