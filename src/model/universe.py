@@ -22,13 +22,13 @@ class Universe(object):
         self.salvage = []
 
     def area(self):
-        return self.playable_area.area()
+        return self.playable_region.area()
 
     def svg_boundary(self, zoom_multiplier):
         """
         Boundary rectangle in which the universe exists.
         """
-        (min_x, min_y, max_x, max_y) = self.playable_region.bounds
+        (min_x, min_y, max_x, max_y) = self.playable_region.bounds()
 
         width_bound = (max_x * zoom_multiplier) + 25
         height_bound = (max_y * zoom_multiplier) + 25
@@ -46,7 +46,7 @@ class Universe(object):
         zoom_multiplier = view_options.zoom_multiplier()
 
         ret_svg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-        ret_svg += self.svg_boundaries(zoom_multiplier)
+        ret_svg += self.svg_boundary(zoom_multiplier)
 
         # TODO: eventually put a purple zone around playable space, right now
         # all space is rectangular and connected, in the future it could

@@ -51,7 +51,7 @@ class CoreUI(QMainWindow):
         self.focus_object = None
         self.interest_object = None
 
-        self.turn = read_turn_file()
+        self.turn = read_turn_file(turn_file)
         self.game = self.turn.visible_game
         self.universe = self.game.universe
 

@@ -11,19 +11,7 @@ from PySide.QtGui import QButtonGroup
 from PySide.QtGui import QIcon
 from PySide.QtCore import QSize
 
-NORMAL_VIEW_ICON = "resources/toolbar/normal_view.png"
-SURFACE_MINERALS_ICON = "resources/toolbar/surface_minerals.png"
-MINERAL_CONCENTRATIONS_ICON = "resources/toolbar/mineral_concentration.png"
-PERCENT_ICON = "resources/toolbar/percent.png"
-ZOOM_ICON = "resources/toolbar/magnifying_glass.png"
-POPULATION_ICON = "resources/toolbar/population_view.png"
-NO_PLAYER_INFO_ICON = "resources/toolbar/no_player_info.png"
-ADD_WAYPOINT_ICON = "resources/toolbar/add_waypoint.png"
-SHOW_ROUTES_ICON = "resources/toolbar/show_routes.png"
-IDLE_FLEETS_ICON = "resources/toolbar/idle_fleets.png"
-SHIP_DESIGN_FILTER_ICON = "resources/toolbar/ship_design_filter.png"
-ENEMY_DESIGN_FILTER_ICON = "resources/toolbar/enemy_ship_filter.png"
-PLANET_NAMES_ICON = "resources/toolbar/planet_names.png"
+from src.model.enumerations import ResourcePaths
 
 TOOLBAR_ICON_SIZE = QSize(24, 24)
 
@@ -43,42 +31,42 @@ def build_main_toolbar(main_window):
     toolbar_table = [
         {
             "name": "normal_view",
-            "icon_path": NORMAL_VIEW_ICON,
+            "icon_path": ResourcePaths.NormalViewIcon,
             "handler": main_window.handle_normal_view,
             "tooltip": "Normal View",
             "checkable": True
         },
         {
             "name": "surface_minerals_view",
-            "icon_path": SURFACE_MINERALS_ICON,
+            "icon_path": ResourcePaths.SurfaceMineralsIcon,
             "handler": main_window.handle_surface_minerals,
             "tooltip": "Surface Mineral View",
             "checkable": True
         },
         {
             "name": "mineral_concentration_view",
-            "icon_path": MINERAL_CONCENTRATIONS_ICON,
+            "icon_path": ResourcePaths.MineralConcentrationsIcon,
             "handler": main_window.handle_mineral_concentrations,
             "tooltip": "Mineral Concentration View",
             "checkable": True
         },
         {
             "name": "value_view",
-            "icon_path": PERCENT_ICON,
+            "icon_path": ResourcePaths.PercentIcon,
             "handler": main_window.handle_percent_population,
             "tooltip": "Planet Value View",
             "checkable": True
         },
         {
             "name": "population_view",
-            "icon_path": POPULATION_ICON,
+            "icon_path": ResourcePaths.PopulationIcon,
             "handler": main_window.handle_population_view,
             "tooltip": "Population View",
             "checkable": True
         },
         {
             "name": "no_info_view",
-            "icon_path": NO_PLAYER_INFO_ICON,
+            "icon_path": ResourcePaths.NoPlayerInfoIcon,
             "handler": main_window.handle_no_player_info,
             "tooltip": "No Player Info View",
             "separator_after": True,
@@ -86,14 +74,14 @@ def build_main_toolbar(main_window):
         },
         {
             "name": "add_waypoints_mode",
-            "icon_path": ADD_WAYPOINT_ICON,
+            "icon_path": ResourcePaths.AddWaypointIcon,
             "handler": main_window.handle_add_waypoints,
             "tooltip": "Add Waypoints Mode",
             "separator_after": True
         },
         {
             "name": "fleet_paths_overlay",
-            "icon_path": SHOW_ROUTES_ICON,
+            "icon_path": ResourcePaths.ShowRoutesIcon,
             "handler": main_window.handle_fleet_paths,
             "tooltip": "Fleet Paths Overlay",
             "separator_after": True,
@@ -101,33 +89,33 @@ def build_main_toolbar(main_window):
         },
         {
             "name": "planet_names_overlay",
-            "icon_path": PLANET_NAMES_ICON,
+            "icon_path": ResourcePaths.PlanetNamesIcon,
             "handler": main_window.handle_planet_names_toggle,
             "tooltip": "Planet Names Overlay",
             "checkable": True
         },
         {
             "name": "idle_fleets_overlay",
-            "icon_path": IDLE_FLEETS_ICON,
+            "icon_path": ResourcePaths.IdleFleetsIcon,
             "handler": main_window.handle_idle_fleets_filter,
             "tooltip": "Idle Fleets Filter",
         },
         {
             "name": "ship_design_filter",
-            "icon_path": SHIP_DESIGN_FILTER_ICON,
+            "icon_path": ResourcePaths.ShipDesignIcon,
             "handler": main_window.handle_ship_design_filter,
             "tooltip": "Ship Design Filter",
         },
         {
             "name": "enemy_ship_design_filter",
-            "icon_path": ENEMY_DESIGN_FILTER_ICON,
+            "icon_path": ResourcePaths.EnemyDesignFilterIcon,
             "handler": main_window.handle_enemy_design_filter,
             "tooltip": "Enemy Ship Class Filter",
             "separator_after": True
         },
         {
             "name": "zoom_button",
-            "icon_path": ZOOM_ICON,
+            "icon_path": ResourcePaths.ZoomIcon,
             "menu": main_window.menu_map["zoom"],
             "tooltip": "Zoom Menu",
         },

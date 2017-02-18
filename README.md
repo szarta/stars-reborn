@@ -45,8 +45,7 @@ run on any machine that can run:
 
  * Python 2.7+
  * PySide - a Qt Python library (for rendering the graphical interface)
- * shapely - a Python polygon library (for scanning calculations)
- * numpy - an excellent Python math library (to speed up shapely calculations)
+ * pyclipper - a Python polygon clipping library (for scanning calculations)
  * jsonpickle - to quickly save and load Python objects (save games, etc)
 
 # Installation #
@@ -57,7 +56,7 @@ So far on Ubuntu, I have needed the following packages:
 
     sudo apt-get install python python-setuptools python-pyside qt4-dev-tools
     sudo apt-get install libgeos-dev
-    sudo pip install jsonpickle numpy shapely[vectorized]==1.6b2
+    sudo pip install jsonpickle pyclipper
 
 # Useful Links #
 

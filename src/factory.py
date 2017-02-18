@@ -7,8 +7,7 @@
     :author: Brandon Arrendondo
     :license: MIT, see LICENSE.txt for more details.
 """
-from shapely.geometry import Polygon
-
+from polygon import Polygon
 from model.technology import Technology
 from model.technology import Armor
 from model.technology import BeamWeapon
@@ -33,7 +32,7 @@ from model.technology import ShipDesign
 from model.enumerations import TechnologyId
 from model.enumerations import TechnologySlotType
 from model.enumerations import MineType
-from model.enuermations import TutorialGameSaveName
+from model.enumerations import TutorialGameSaveName
 
 from model.enumerations import PrebuiltShipDesign
 

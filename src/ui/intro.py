@@ -10,7 +10,6 @@
     :license: MIT, see LICENSE.txt for more details.
 """
 import os
-import logging
 
 from PySide.QtGui import QDialog
 from PySide.QtGui import QPixmap
@@ -94,7 +93,6 @@ class IntroUI(QDialog):
         main_layout.addLayout(background_layout)
 
     def new_game_handler(self):
-        #player = None
         #tech_browser = technology_browser.TechnologyBrowser(player)
         #tech_browser.exec_()
         new_game_dialog = game.NewBasicGameDialog(self)
@@ -105,7 +103,6 @@ class IntroUI(QDialog):
                     ResourcePaths.SaveGamePath, TutorialGameSaveName)
 
                 if(os.path.exists(tutorial_path)):
-                    logging.debug("tutorial already exists!")
                     msgbox = QMessageBox(self)
                     msgbox.setText(
                         Language_Map["ui"]["intro"]["tutorial-run-before-text"])
@@ -124,18 +121,12 @@ class IntroUI(QDialog):
                 tut_game = load_tutorial_game(ResourcePaths.TutorialData)
                 generate_turn_zero(tut_game, ResourcePaths.SaveGamePath)
 
-                print "i am here"
-                logging.debug("generated turn zero")
-
                 player_turn_file = "{0}/{1}.m0".format(
                     ResourcePaths.SaveGamePath, TutorialGameSaveName)
 
-                logging.debug("player turn file = {0!s}".format(
-                    player_turn_file))
-
-                #self.main_editor = editor.CoreUI(player_turn_file)
-                #self.main_editor.show()
-                #self.hide()
+                self.main_editor = editor.CoreUI(player_turn_file)
+                self.main_editor.show()
+                self.hide()
 
             elif(new_game_dialog.launch_advanced_game):
                 print "Launch advanced game!"
