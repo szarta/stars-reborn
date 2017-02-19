@@ -72,7 +72,8 @@ class Planet(SpaceObject):
         self.planetary_defense = 0
         self.years_since = NeverSeenPlanet
 
-
+    def calculate_value(self, race):
+        return 100
 
     def to_svg(self, view_options, current_player):
         zoom_multiplier = view_options.zoom_multiplier()
