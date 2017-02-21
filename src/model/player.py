@@ -8,6 +8,14 @@ from enumerations import TechnologyLevelBaseCosts
 from enumerations import ResearchCostOption
 from enumerations import PrimaryRacialTrait
 from enumerations import LesserRacialTrait
+from enumerations import InitialTechnologies
+from enumerations import BaseDiscoverableTechnologies
+from enumerations import PRT_Technologies
+from enumerations import LRT_Technologies
+from enumerations import TechnologyId
+from enumerations import RamScoopEngines
+from enumerations import NormalRemoteMiners
+from enumerations import AdvancedPlanetaryScanners
 
 
 class Player(object):
@@ -40,11 +48,13 @@ class Player(object):
 
         self.starbase_prototypes = []
         self.ship_prototypes = []
+        self.available_technologies = []
+        self.discoverable_technologies = []
 
     def apply_trait_adjustments(self):
         self.adjust_starbase_prototypes_for_racial_traits()
         self.adjust_ship_prototypes_for_racial_traits()
-        self.adjust_technology_levels_for_racial_traits()
+        self.adjust_technology_for_racial_traits()
 
     def adjust_starbase_prototypes_for_racial_traits(self):
         print "adjust_starbase_prototypes_for_racial_traits"
@@ -58,7 +68,30 @@ class Player(object):
     def get_penetrating_visibility_regions(self):
         return []
 
-    def adjust_technology_levels_for_racial_traits(self):
+    def adjust_technology_for_racial_traits(self):
+
+        self.available_technologies = list(InitialTechnologies)
+        self.discoverable_technologies = list(BaseDiscoverableTechnologies)
+        self.discoverable_technologies.extend(
+            list(PRT_Technologies[self.race.primary_racial_trait]))
+
+        for trait in self.race.lesser_racial_traits:
+            self.discoverable_technologies.extend(
+                list(LRT_Technologies[trait]))
+
+        if LesserRacialTrait.NoRamscoopEngines in self.race.lesser_racial_traits:
+            if LesserRacialTrait.ImprovedFuelEfficiency in self.race.lesser_racial_traits:
+                self.discoverable_technologies.remove(TechnologyId.GalaxyScoop)
+        else:
+            self.discoverable_technologies.extend(list(RamScoopEngines))
+
+        if not LesserRacialTrait.OnlyBasicRemoteMining in self.race.lesser_racial_traits:
+            self.discoverable_technologies.extend(list(NormalRemoteMiners))
+
+
+        if not (self.race.primary_racial_trait == PrimaryRacialTrait.AlternateReality or
+                LesserRacialTrait.NoAdvancedScanners in self.race.lesser_racial_traits):
+            self.discoverable_technologies.extend(list(AdvancedPlanetaryScanners))
 
         if(self.race.expensive_tech_boost):
             if(self.race.energy_cost == ResearchCostOption.Expensive):

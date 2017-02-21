@@ -286,6 +286,118 @@ class TechnologyId:
     MiniMorph = 238
 
 
+# Tech everyone gets from the beginning
+InitialTechnologies = [
+    TechnologyId.Tritanium,
+    TechnologyId.Laser,
+    TechnologyId.QuickJump5,
+    TechnologyId.BattleComputer,
+    TechnologyId.FuelTank,
+    TechnologyId.BatScanner,
+    TechnologyId.MoleskinShield,
+    TechnologyId.SmallFreighter,
+]
+
+BaseDiscoverableTechnologies = [
+    TechnologyId.Crobmnium,
+    TechnologyId.CarbonicArmor,
+    TechnologyId.Strobnium,
+    TechnologyId.OrganicArmor,
+    TechnologyId.Kelarium,
+    TechnologyId.Neutronium,
+    TechnologyId.Valanium,
+    TechnologyId.Superlatanium,
+    TechnologyId.XrayLaser,
+    TechnologyId.YakimoraLightPhaser,
+    TechnologyId.Blackjack,
+    TechnologyId.PhaserBazooka,
+    TechnologyId.PulsedSapper,
+    TechnologyId.ColloidalPhaser,
+    TechnologyId.GatlingGun,
+    TechnologyId.MiniBlaster,
+    TechnologyId.Bludgeon,
+    TechnologyId.MarkIVBlaster,
+    TechnologyId.PhasedSapper,
+    TechnologyId.HeavyBlaster,
+    TechnologyId.MyopicDisruptor,
+    TechnologyId.Disruptor,
+    TechnologyId.SyncroSapper,
+    TechnologyId.MegaDisruptor,
+    TechnologyId.BigMuthaCannon,
+    TechnologyId.StreamingPulverizer,
+    TechnologyId.AntiMatterPulverizer,
+    TechnologyId.LadyFingerBomb,
+    TechnologyId.BlackCatBomb,
+    TechnologyId.M70Bomb,
+    TechnologyId.M80Bomb,
+    TechnologyId.CherryBomb,
+    TechnologyId.LBU17Bomb,
+    TechnologyId.LBU32Bomb,
+    TechnologyId.LBU74Bomb,
+    TechnologyId.StealthCloak,
+    TechnologyId.SuperStealthCloak,
+    TechnologyId.BattleSuperComputer,
+    TechnologyId.BattleNexus,
+    TechnologyId.Jammer20,
+    TechnologyId.Jammer30,
+    TechnologyId.EnergyCapacitor,
+    TechnologyId.LongHump6,
+    TechnologyId.DaddyLongLegs7,
+    TechnologyId.AlphaDrive8,
+    TechnologyId.TransGalacticDrive,
+    TechnologyId.TransStar10,
+    TechnologyId.RadiatingHydroRamScoop,
+    TechnologyId.CargoPod,
+    TechnologyId.SuperCargoPod,
+    TechnologyId.SuperFuelTank,
+    TechnologyId.ManeuveringJet,
+    TechnologyId.Overthruster,
+    TechnologyId.BeamDeflector,
+    TechnologyId.RoboMiniMiner,
+    TechnologyId.MassDriver7,
+    TechnologyId.UltraDriver10,
+    TechnologyId.RhinoScanner,
+    TechnologyId.MoleScanner,
+    TechnologyId.DNAScanner,
+    TechnologyId.PossumScanner,
+    TechnologyId.GazelleScanner,
+    TechnologyId.RNAScanner,
+    TechnologyId.CheetahScanner,
+    TechnologyId.EagleEyeScanner,
+    TechnologyId.PeerlessScanner,
+    TechnologyId.CowhideShield,
+    TechnologyId.WolverineDiffuseShield,
+    TechnologyId.BearNeutrinoBarrier,
+    TechnologyId.GorillaDelegator,
+    TechnologyId.ElephantHideFortress,
+    TechnologyId.CompletePhaseShield,
+]
+
+NormalRemoteMiners = [
+    TechnologyId.RoboMiner,
+    TechnologyId.RoboMaxiMiner,
+    TechnologyId.RoboSuperMiner
+]
+
+RamScoopEngines = [
+    TechnologyId.SubGalacticFuelScoop,
+    TechnologyId.TransGalacticFuelScoop,
+    TechnologyId.TransGalacticMizerScoop,
+]
+
+AdvancedPlanetaryScanners = [
+    TechnologyId.Snooper320X,
+    TechnologyId.Snooper400X,
+    TechnologyId.Snooper620X,
+]
+
+AdvancedShipScanners = [
+    TechnologyId.FerretScanner,
+    TechnologyId.DolphinScanner,
+    TechnologyId.ElephantScanner
+]
+
+
 class TechnologySlotType:
     BeamWeapons = 1
     Torpedoes = 2
@@ -944,6 +1056,248 @@ class PrimaryRacialTrait:
     AlternateReality = 9
 
 
+PRT_Technologies = {
+    PrimaryRacialTrait.ClaimAdjuster: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.Stargate100_250,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.RetroBomb,
+        TechnologyId.OrbitalAdjuster,
+        TechnologyId.SmartBomb,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.JackOfAllTrades: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.InterstellarTraveler: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.StargateAny_300,
+        TechnologyId.Stargate100_Any,
+        TechnologyId.StargateAny_800,
+        TechnologyId.StargateAny_Any,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.AntiMatterGenerator,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.InnerStrength: [
+        TechnologyId.CrobySharmor,
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.SpeedTrap20,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.FieldedKelarium,
+        TechnologyId.TachyonDetector,
+        TechnologyId.MiniGun,
+        TechnologyId.Jammer10,
+        TechnologyId.Jammer50,
+    ],
+
+    PrimaryRacialTrait.SpaceDemolition: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.MineDispenser40,
+        TechnologyId.MineDispenser80,
+        TechnologyId.MineDispenser130,
+        TechnologyId.HeavyDispenser50,
+        TechnologyId.HeavyDispenser110,
+        TechnologyId.HeavyDispenser200,
+        TechnologyId.SpeedTrap20,
+        TechnologyId.SpeedTrap30,
+        TechnologyId.SpeedTrap50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.EnergyDampener,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.WarMonger: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.ColonizationModule,
+        TechnologyId.GatlingNeutrinoCannon,
+        TechnologyId.Blunderbuss,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.PacketPhysics: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.MassDriver5,
+        TechnologyId.MassDriver6,
+        TechnologyId.SuperDriver8,
+        TechnologyId.SuperDriver9,
+        TechnologyId.UltraDriver11,
+        TechnologyId.UltraDriver12,
+        TechnologyId.UltraDriver13,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.SuperStealth: [
+        TechnologyId.ShadowShield,
+        TechnologyId.ChameleonScanner,
+        TechnologyId.PickPocketScanner,
+        TechnologyId.RobberBaronScanner,
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.DepletedNeutronium,
+        TechnologyId.TransportCloaking,
+        TechnologyId.UltraStealthCloak,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.HyperExpansion: [
+        TechnologyId.Viewer50,
+        TechnologyId.Viewer90,
+        TechnologyId.Scoper150,
+        TechnologyId.Scoper220,
+        TechnologyId.Scoper280,
+        TechnologyId.SDI,
+        TechnologyId.MissileBattery,
+        TechnologyId.LaserBattery,
+        TechnologyId.PlanetaryShield,
+        TechnologyId.NeutronShield,
+        TechnologyId.MineDispenser50,
+        TechnologyId.ColonizationModule,
+        TechnologyId.SettlersDelight,
+        TechnologyId.FluxCapacitor,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+
+    PrimaryRacialTrait.AlternateReality: [
+        TechnologyId.Stargate100_250,
+        TechnologyId.Stargate150_600,
+        TechnologyId.Stargate300_500,
+        TechnologyId.MineDispenser50,
+        TechnologyId.OrbitalConstructionModule,
+        TechnologyId.NeutronBomb,
+        TechnologyId.EnrichedNeutronBomb,
+        TechnologyId.PeerlessBomb,
+        TechnologyId.AnnihilatorBomb,
+    ],
+}
+
+
 class LesserRacialTrait:
     NoRamscoopEngines = 0
     ImprovedFuelEfficiency = 1
@@ -959,6 +1313,44 @@ class LesserRacialTrait:
     UltimateRecycling = 11
     RegeneratingShields = 12
     MineralAlchemy = 13
+
+
+LRT_Technologies = {
+    LesserRacialTrait.NoRamscoopEngines: [
+        TechnologyId.Interspace10
+    ],
+    LesserRacialTrait.ImprovedFuelEfficiency: [
+        TechnologyId.FuelMizer,
+        TechnologyId.GalaxyScoop
+    ],
+    LesserRacialTrait.CheapEngines: [
+    ],
+    LesserRacialTrait.TotalTerraforming: [
+    ],
+    LesserRacialTrait.OnlyBasicRemoteMining: [
+    ],
+    LesserRacialTrait.AdvancedRemoteMining: [
+        TechnologyId.RoboMidgetMiner,
+        TechnologyId.RoboUltraMiner,
+
+    ],
+    LesserRacialTrait.NoAdvancedScanners: [
+    ],
+    LesserRacialTrait.ImprovedStarbases: [
+    ],
+    LesserRacialTrait.LowStartingPopulation: [
+    ],
+    LesserRacialTrait.GeneralizedResearch: [
+    ],
+    LesserRacialTrait.BleedingEdgeTechnology: [
+    ],
+    LesserRacialTrait.UltimateRecycling: [
+    ],
+    LesserRacialTrait.RegeneratingShields: [
+    ],
+    LesserRacialTrait.MineralAlchemy: [
+    ]
+}
 
 
 class LeftoverPointsOption:

@@ -70,7 +70,7 @@ class PlanetInfo(QWidget):
             self.unknown_planet_label.show()
             self.planet_details.hide()
         else:
-            value = self.target_planet.calculate_value(self.race)
+            value = self.target_planet.value
             color = "red"
             if(value > 0):
                 color = "green"

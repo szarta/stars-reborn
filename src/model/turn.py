@@ -15,6 +15,7 @@ from src.model.game import Game
 from src.model.player import Player
 from src.model.universe import Universe
 from src.model.space import Planet
+from src.model.space import calculate_planet_value
 
 
 class TurnMessageType:
@@ -86,7 +87,22 @@ def apply_scanning(player, actual_universe, visible_universe):
     """
     Based on scanning, update universe information
     """
-    pass
+#   for pid in visible_universe.planets.keys():
+#       p = visible_universe.planets[pid]
+#
+#        # if we do not see it on the scanner currently,
+#        # but we did previously, update years since
+#        p.years_since += 1
+
+    for pid in visible_universe.planets.keys():
+        p = visible_universe.planets[pid]
+        actual_p = actual_universe.planets[pid]
+        if p.years_since == 0:
+            p.gravity = actual_p.gravity
+            p.temperature = actual_p.temperature
+            p.radiation = actual_p.radiation
+            p.value = calculate_planet_value(p, player.race)
+
 
 
 def generate_turn_zero(game, save_directory):
