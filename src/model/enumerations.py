@@ -368,7 +368,7 @@ BaseDiscoverableTechnologies = [
     TechnologyId.CowhideShield,
     TechnologyId.WolverineDiffuseShield,
     TechnologyId.BearNeutrinoBarrier,
-    TechnologyId.GorillaDelegator,
+    TechnologyId.GorillaDelagator,
     TechnologyId.ElephantHideFortress,
     TechnologyId.CompletePhaseShield,
 ]
