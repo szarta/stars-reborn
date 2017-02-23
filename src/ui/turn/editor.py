@@ -14,6 +14,8 @@ from PySide.QtGui import QSplitter
 from PySide.QtCore import Qt
 
 from src.ui.dialogs import about
+from src.ui.dialogs.technology_browser import TechnologyBrowser
+
 from space import SpaceMap
 from resourceinfo import PlanetInfo
 from planetimage import PlanetImage
@@ -249,7 +251,8 @@ class CoreUI(QMainWindow):
         print "Guide!"
 
     def handle_tech_browser(self):
-        print "Tech Browser!"
+        dialog = TechnologyBrowser(self.active_player, self.game.slower_tech_advances)
+        dialog.exec_()
 
     def handle_tutorial(self):
         print "Tutorial!"

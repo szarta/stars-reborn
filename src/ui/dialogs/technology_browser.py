@@ -30,18 +30,20 @@ from src.model.enumerations import ResourcePaths
 from src.model.enumerations import ResearchAreas
 from src.model.enumerations import Minerals
 from src.model.enumerations import ProductionCost
+from src.model.player import total_cost_to_requirement_level
 
 
 class TechnologyBrowser(QDialog):
-    def __init__(self, player, parent=None):
+    def __init__(self, player, slow_tech, parent=None):
         super(TechnologyBrowser, self).__init__(parent)
 
         self.selectedTechnologyIndex = 0
+        self.player = player
+        self.slow_tech = slow_tech
 
         self.init_user_controls()
         self.init_ui()
         self.bind_user_controls()
-        self.player = player
 
     def init_user_controls(self):
         self.close_button = QPushButton(Language_Map["ui"]["general"]["close"])
@@ -995,7 +997,15 @@ class TechnologyBrowser(QDialog):
 
         self.no_requirements.setVisible(not has_req)
 
-        # TODO: logic for tech available vs. cost to obtain
+        if(tech_id in self.player.available_technologies):
+            self.available_tech.setText("<b>{0}</b>".format(
+                Language_Map["tech-available"]))
+        elif(tech_id in self.player.discoverable_technologies):
+            self.available_tech.setText("<b>Cost: {0!s}</b>".format(
+                total_cost_to_requirement_level(self.player, current_tech.requirements, self.slow_tech)))
+        else:
+            self.available_tech.setText("<b>{0}</b>".format(
+                Language_Map["tech-unavailable"]))
 
     def technology_category_change(self):
         self.selectedTechnologyIndex = 0

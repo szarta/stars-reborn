@@ -166,6 +166,7 @@
 
     "tech-no-requirements": "-- None --",
     "tech-available": "Available",
+    "tech-unavailable": "Unavailable",
 
     "research-cost-option-names": [
         "Expensive",

@@ -140,7 +140,6 @@ class Player(object):
             self.discoverable_technologies.remove(t)
 
     def total_tech_levels(self):
-
         return (self.energy_tech_level + self.propulsion_tech_level +
                 self.biotechnology_tech_level + self.electronics_tech_level +
                 self.weapons_tech_level + self.construction_tech_level)
@@ -150,15 +149,7 @@ class Player(object):
 
         for tech_id in self.discoverable_technologies:
             tech = Technologies[tech_id]
-            r = tech.requirements
-            has_req = self.energy_tech_level >= r[ResearchAreas.Energy]
-            has_req = has_req and self.weapons_tech_level >= r[ResearchAreas.Weapons]
-            has_req = has_req and self.propulsion_tech_level >= r[ResearchAreas.Propulsion]
-            has_req = has_req and self.construction_tech_level >= r[ResearchAreas.Construction]
-            has_req = has_req and self.electronics_tech_level >= r[ResearchAreas.Electronics]
-            has_req = has_req and self.biotechnology_tech_level >= r[ResearchAreas.Biotechnology]
-
-            if has_req:
+            if player_meets_tech_requirements(self, tech.requirements):
                 new_technologies.append(tech_id)
 
         return new_technologies
@@ -170,6 +161,83 @@ class CPU(Player):
         self.difficulty_level = difficulty_level
         self.strategy = strategy
         self.cpu = True
+
+
+def player_meets_tech_requirements(player, requirements):
+    """
+    Returns True if the given player has met the given research requirements.
+    """
+    p = player
+    r = requirements
+    ra = ResearchAreas
+
+    if (p.energy_tech_level >= r[ra.Energy] and
+       p.weapons_tech_level >= r[ra.Weapons] and
+       p.propulsion_tech_level >= r[ra.Propulsion] and
+       p.construction_tech_level >= r[ra.Construction] and
+       p.electronics_tech_level >= r[ra.Electronics] and
+       p.biotechnology_tech_level >= r[ra.Biotechnology]):
+        return True
+    else:
+        return False
+
+
+def total_cost_to_requirement_level(player, requirements, slow_tech_advance):
+    """
+    Calculates the total cost (could be 0) for the given player to reach the
+    given requirement level.
+    """
+    if player_meets_tech_requirements(player, requirements):
+        return 0
+
+    deficits = []
+    levels = [
+        player.energy_tech_level,
+        player.weapons_tech_level,
+        player.propulsion_tech_level,
+        player.construction_tech_level,
+        player.electronics_tech_level,
+        player.biotechnology_tech_level
+    ]
+
+    cost_percents = [
+        player.race.energy_cost,
+        player.race.weapons_cost,
+        player.race.propulsion_cost,
+        player.race.construction_cost,
+        player.race.electronics_cost,
+        player.race.biotechnology_cost
+    ]
+
+    for i in xrange(len(cost_percents)):
+        cost_enum = cost_percents[i]
+        if cost_enum == ResearchCostOption.Expensive:
+            cost_percents[i] = 175
+        elif cost_enum == ResearchCostOption.Normal:
+            cost_percents[i] = 100
+        else:
+            cost_percents[i] = 50
+
+    for i in xrange(len(levels)):
+        plevel = levels[i]
+        rlevel = requirements[i]
+        if plevel >= rlevel:
+            deficits.append(0)
+        else:
+            deficits.append(rlevel - plevel)
+
+    running_cost = 0
+    current_total_levels = player.total_tech_levels()
+    for i in xrange(len(deficits)):
+        deficit = deficits[i]
+        if deficit != 0:
+            for i in xrange(deficit):
+                running_cost += total_cost_to_next_level(
+                    levels[i], current_total_levels, cost_percents[i], slow_tech_advance)
+                levels[i] += 1
+                current_total_levels += 1
+
+    return int(running_cost)
 
 
 def total_cost_to_next_level(current_level, total_tech_levels, cost_percent,
