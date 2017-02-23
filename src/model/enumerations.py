@@ -1524,11 +1524,11 @@ class ProductionCost:
 
 
 class ResearchAreas:
-    Energy = 0,
-    Weapons = 1,
-    Propulsion = 2,
-    Construction = 3,
-    Electronics = 4,
+    Energy = 0
+    Weapons = 1
+    Propulsion = 2
+    Construction = 3
+    Electronics = 4
     Biotechnology = 5
     Total = 6
 

@@ -16,6 +16,9 @@ from enumerations import TechnologyId
 from enumerations import RamScoopEngines
 from enumerations import NormalRemoteMiners
 from enumerations import AdvancedPlanetaryScanners
+from enumerations import ResearchAreas
+
+from src.data import Technologies
 
 
 class Player(object):
@@ -69,7 +72,6 @@ class Player(object):
         return []
 
     def adjust_technology_for_racial_traits(self):
-
         self.available_technologies = list(InitialTechnologies)
         self.discoverable_technologies = list(BaseDiscoverableTechnologies)
         self.discoverable_technologies.extend(
@@ -87,7 +89,6 @@ class Player(object):
 
         if not LesserRacialTrait.OnlyBasicRemoteMining in self.race.lesser_racial_traits:
             self.discoverable_technologies.extend(list(NormalRemoteMiners))
-
 
         if not (self.race.primary_racial_trait == PrimaryRacialTrait.AlternateReality or
                 LesserRacialTrait.NoAdvancedScanners in self.race.lesser_racial_traits):
@@ -133,11 +134,34 @@ class Player(object):
            LesserRacialTrait.CheapEngines in self.race.lesser_racial_traits):
             self.propulsion_tech_level += 1
 
+        other_techs = self.find_new_technologies()
+        for t in other_techs:
+            self.available_technologies.append(t)
+            self.discoverable_technologies.remove(t)
+
     def total_tech_levels(self):
 
         return (self.energy_tech_level + self.propulsion_tech_level +
                 self.biotechnology_tech_level + self.electronics_tech_level +
                 self.weapons_tech_level + self.construction_tech_level)
+
+    def find_new_technologies(self):
+        new_technologies = []
+
+        for tech_id in self.discoverable_technologies:
+            tech = Technologies[tech_id]
+            r = tech.requirements
+            has_req = self.energy_tech_level >= r[ResearchAreas.Energy]
+            has_req = has_req and self.weapons_tech_level >= r[ResearchAreas.Weapons]
+            has_req = has_req and self.propulsion_tech_level >= r[ResearchAreas.Propulsion]
+            has_req = has_req and self.construction_tech_level >= r[ResearchAreas.Construction]
+            has_req = has_req and self.electronics_tech_level >= r[ResearchAreas.Electronics]
+            has_req = has_req and self.biotechnology_tech_level >= r[ResearchAreas.Biotechnology]
+
+            if has_req:
+                new_technologies.append(tech_id)
+
+        return new_technologies
 
 
 class CPU(Player):
