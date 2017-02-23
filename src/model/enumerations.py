@@ -296,6 +296,11 @@ InitialTechnologies = [
     TechnologyId.BatScanner,
     TechnologyId.MoleskinShield,
     TechnologyId.SmallFreighter,
+    TechnologyId.Scout,
+    TechnologyId.ColonyShip,
+    TechnologyId.OrbitalFort,
+    TechnologyId.SpaceStation,
+    TechnologyId.AlphaTorpedo
 ]
 
 BaseDiscoverableTechnologies = [
@@ -371,12 +376,48 @@ BaseDiscoverableTechnologies = [
     TechnologyId.GorillaDelagator,
     TechnologyId.ElephantHideFortress,
     TechnologyId.CompletePhaseShield,
+    TechnologyId.MediumFreighter,
+    TechnologyId.LargeFreighter,
+    TechnologyId.Frigate,
+    TechnologyId.Destroyer,
+    TechnologyId.Cruiser,
+    TechnologyId.Battleship,
+    TechnologyId.Privateer,
+    TechnologyId.Galleon,
+    TechnologyId.MiniBomber,
+    TechnologyId.B17Bomber,
+    TechnologyId.MiniMiner,
+    TechnologyId.SuperFuelTransport,
+    TechnologyId.Nubian,
+    TechnologyId.GravityTerraform3,
+    TechnologyId.GravityTerraform7,
+    TechnologyId.GravityTerraform11,
+    TechnologyId.GravityTerraform15,
+    TechnologyId.TemperatureTerraform3,
+    TechnologyId.TemperatureTerraform7,
+    TechnologyId.TemperatureTerraform11,
+    TechnologyId.TemperatureTerraform15,
+    TechnologyId.RadiationTerraform3,
+    TechnologyId.RadiationTerraform7,
+    TechnologyId.RadiationTerraform11,
+    TechnologyId.RadiationTerraform15,
+    TechnologyId.BetaTorpedo,
+    TechnologyId.DeltaTorpedo,
+    TechnologyId.EpsilonTorpedo,
+    TechnologyId.RhoTorpedo,
+    TechnologyId.UpsilonTorpedo,
+    TechnologyId.OmegaTorpedo,
+    TechnologyId.JihadMissile,
+    TechnologyId.JuggernautMissile,
+    TechnologyId.DoomsdayMissile,
+    TechnologyId.ArmageddonMissile
 ]
 
 NormalRemoteMiners = [
     TechnologyId.RoboMiner,
     TechnologyId.RoboMaxiMiner,
-    TechnologyId.RoboSuperMiner
+    TechnologyId.RoboSuperMiner,
+    TechnologyId.MaxiMiner,
 ]
 
 RamScoopEngines = [
@@ -1130,6 +1171,8 @@ PRT_Technologies = {
     ],
 
     PrimaryRacialTrait.InnerStrength: [
+        TechnologyId.FuelTransport,
+        TechnologyId.SuperFreighter,
         TechnologyId.CrobySharmor,
         TechnologyId.Viewer50,
         TechnologyId.Viewer90,
@@ -1155,6 +1198,8 @@ PRT_Technologies = {
     ],
 
     PrimaryRacialTrait.SpaceDemolition: [
+        TechnologyId.SuperMineLayer,
+        TechnologyId.MiniMineLayer,
         TechnologyId.Viewer50,
         TechnologyId.Viewer90,
         TechnologyId.Scoper150,
@@ -1186,6 +1231,8 @@ PRT_Technologies = {
     ],
 
     PrimaryRacialTrait.WarMonger: [
+        TechnologyId.BattleCruiser,
+        TechnologyId.Dreadnought,
         TechnologyId.Viewer50,
         TechnologyId.Viewer90,
         TechnologyId.Scoper150,
@@ -1235,6 +1282,8 @@ PRT_Technologies = {
     ],
 
     PrimaryRacialTrait.SuperStealth: [
+        TechnologyId.StealthBomber,
+        TechnologyId.Rogue,
         TechnologyId.ShadowShield,
         TechnologyId.ChameleonScanner,
         TechnologyId.PickPocketScanner,
@@ -1264,6 +1313,8 @@ PRT_Technologies = {
     ],
 
     PrimaryRacialTrait.HyperExpansion: [
+        TechnologyId.MetaMorph,
+        TechnologyId.MiniColonyShip,
         TechnologyId.Viewer50,
         TechnologyId.Viewer90,
         TechnologyId.Scoper150,
@@ -1285,6 +1336,7 @@ PRT_Technologies = {
     ],
 
     PrimaryRacialTrait.AlternateReality: [
+        TechnologyId.DeathStar,
         TechnologyId.Stargate100_250,
         TechnologyId.Stargate150_600,
         TechnologyId.Stargate300_500,
@@ -1326,17 +1378,31 @@ LRT_Technologies = {
     LesserRacialTrait.CheapEngines: [
     ],
     LesserRacialTrait.TotalTerraforming: [
+        TechnologyId.TotalTerraform3,
+        TechnologyId.TotalTerraform5,
+        TechnologyId.TotalTerraform7,
+        TechnologyId.TotalTerraform7,
+        TechnologyId.TotalTerraform10,
+        TechnologyId.TotalTerraform15,
+        TechnologyId.TotalTerraform20,
+        TechnologyId.TotalTerraform25,
+        TechnologyId.TotalTerraform30
     ],
     LesserRacialTrait.OnlyBasicRemoteMining: [
     ],
     LesserRacialTrait.AdvancedRemoteMining: [
         TechnologyId.RoboMidgetMiner,
         TechnologyId.RoboUltraMiner,
+        TechnologyId.MidgetMiner,
+        TechnologyId.Miner,
+        TechnologyId.UltraMiner,
 
     ],
     LesserRacialTrait.NoAdvancedScanners: [
     ],
     LesserRacialTrait.ImprovedStarbases: [
+        TechnologyId.SpaceDock,
+        TechnologyId.UltraStation
     ],
     LesserRacialTrait.LowStartingPopulation: [
     ],
