@@ -231,7 +231,7 @@ def total_cost_to_requirement_level(player, requirements, slow_tech_advance):
     for i in xrange(len(deficits)):
         deficit = deficits[i]
         if deficit != 0:
-            for i in xrange(deficit):
+            for j in xrange(deficit):
                 running_cost += total_cost_to_next_level(
                     levels[i], current_total_levels, cost_percents[i], slow_tech_advance)
                 levels[i] += 1
