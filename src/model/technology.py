@@ -8,6 +8,7 @@
 """
 from enumerations import BombType
 from enumerations import MineType
+from enumerations import ResearchAreas
 
 
 class ShipDesign(object):
@@ -264,3 +265,77 @@ class StarbaseHull(Hull):
                       initiative)
 
         self.dock_capacity = dock_capacity
+
+
+def calculate_costs_after_miniaturization(tech, tech_levels,
+                                          bleeding_edge=False):
+    """
+    Miniaturization is the cost reduction of older technologies.
+    It occurs as 4% cost reduction for each level over the tech requirement
+    level up to 75% total.
+
+    If Bleeding Edge Technology is taken, it occurs as 5% cost reduction for
+    each level, up to 80%, but the technology on the current level costs twice
+    as much.
+
+    Miniaturization affects mineral costs and resource costs.
+
+    Miniaturization rounds to the nearest whole number.
+
+    If there are multiple requirements, the overleveling is defined as the
+    minimum level difference:  e.g. if requirement is Energy 5 and Propulsion
+    6, and the player's current levels are Energy 6 and Propulsion 8, the
+    overlevel is 1 (Energy) despite Propulsion being over by 2.
+
+    If there are no requirements for a given tech, the original game treats the
+    tech as having requirements 0 for all types.
+    """
+    assert(len(tech_levels) == ResearchAreas.Total)
+
+    overlevel = 0
+    if(sum(tech.requirements) == 0):
+        overlevel_arr = []
+        for i in xrange(len(tech.requirements)):
+            req = tech.requirements[i]
+            current_level = tech_levels[i]
+            overlevel_arr.append(current_level - req)
+
+        if len(overlevel_arr) == 0:
+            overlevel = 0
+        else:
+            overlevel = min(overlevel_arr)
+    else:
+        overlevel_arr = []
+        for i in xrange(len(tech.requirements)):
+            req = tech.requirements[i]
+            current_level = tech_levels[i]
+            if req != 0:
+                if current_level >= req:
+                    overlevel_arr.append(current_level - req)
+
+        if len(overlevel_arr) == 0:
+            overlevel = 0
+        else:
+            overlevel = min(overlevel_arr)
+
+    if overlevel == 0:
+        if bleeding_edge:
+            return [2 * x for x in tech.cost]
+        else:
+            return tech.cost
+    else:
+        if bleeding_edge:
+            reduction = 100 - (overlevel * 5)
+            if reduction < 20:
+                reduction = 20
+
+            actual_reduction = reduction / 100.0
+            return [actual_reduction * x for x in tech.cost]
+
+        else:
+            reduction = 100 - (overlevel * 4)
+            if reduction < 25:
+                reduction = 25
+
+            actual_reduction = reduction / 100.0
+            return [int(round(actual_reduction * x)) for x in tech.cost]

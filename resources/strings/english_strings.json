@@ -64,6 +64,7 @@
     ],
 
     "random": "random",
+    "cost": "cost",
     "tutorial-name": "Tutorial Game",
 
     "predefined-race-descriptions": [
@@ -234,7 +235,7 @@
         "<p>Gives you two new starbase designs: the Stardock and the Ultra Station.  The Stardock allows you to build light ships and is capable of refueling ships.  The Ultra Station is a formidable weapons platform.  Your starbases cost 20% less and have base cloaking of 20%.</p>",
         "<p>You will start the game with 30% fewer colonists.</p>",
         "<p>Each year, only half of the dedicated research resources will be dedicated to your chosen research field.  15% of the total research resources will be applied to each other field.</p>",
-        "<p>Normally, as you exceed the technology of some component, the cost of the component drops (at a rate of 4% per level).  This is called miniaturization.  Normally, through miniaturization, the cost of component will eventually drop to 24% of its initial cost.</p> <p>Bleeding Edge Technology makes all components cost 200% of their cost when initially researched.  One technology level above, however, will cause the costs to drop to 95% and the cost will drop 5% per tech level, to a final cost of 20% of its initial cost.</p> <p>As a result of the above, technology components gained at Tech 26 will always cost twice as much.</p>",
+        "<p>Normally, as you exceed the technology of some component, the cost of the component drops (at a rate of 4% per level).  This is called miniaturization.  Normally, through miniaturization, the cost of component will eventually drop to 25% of its initial cost.</p> <p>Bleeding Edge Technology makes all components cost 200% of their cost when initially researched.  One technology level above, however, will cause the costs to drop to 95% and the cost will drop 5% per tech level, to a final cost of 20% of its initial cost.</p> <p>As a result of the above, technology components gained at Tech 26 will always cost twice as much.</p>",
         "<p>When you scrap a fleet at a starbase, you will recover 90% of the minerals of that fleet as well as some of the resources.  The resources will be available for use the next year.  Scrapping at a planet without a starbase gives half the starbase amount.</p>",
         "<p>All of your shields are 40% stronger than the listed rating.  Shields also regenerate at 10% of their maximum strength after each round of battle.  Your armor, however, will only be at 50% of its rated strength.</p>",
         " <p>You will be able to turn resources into minerals four times more efficiently than normal at any planet you own.</p>"

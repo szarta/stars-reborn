@@ -31,20 +31,20 @@ class Player(object):
         self.energy_tech_level = 0
         self.energy_tech_progress = 0
 
+        self.weapons_tech_level = 0
+        self.weapons_tech_progress = 0
+
         self.propulsion_tech_level = 0
         self.propulsion_tech_progress = 0
 
-        self.biotechnology_tech_level = 0
-        self.biotechnology_tech_progress = 0
+        self.construction_tech_level = 0
+        self.construction_tech_progress = 0
 
         self.electronics_tech_level = 0
         self.electronics_tech_progress = 0
 
-        self.weapons_tech_level = 0
-        self.weapons_tech_progress = 0
-
-        self.construction_tech_level = 0
-        self.construction_tech_progress = 0
+        self.biotechnology_tech_level = 0
+        self.biotechnology_tech_progress = 0
 
         self.constructed_starbase_designs = []
         self.constructed_ship_designs = []
@@ -53,6 +53,16 @@ class Player(object):
         self.ship_prototypes = []
         self.available_technologies = []
         self.discoverable_technologies = []
+
+    def get_tech_level_array(self):
+        return [
+            self.energy_tech_level,
+            self.weapons_tech_level,
+            self.propulsion_tech_level,
+            self.construction_tech_level,
+            self.electronics_tech_level,
+            self.biotechnology_tech_level
+        ]
 
     def apply_trait_adjustments(self):
         self.adjust_starbase_prototypes_for_racial_traits()

@@ -15,6 +15,7 @@ from PySide.QtGui import QComboBox
 from PySide.QtGui import QCheckBox
 from PySide.QtGui import QFont
 from PySide.QtGui import QPixmap
+from PySide.QtGui import QPainter
 from PySide.QtCore import Qt
 
 from src.data import Language_Map
@@ -31,6 +32,19 @@ from src.model.enumerations import ResearchAreas
 from src.model.enumerations import Minerals
 from src.model.enumerations import ProductionCost
 from src.model.player import total_cost_to_requirement_level
+from src.model.technology import calculate_costs_after_miniaturization
+from src.model.enumerations import LesserRacialTrait
+
+
+class QLabel45(QLabel):
+    def __init__(self, parent=None):
+        super(QLabel45, self).__init__(parent)
+
+    def paintEvent(self, evt):
+        painter = QPainter(self)
+        painter.setPen(Qt.black)
+        painter.rotate(315)
+        painter.drawText(0, 0, self.text())
 
 
 class TechnologyBrowser(QDialog):
@@ -38,6 +52,7 @@ class TechnologyBrowser(QDialog):
         super(TechnologyBrowser, self).__init__(parent)
 
         self.selectedTechnologyIndex = 0
+        self.currentCategoryTechnologies = []
         self.player = player
         self.slow_tech = slow_tech
 
@@ -92,7 +107,6 @@ class TechnologyBrowser(QDialog):
         self.close_button.clicked.connect(self.close_window)
         self.next_button.clicked.connect(self.next_technology)
         self.prev_button.clicked.connect(self.previous_technology)
-        self.show_available.clicked.connect(self.show_available_technology)
         self.technology_categories.currentIndexChanged.connect(
             self.technology_category_change)
 
@@ -110,6 +124,11 @@ class TechnologyBrowser(QDialog):
 
         center_layout = QFrame()
         center_layout.setFrameStyle(QFrame.Panel | QFrame.Raised)
+
+        #f1_layout = QBoxLayout(QBoxLayout.TopToBottom)
+        #l = QLabel45()
+        #l.setText("NONE AVAILABLE")
+        #f1_layout.addWidget(l)
 
         frame_layout = QBoxLayout(QBoxLayout.TopToBottom)
 
@@ -210,36 +229,36 @@ class TechnologyBrowser(QDialog):
         main_layout.addLayout(top_layout)
         main_layout.addWidget(center_layout, 1)
         main_layout.addLayout(bottom_layout)
+        #main_layout.addLayout(f1_layout)
 
-        self.set_new_technology()
+        self.technology_categories.setCurrentIndex(0)
+        self.technology_category_change()
 
     def close_window(self):
         self.accept()
 
     def next_technology(self):
-        selected_index = self.technology_categories.currentIndex()
-        self.selectedTechnologyIndex = (
-            (self.selectedTechnologyIndex + 1) % len(
-                TechnologyCategoryMapping[selected_index]))
+        if len(self.currentCategoryTechnologies) != 0:
+            self.selectedTechnologyIndex = (
+                (self.selectedTechnologyIndex + 1) % len(
+                    self.currentCategoryTechnologies))
 
-        self.set_new_technology()
+            self.set_new_technology()
 
     def previous_technology(self):
-        selected_index = self.technology_categories.currentIndex()
+        if len(self.currentCategoryTechnologies) != 0:
+            self.selectedTechnologyIndex = (
+                (self.selectedTechnologyIndex - 1) % len(
+                    self.currentCategoryTechnologies))
 
-        self.selectedTechnologyIndex = (
-            (self.selectedTechnologyIndex - 1) % len(
-                TechnologyCategoryMapping[selected_index]))
-
-        self.set_new_technology()
-
-    def show_available_technology(self):
-        print "Show only available technology!"
+            self.set_new_technology()
 
     def set_new_technology(self):
-        selected_index = self.technology_categories.currentIndex()
+        if len(self.currentCategoryTechnologies) == 0:
+            # TODO: display the no available technologies
+            return
 
-        tech_id = TechnologyCategoryMapping[selected_index][self.selectedTechnologyIndex]
+        tech_id = self.currentCategoryTechnologies[self.selectedTechnologyIndex]
         self.technology_label.setText(
             Language_Map["technology-names"][tech_id])
 
@@ -250,17 +269,21 @@ class TechnologyBrowser(QDialog):
 
         current_tech = Technologies[tech_id]
 
+        costs = calculate_costs_after_miniaturization(
+            current_tech, self.player.get_tech_level_array(),
+            LesserRacialTrait.BleedingEdgeTechnology in self.player.race.lesser_racial_traits)
+
         self.ironium_cost.setText("{0!s}kT".format(
-            current_tech.cost[ProductionCost.Ironium]))
+            costs[ProductionCost.Ironium]))
 
         self.boranium_cost.setText("{0!s}kT".format(
-            current_tech.cost[ProductionCost.Boranium]))
+            costs[ProductionCost.Boranium]))
 
         self.germanium_cost.setText("{0!s}kT".format(
-            current_tech.cost[ProductionCost.Germanium]))
+            costs[ProductionCost.Germanium]))
 
         self.resource_cost.setText("{0!s}".format(
-            current_tech.cost[ProductionCost.Resources]))
+            costs[ProductionCost.Resources]))
 
         if (isinstance(current_tech, Part) or
            isinstance(current_tech, ShipHull)):
@@ -545,8 +568,6 @@ class TechnologyBrowser(QDialog):
                 current_tech.min_dmg_fleet_no_ram_scoop,
                 current_tech.min_dmg_fleet_ram_scoop))
 
-
-
             remaining_label.setText(
                 Language_Map["ui"]["technology-browser"]["fine-details"]["parens-explanation"])
 
@@ -646,7 +667,7 @@ class TechnologyBrowser(QDialog):
                 layout.addWidget(l1)
                 layout.addWidget(l2)
                 layout.addWidget(l3)
- 
+
             layout.addStretch(1)
             if self.technology_fine_details_pane.layout():
                 dummy_widget = QLabel()
@@ -714,7 +735,6 @@ class TechnologyBrowser(QDialog):
 
             self.technology_fine_details_pane.setLayout(layout)
 
-
     def set_technology_message(self, tech_id):
         planetary_scanners_and_defenses = [
             TechnologyId.Viewer50,
@@ -724,7 +744,7 @@ class TechnologyBrowser(QDialog):
             TechnologyId.Scoper280,
             TechnologyId.SDI,
             TechnologyId.MissileBattery
-       ]
+        ]
 
         penetrating_scanners = [
             TechnologyId.Snooper320X,
@@ -1001,12 +1021,24 @@ class TechnologyBrowser(QDialog):
             self.available_tech.setText("<b>{0}</b>".format(
                 Language_Map["tech-available"]))
         elif(tech_id in self.player.discoverable_technologies):
-            self.available_tech.setText("<b>Cost: {0!s}</b>".format(
+            self.available_tech.setText("<b>{0}: {1!s}</b>".format(
+                Language_Map["cost"].title(),
                 total_cost_to_requirement_level(self.player, current_tech.requirements, self.slow_tech)))
         else:
             self.available_tech.setText("<b>{0}</b>".format(
                 Language_Map["tech-unavailable"]))
 
     def technology_category_change(self):
+        selected_index = self.technology_categories.currentIndex()
         self.selectedTechnologyIndex = 0
+
+        self.currentCategoryTechnologies = []
+
+        if self.show_available.isChecked():
+            for t in TechnologyCategoryMapping[selected_index]:
+                if t in self.player.available_technologies:
+                    self.currentCategoryTechnologies.append(t)
+        else:
+            self.currentCategoryTechnologies = TechnologyCategoryMapping[selected_index]
+
         self.set_new_technology()
