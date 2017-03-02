@@ -177,19 +177,16 @@ def player_meets_tech_requirements(player, requirements):
     """
     Returns True if the given player has met the given research requirements.
     """
-    p = player
-    r = requirements
-    ra = ResearchAreas
+    l = player.get_tech_level_array()
 
-    if (p.energy_tech_level >= r[ra.Energy] and
-       p.weapons_tech_level >= r[ra.Weapons] and
-       p.propulsion_tech_level >= r[ra.Propulsion] and
-       p.construction_tech_level >= r[ra.Construction] and
-       p.electronics_tech_level >= r[ra.Electronics] and
-       p.biotechnology_tech_level >= r[ra.Biotechnology]):
-        return True
-    else:
-        return False
+    for i in xrange(len(l)):
+        req = requirements[i]
+        current_level = l[i]
+
+        if current_level < req:
+            return False
+
+    return True
 
 
 def total_cost_to_requirement_level(player, requirements, slow_tech_advance):

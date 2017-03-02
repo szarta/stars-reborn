@@ -42,6 +42,7 @@ class TechnologyBrowser(QDialog):
         self.selectedTechnologyIndex = 0
         self.currentCategoryTechnologies = []
         self.player = player
+
         self.slow_tech = slow_tech
 
         self.init_user_controls()
@@ -115,7 +116,6 @@ class TechnologyBrowser(QDialog):
         self.setFixedSize(525, 525)
 
         self.bleeding_edge_overlay.setPixmap(QPixmap(ResourcePaths.BleedingEdgeOverlay))
-        self.bleeding_edge_overlay.lower()
 
         top_layout = QBoxLayout(QBoxLayout.LeftToRight)
         top_layout.addWidget(self.prev_button)
@@ -244,13 +244,15 @@ class TechnologyBrowser(QDialog):
             self.set_new_technology()
 
     def update_fine_details_pane(self, new_layout, bleeding_edge):
+        new_layout.addWidget(self.bleeding_edge_overlay)
+        self.bleeding_edge_overlay.lower()
+
         if self.technology_fine_details_pane.layout():
             dummy_widget = QLabel()
             old_layout = self.technology_fine_details_pane.layout()
             dummy_widget.setLayout(old_layout)
 
         if bleeding_edge:
-            new_layout.addWidget(self.bleeding_edge_overlay)
             self.bleeding_edge_overlay.setVisible(True)
         else:
             self.bleeding_edge_overlay.setVisible(False)

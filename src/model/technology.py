@@ -267,6 +267,19 @@ class StarbaseHull(Hull):
         self.dock_capacity = dock_capacity
 
 
+def tech_requirements_met(tech, tech_levels):
+    assert(len(tech_levels) == ResearchAreas.Total)
+
+    for i in xrange(len(tech.requirements)):
+        req = tech.requirements[i]
+        current_level = tech_levels[i]
+
+        if current_level < req:
+            return False
+
+    return True
+
+
 def tech_is_bleeding_edge(tech, tech_levels, bleeding_edge=False):
     """
     Returns if the given technology is currently bleeding edge.
@@ -274,6 +287,9 @@ def tech_is_bleeding_edge(tech, tech_levels, bleeding_edge=False):
 
     Notably the starting technologies (those with no requirements) are not
     subject to the bleeding edge technology restriction.
+
+    Also, technically, technologies which have not been researched yet are not
+    bleeding edge.
     """
     if not bleeding_edge:
         return False
@@ -281,6 +297,9 @@ def tech_is_bleeding_edge(tech, tech_levels, bleeding_edge=False):
     assert(len(tech_levels) == ResearchAreas.Total)
 
     if(sum(tech.requirements) == 0):
+        return False
+
+    if not tech_requirements_met(tech, tech_levels):
         return False
 
     overlevel_arr = []
