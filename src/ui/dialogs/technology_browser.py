@@ -13,9 +13,7 @@ from PySide.QtGui import QBoxLayout
 from PySide.QtGui import QPushButton
 from PySide.QtGui import QComboBox
 from PySide.QtGui import QCheckBox
-from PySide.QtGui import QFont
 from PySide.QtGui import QPixmap
-from PySide.QtGui import QPainter
 from PySide.QtCore import Qt
 
 from src.data import Language_Map
@@ -33,18 +31,8 @@ from src.model.enumerations import Minerals
 from src.model.enumerations import ProductionCost
 from src.model.player import total_cost_to_requirement_level
 from src.model.technology import calculate_costs_after_miniaturization
+from src.model.technology import tech_is_bleeding_edge
 from src.model.enumerations import LesserRacialTrait
-
-
-class QLabel45(QLabel):
-    def __init__(self, parent=None):
-        super(QLabel45, self).__init__(parent)
-
-    def paintEvent(self, evt):
-        painter = QPainter(self)
-        painter.setPen(Qt.black)
-        painter.rotate(315)
-        painter.drawText(0, 0, self.text())
 
 
 class TechnologyBrowser(QDialog):
@@ -78,11 +66,20 @@ class TechnologyBrowser(QDialog):
         self.technology_label = QLabel("test")
         self.technology_image_label = QLabel("")
 
+        self.ironium_label = QLabel()
+        self.boranium_label = QLabel()
+        self.germanium_label = QLabel()
+        self.resource_label = QLabel()
+
         self.ironium_cost = QLabel()
         self.boranium_cost = QLabel()
         self.germanium_cost = QLabel()
         self.resource_cost = QLabel()
         self.mass_value = QLabel()
+
+        self.req_label = QLabel()
+
+        self.bleeding_edge_overlay = QLabel()
 
         self.tech_requirements = []
         for i in xrange(ResearchAreas.Total):
@@ -117,6 +114,9 @@ class TechnologyBrowser(QDialog):
         self.setGeometry(200, 200, 525, 525)
         self.setFixedSize(525, 525)
 
+        self.bleeding_edge_overlay.setPixmap(QPixmap(ResourcePaths.BleedingEdgeOverlay))
+        self.bleeding_edge_overlay.lower()
+
         top_layout = QBoxLayout(QBoxLayout.LeftToRight)
         top_layout.addWidget(self.prev_button)
         top_layout.addWidget(self.technology_categories, 1)
@@ -124,11 +124,6 @@ class TechnologyBrowser(QDialog):
 
         center_layout = QFrame()
         center_layout.setFrameStyle(QFrame.Panel | QFrame.Raised)
-
-        #f1_layout = QBoxLayout(QBoxLayout.TopToBottom)
-        #l = QLabel45()
-        #l.setText("NONE AVAILABLE")
-        #f1_layout.addWidget(l)
 
         frame_layout = QBoxLayout(QBoxLayout.TopToBottom)
 
@@ -140,26 +135,26 @@ class TechnologyBrowser(QDialog):
         technology_overview_layout.addWidget(self.technology_image_label)
 
         mineral_label_layout = QBoxLayout(QBoxLayout.TopToBottom)
-        ironium_label = QLabel("<b>{0}</b>".format(
+        self.ironium_label = QLabel("<b>{0}</b>".format(
             Language_Map["minerals"][Minerals.Ironium].title()))
 
-        ironium_label.setStyleSheet("QLabel { color: #0000ff }")
-        mineral_label_layout.addWidget(ironium_label)
+        self.ironium_label.setStyleSheet("QLabel { color: #0000ff }")
+        mineral_label_layout.addWidget(self.ironium_label)
 
-        boranium_label = QLabel("<b>{0}</b>".format(
+        self.boranium_label = QLabel("<b>{0}</b>".format(
             Language_Map["minerals"][Minerals.Boranium].title()))
-        boranium_label.setStyleSheet("QLabel { color: #008000 }")
-        mineral_label_layout.addWidget(boranium_label)
+        self.boranium_label.setStyleSheet("QLabel { color: #008000 }")
+        mineral_label_layout.addWidget(self.boranium_label)
 
-        germanium_label = QLabel("<b>{0}</b>".format(
+        self.germanium_label = QLabel("<b>{0}</b>".format(
             Language_Map["minerals"][Minerals.Germanium].title()))
-        germanium_label.setStyleSheet("QLabel { color: #ffff00 }")
-        mineral_label_layout.addWidget(germanium_label)
+        self.germanium_label.setStyleSheet("QLabel { color: #ffff00 }")
+        mineral_label_layout.addWidget(self.germanium_label)
 
-        resources_label = QLabel("<b>{0}</b>".format(
+        self.resources_label = QLabel("<b>{0}</b>".format(
             Language_Map["resources"].title()))
-        resources_label.setStyleSheet("QLabel { color: #000000 }")
-        mineral_label_layout.addWidget(resources_label)
+        self.resources_label.setStyleSheet("QLabel { color: #000000 }")
+        mineral_label_layout.addWidget(self.resources_label)
         mineral_label_layout.addStretch(1)
         technology_overview_layout.addLayout(mineral_label_layout)
 
@@ -185,15 +180,11 @@ class TechnologyBrowser(QDialog):
         technology_details_layout = QBoxLayout(QBoxLayout.LeftToRight)
 
         technology_requirements_layout = QBoxLayout(QBoxLayout.TopToBottom)
-        req_label = QLabel(
-            Language_Map["tech-requirements-title"])
-        req_label.setStyleSheet("QLabel { color: #000000 }")
+        self.req_label = QLabel("<b>{0}</b>".format(
+            Language_Map["tech-requirements-title"]))
+        self.req_label.setStyleSheet("QLabel { color: #000000 }")
 
-        font = QFont()
-        font.setBold(True)
-        req_label.setFont(font)
-
-        technology_requirements_layout.addWidget(req_label)
+        technology_requirements_layout.addWidget(self.req_label)
 
         for i in xrange(ResearchAreas.Total):
             technology_requirements_layout.addWidget(self.tech_requirements[i])
@@ -229,7 +220,6 @@ class TechnologyBrowser(QDialog):
         main_layout.addLayout(top_layout)
         main_layout.addWidget(center_layout, 1)
         main_layout.addLayout(bottom_layout)
-        #main_layout.addLayout(f1_layout)
 
         self.technology_categories.setCurrentIndex(0)
         self.technology_category_change()
@@ -253,9 +243,55 @@ class TechnologyBrowser(QDialog):
 
             self.set_new_technology()
 
+    def update_fine_details_pane(self, new_layout, bleeding_edge):
+        if self.technology_fine_details_pane.layout():
+            dummy_widget = QLabel()
+            old_layout = self.technology_fine_details_pane.layout()
+            dummy_widget.setLayout(old_layout)
+
+        if bleeding_edge:
+            new_layout.addWidget(self.bleeding_edge_overlay)
+            self.bleeding_edge_overlay.setVisible(True)
+        else:
+            self.bleeding_edge_overlay.setVisible(False)
+
+        self.technology_fine_details_pane.setLayout(new_layout)
+
     def set_new_technology(self):
+        visibility_items = [
+            self.technology_label,
+            self.ironium_label,
+            self.boranium_label,
+            self.germanium_label,
+            self.resources_label,
+            self.mass_value,
+            self.ironium_label,
+            self.ironium_cost,
+            self.boranium_cost,
+            self.germanium_cost,
+            self.resource_cost,
+            self.technology_image_label,
+            self.available_tech,
+            self.no_requirements,
+            self.req_label
+        ]
+
+        visibility_items.extend(self.tech_requirements)
+
         if len(self.currentCategoryTechnologies) == 0:
-            # TODO: display the no available technologies
+            for t in visibility_items:
+                t.setVisible(False)
+        else:
+            for t in visibility_items:
+                t.setVisible(True)
+
+        if len(self.currentCategoryTechnologies) == 0:
+            layout = QBoxLayout(QBoxLayout.TopToBottom)
+            l = QLabel()
+            l.setPixmap(QPixmap(ResourcePaths.NoTechAvailable))
+            layout.addWidget(l)
+
+            self.update_fine_details_pane(layout, False)
             return
 
         tech_id = self.currentCategoryTechnologies[self.selectedTechnologyIndex]
@@ -298,6 +334,11 @@ class TechnologyBrowser(QDialog):
 
     def set_technology_fine_details(self, tech_id):
         current_tech = Technologies[tech_id]
+
+        bleeding_edge = tech_is_bleeding_edge(current_tech,
+            self.player.get_tech_level_array(),
+            LesserRacialTrait.BleedingEdgeTechnology in self.player.race.lesser_racial_traits)
+
         fine_details_are_graphs = [
             TechnologyId.SDI,
             TechnologyId.MissileBattery,
@@ -338,12 +379,8 @@ class TechnologyBrowser(QDialog):
                 ResourcePaths.TechnologyIcons, tech_id)))
 
             layout.addWidget(label, 1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
-            self.technology_fine_details_pane.setLayout(layout)
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Armor]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
             armor_strength = QLabel("<b>{0}:</b> {1!s}".format(
@@ -364,12 +401,8 @@ class TechnologyBrowser(QDialog):
                 layout.addWidget(extra_label)
 
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
-            self.technology_fine_details_pane.setLayout(layout)
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.BeamWeapons]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
 
@@ -422,12 +455,7 @@ class TechnologyBrowser(QDialog):
                 layout.addWidget(extra_label)
 
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Bombs]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -455,12 +483,7 @@ class TechnologyBrowser(QDialog):
             layout.addWidget(label)
 
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Electrical]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -492,14 +515,8 @@ class TechnologyBrowser(QDialog):
 
 
             layout.addWidget(label)
-
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Mechanical]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -525,14 +542,8 @@ class TechnologyBrowser(QDialog):
                 label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["beam-deflector"])
 
             layout.addWidget(label)
-
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.MineLayers]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -579,12 +590,7 @@ class TechnologyBrowser(QDialog):
             layout.addWidget(remaining_label)
             layout.addStretch(1)
 
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.MiningRobots]:
@@ -599,14 +605,8 @@ class TechnologyBrowser(QDialog):
                 label.setText(Language_Map["ui"]["technology-browser"]["fine-details"]["remote-mining-robot"].format(current_tech.mining_value))
 
             layout.addWidget(label)
-
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Orbital]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -669,12 +669,7 @@ class TechnologyBrowser(QDialog):
                 layout.addWidget(l3)
 
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Planetary]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -691,12 +686,7 @@ class TechnologyBrowser(QDialog):
 
             layout.addWidget(label)
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
         elif tech_id in TechnologyCategoryMapping[TechnologyCategory.Torpedoes]:
             layout = QBoxLayout(QBoxLayout.TopToBottom)
@@ -728,12 +718,7 @@ class TechnologyBrowser(QDialog):
             layout.addWidget(l4)
 
             layout.addStretch(1)
-            if self.technology_fine_details_pane.layout():
-                dummy_widget = QLabel()
-                old_layout = self.technology_fine_details_pane.layout()
-                dummy_widget.setLayout(old_layout)
-
-            self.technology_fine_details_pane.setLayout(layout)
+            self.update_fine_details_pane(layout, bleeding_edge)
 
     def set_technology_message(self, tech_id):
         planetary_scanners_and_defenses = [

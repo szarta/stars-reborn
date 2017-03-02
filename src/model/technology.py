@@ -267,6 +267,41 @@ class StarbaseHull(Hull):
         self.dock_capacity = dock_capacity
 
 
+def tech_is_bleeding_edge(tech, tech_levels, bleeding_edge=False):
+    """
+    Returns if the given technology is currently bleeding edge.
+    Obviously if bleeding edge is not selected, it will not be.
+
+    Notably the starting technologies (those with no requirements) are not
+    subject to the bleeding edge technology restriction.
+    """
+    if not bleeding_edge:
+        return False
+
+    assert(len(tech_levels) == ResearchAreas.Total)
+
+    if(sum(tech.requirements) == 0):
+        return False
+
+    overlevel_arr = []
+    for i in xrange(len(tech.requirements)):
+        req = tech.requirements[i]
+        current_level = tech_levels[i]
+        if req != 0:
+            if current_level >= req:
+                overlevel_arr.append(current_level - req)
+
+    if len(overlevel_arr) == 0:
+        overlevel = 0
+    else:
+        overlevel = min(overlevel_arr)
+
+    if overlevel == 0:
+        return True
+    else:
+        return False
+
+
 def calculate_costs_after_miniaturization(tech, tech_levels,
                                           bleeding_edge=False):
     """

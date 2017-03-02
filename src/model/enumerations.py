@@ -31,6 +31,8 @@ class ResourcePaths:
     IdleFleetsIcon = "resources/images/toolbar/idle_fleets.png"
     ShipDesignIcon = "resources/images/toolbar/ship_design_filter.png"
     EnemyDesignFilterIcon = "resources/images/toolbar/enemy_ship_filter.png"
+    NoTechAvailable = "resources/images/technology/none_available.png"
+    BleedingEdgeOverlay = "resources/images/technology/bleeding_edge.png"
 
 
 TutorialGameSaveName = "Tutorial"
