@@ -10,6 +10,8 @@ from enumerations import BombType
 from enumerations import MineType
 from enumerations import ResearchAreas
 
+from src.data import Technologies
+
 
 class ShipDesign(object):
     def __init__(self, name, base_hull_id, tech):
@@ -319,6 +321,34 @@ def tech_is_bleeding_edge(tech, tech_levels, bleeding_edge=False):
         return True
     else:
         return False
+
+
+def calculate_next_n_techs(player, research_field, n, threshold):
+    """
+    Given the research field, determines the next N technologies (in order)
+    that the given player could discover via researching solely that field.
+
+    This is mostly used by the research window, in which the next 6 techs are
+    selected, which is threshold 7?
+    """
+    current_levels = list(player.get_tech_level_array())
+    ret_techs = []
+
+    starting_level = current_levels[research_field]
+    ending_level = starting_level + threshold
+
+    for i in xrange(starting_level, ending_level + 1):
+        current_levels[research_field] = i
+        for tech_id in player.discoverable_technologies:
+            tech = Technologies[tech_id]
+
+            if tech_requirements_met(tech, current_levels):
+                if tech_id not in ret_techs:
+                    ret_techs.append(tech_id)
+                    if len(ret_techs) >= n:
+                        return ret_techs
+
+    return ret_techs
 
 
 def calculate_costs_after_miniaturization(tech, tech_levels,

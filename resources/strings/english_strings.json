@@ -519,6 +519,7 @@
 
     "ui": {
         "general": {
+            "done": "&Done",
             "close": "&Close",
             "previous": "Previous",
             "next": "Next",
@@ -545,6 +546,26 @@
             "difficulty-level-title": "Difficulty Level",
             "universe-size-title": "Universe Size"
          },
+
+        "research": {
+            "title": "Research",
+            "field-of-study": "Field of Study",
+            "current-level": "Current Level",
+            "technology-status": "Technology Status",
+            "expected-benefits": "Expected Research Benefits",
+            "currently-researching": "Currently Researching",
+            "resource-allocation": "Resource Allocation",
+            "resources-needed": "Resources needed to complete",
+            "tech-level": "Tech Level",
+            "time-to-completion": "Estimated time to completion",
+            "next-field": "Next field to research",
+            "same-field": "<Same Field>",
+            "lowest-field": "<Lowest Field>",
+            "annual-resources": "Annual resources from all planets",
+            "total-last-year": "Total resources spent on research last year",
+            "budget": "Resources budgeted for research",
+            "next-year-budget": "Next year's projected research budget"
+        },
 
         "technology-browser": {
             "title": "Technology Browser",

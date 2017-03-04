@@ -29,6 +29,8 @@ from src.model.enumerations import PlanetView
 
 from src.data import Language_Map
 
+from src.ui.dialogs.research import ResearchDialog
+
 #from src.ui.dialogs.race import RaceWizard
 
 
@@ -215,7 +217,8 @@ class CoreUI(QMainWindow):
         print "Ship Design!"
 
     def handle_research(self):
-        print "Research!"
+        dialog = ResearchDialog(self.active_player, self.game.slower_tech_advances)
+        dialog.exec_()
 
     def handle_battle_plans(self):
         print "Battle Plans!"

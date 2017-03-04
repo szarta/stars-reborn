@@ -16,7 +16,7 @@ from enumerations import TechnologyId
 from enumerations import RamScoopEngines
 from enumerations import NormalRemoteMiners
 from enumerations import AdvancedPlanetaryScanners
-from enumerations import ResearchAreas
+from enumerations import AdvancedShipScanners
 
 from src.data import Technologies
 
@@ -45,6 +45,12 @@ class Player(object):
 
         self.biotechnology_tech_level = 0
         self.biotechnology_tech_progress = 0
+
+        self.current_research_field = 0
+        self.next_research_field = 0
+        self.research_budget = 15
+
+        self.research_resources_needed = [0, 0, 0, 0, 0, 0]
 
         self.constructed_starbase_designs = []
         self.constructed_ship_designs = []
@@ -103,6 +109,7 @@ class Player(object):
         if not (self.race.primary_racial_trait == PrimaryRacialTrait.AlternateReality or
                 LesserRacialTrait.NoAdvancedScanners in self.race.lesser_racial_traits):
             self.discoverable_technologies.extend(list(AdvancedPlanetaryScanners))
+            self.discoverable_technologies.extend(list(AdvancedShipScanners))
 
         if(self.race.expensive_tech_boost):
             if(self.race.energy_cost == ResearchCostOption.Expensive):
