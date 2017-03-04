@@ -32,6 +32,8 @@ class Player(object):
         self.current_research_field = 0
         self.next_research_field = 0
         self.research_budget = 15
+        self.annual_resources = 0
+        self.last_year_research_resources = 0
 
         self.tech_level = [0, 0, 0, 0, 0, 0]
         self.research_progress = [0, 0, 0, 0, 0, 0]

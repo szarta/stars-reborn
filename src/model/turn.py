@@ -104,7 +104,6 @@ def apply_scanning(player, actual_universe, visible_universe):
             p.value = calculate_planet_value(p, player.race)
 
 
-
 def generate_turn_zero(game, save_directory):
 
     logging.debug("generating turn zero")
@@ -112,15 +111,21 @@ def generate_turn_zero(game, save_directory):
     planet_ids = game.universe.planets.keys()
     for planet_id in planet_ids:
         planet = game.universe.planets[planet_id]
-        if(planet.owner is not None):
+        if planet.owner is not None:
             owner_player = game.players[planet.owner]
             starting_population = get_starting_population(
                 owner_player.race, game.universe)
 
-            if(planet.homeworld):
-                planet.population = starting_population
+            if planet.homeworld:
+                if game.accelerated_play:
+                    planet.population = starting_population * 4
+                else:
+                    planet.population = starting_population
             else:
-                planet.population = starting_population / 2
+                if game.accelerated_play:
+                    planet.population = starting_population * 2
+                else:
+                    planet.population = starting_population / 2
 
     turns = [Turn() for i in xrange(len(game.players))]
     game.turns = turns

@@ -154,8 +154,21 @@ class ResearchDialog(QDialog):
 
         currently_researching.setLayout(researching_layout)
 
+        resource_allocation = QGroupBox(
+            Language_Map["ui"]["research"]["resource-allocation"])
+
+        ra_layout = QBoxLayout(QBoxLayout.TopToBottom)
+
+        ra_layout.addWidget(QLabel("{0}:  {1}".format(
+            Language_Map["ui"]["research"]["annual-resources"],
+            self.player.annual_resources)))
+
+        resource_allocation.setLayout(ra_layout)
+
         right_layout = QBoxLayout(QBoxLayout.TopToBottom)
         right_layout.addWidget(currently_researching)
+        right_layout.addStretch(1)
+        right_layout.addWidget(resource_allocation)
 
         center_layout = QBoxLayout(QBoxLayout.LeftToRight)
         center_layout.addLayout(left_layout)

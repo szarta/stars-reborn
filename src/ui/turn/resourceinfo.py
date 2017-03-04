@@ -96,7 +96,7 @@ class PlanetInfo(QWidget):
             if(self.target_planet.population == 0):
                 pop = '<font size="8pt">Uninhabited</font>'
             else:
-                pop = '<font size="8pt">Population:  {0!s}</font>'.format(
+                pop = '<font size="8pt">Population:  {:,}</font>'.format(
                     self.target_planet.population)
 
             self.population.setText(pop)
