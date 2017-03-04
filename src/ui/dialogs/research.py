@@ -17,11 +17,11 @@ from PySide.QtGui import QRadioButton
 from PySide.QtGui import QGroupBox
 
 from PySide.QtGui import QFrame
-from PySide.QtGui import QPixmap
 from PySide.QtCore import Qt
 
 from src.data import Language_Map
 from src.data import Technologies
+from src.model.player import player_cost_to_next_level
 
 from src.model.technology import calculate_next_n_techs
 
@@ -57,13 +57,14 @@ class ResearchDialog(QDialog):
         self.done_button = QPushButton(Language_Map["ui"]["general"]["done"])
         self.help_button = QPushButton(Language_Map["ui"]["general"]["help"])
 
-        self.next_field_combo = QComboBox()
-        self.next_field_combo.addItems(self.next_field_selection_array)
-
         self.research_area = QButtonGroup()
 
         self.current_research_label = QLabel()
         self.resources_needed_label = QLabel()
+        self.time_to_completion_label = QLabel()
+
+        self.next_field_combo = QComboBox()
+        self.next_field_combo.addItems(self.next_field_selection_array)
 
         button_id = 0
         for ra in Language_Map["research-areas"]:
@@ -106,7 +107,7 @@ class ResearchDialog(QDialog):
 
         research_areas_layout = QBoxLayout(QBoxLayout.TopToBottom)
 
-        rl = self.player.get_tech_level_array()
+        rl = self.player.tech_level
 
         for i in xrange(len(self.research_area.buttons())):
             l = QBoxLayout(QBoxLayout.LeftToRight)
@@ -137,9 +138,19 @@ class ResearchDialog(QDialog):
         researching_layout = QBoxLayout(QBoxLayout.TopToBottom)
         self.current_research_label.setAlignment(Qt.AlignCenter)
         self.resources_needed_label.setAlignment(Qt.AlignCenter)
+        self.time_to_completion_label.setAlignment(Qt.AlignCenter)
 
         researching_layout.addWidget(self.current_research_label)
         researching_layout.addWidget(self.resources_needed_label)
+        researching_layout.addWidget(self.time_to_completion_label)
+
+        next_field_layout = QBoxLayout(QBoxLayout.LeftToRight)
+        next_field_layout.addStretch(1)
+        next_field_layout.addWidget(QLabel("{0}:".format(
+            Language_Map["ui"]["research"]["time-to-completion"])))
+        next_field_layout.addWidget(self.next_field_combo)
+        next_field_layout.addStretch(1)
+        researching_layout.addLayout(next_field_layout)
 
         currently_researching.setLayout(researching_layout)
 
@@ -168,16 +179,25 @@ class ResearchDialog(QDialog):
         index = self.research_area.buttons().index(radio_button)
         self.current_field = index
 
-        rl = self.player.get_tech_level_array()
+        rl = self.player.tech_level
 
         self.current_research_label.setText("{0}, {1} {2!s}".format(
             Language_Map["research-areas"][self.current_field].title(),
             Language_Map["ui"]["research"]["tech-level"],
             rl[self.current_field]))
 
+        cost_to_next = player_cost_to_next_level(
+            self.player, self.current_field, self.slow_tech)
+
         self.resources_needed_label.setText("{0}:  {1}".format(
             Language_Map["ui"]["research"]["resources-needed"],
-            self.player.research_resources_needed[self.current_field]))
+            cost_to_next))
+
+        ttc_calc = 0
+
+        self.time_to_completion_label.setText("{0}:  {1} years".format(
+            Language_Map["ui"]["research"]["time-to-completion"],
+            ttc_calc))
 
         if self.expected_benefits.layout():
             dummy_widget = QLabel()

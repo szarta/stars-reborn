@@ -308,7 +308,7 @@ class TechnologyBrowser(QDialog):
         current_tech = Technologies[tech_id]
 
         costs = calculate_costs_after_miniaturization(
-            current_tech, self.player.get_tech_level_array(),
+            current_tech, self.player.tech_level,
             LesserRacialTrait.BleedingEdgeTechnology in self.player.race.lesser_racial_traits)
 
         self.ironium_cost.setText("{0!s}kT".format(
@@ -337,8 +337,8 @@ class TechnologyBrowser(QDialog):
     def set_technology_fine_details(self, tech_id):
         current_tech = Technologies[tech_id]
 
-        bleeding_edge = tech_is_bleeding_edge(current_tech,
-            self.player.get_tech_level_array(),
+        bleeding_edge = tech_is_bleeding_edge(
+            current_tech, self.player.tech_level,
             LesserRacialTrait.BleedingEdgeTechnology in self.player.race.lesser_racial_traits)
 
         fine_details_are_graphs = [

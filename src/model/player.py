@@ -17,6 +17,7 @@ from enumerations import RamScoopEngines
 from enumerations import NormalRemoteMiners
 from enumerations import AdvancedPlanetaryScanners
 from enumerations import AdvancedShipScanners
+from enumerations import ResearchAreas
 
 from src.data import Technologies
 
@@ -28,29 +29,12 @@ class Player(object):
         self.cpu = False
         self.homeworld = 0
 
-        self.energy_tech_level = 0
-        self.energy_tech_progress = 0
-
-        self.weapons_tech_level = 0
-        self.weapons_tech_progress = 0
-
-        self.propulsion_tech_level = 0
-        self.propulsion_tech_progress = 0
-
-        self.construction_tech_level = 0
-        self.construction_tech_progress = 0
-
-        self.electronics_tech_level = 0
-        self.electronics_tech_progress = 0
-
-        self.biotechnology_tech_level = 0
-        self.biotechnology_tech_progress = 0
-
         self.current_research_field = 0
         self.next_research_field = 0
         self.research_budget = 15
 
-        self.research_resources_needed = [0, 0, 0, 0, 0, 0]
+        self.tech_level = [0, 0, 0, 0, 0, 0]
+        self.research_progress = [0, 0, 0, 0, 0, 0]
 
         self.constructed_starbase_designs = []
         self.constructed_ship_designs = []
@@ -60,20 +44,43 @@ class Player(object):
         self.available_technologies = []
         self.discoverable_technologies = []
 
-    def get_tech_level_array(self):
-        return [
-            self.energy_tech_level,
-            self.weapons_tech_level,
-            self.propulsion_tech_level,
-            self.construction_tech_level,
-            self.electronics_tech_level,
-            self.biotechnology_tech_level
-        ]
-
     def apply_trait_adjustments(self):
         self.adjust_starbase_prototypes_for_racial_traits()
         self.adjust_ship_prototypes_for_racial_traits()
         self.adjust_technology_for_racial_traits()
+
+    def meets_tech_requirements(self, requirements):
+        assert (len(requirements) == len(self.tech_level))
+
+        for i in xrange(len(self.tech_level)):
+            req = requirements[i]
+            current_level = self.tech_level[i]
+
+            if current_level < req:
+                return False
+
+        return True
+
+    def get_cost_multipliers(self):
+        cost_percents = [
+            self.race.energy_cost,
+            self.race.weapons_cost,
+            self.race.propulsion_cost,
+            self.race.construction_cost,
+            self.race.electronics_cost,
+            self.race.biotechnology_cost
+        ]
+
+        for i in xrange(len(cost_percents)):
+            cost_enum = cost_percents[i]
+            if cost_enum == ResearchCostOption.Expensive:
+                cost_percents[i] = 175
+            elif cost_enum == ResearchCostOption.Normal:
+                cost_percents[i] = 100
+            else:
+                cost_percents[i] = 50
+
+        return cost_percents
 
     def adjust_starbase_prototypes_for_racial_traits(self):
         print "adjust_starbase_prototypes_for_racial_traits"
@@ -93,80 +100,95 @@ class Player(object):
         self.discoverable_technologies.extend(
             list(PRT_Technologies[self.race.primary_racial_trait]))
 
-        for trait in self.race.lesser_racial_traits:
+        prt = self.race.primary_racial_trait
+        lrts = self.race.lesser_racial_traits
+
+        for trait in lrts:
             self.discoverable_technologies.extend(
                 list(LRT_Technologies[trait]))
 
-        if LesserRacialTrait.NoRamscoopEngines in self.race.lesser_racial_traits:
-            if LesserRacialTrait.ImprovedFuelEfficiency in self.race.lesser_racial_traits:
+        if LesserRacialTrait.NoRamscoopEngines in lrts:
+            if LesserRacialTrait.ImprovedFuelEfficiency in lrts:
                 self.discoverable_technologies.remove(TechnologyId.GalaxyScoop)
         else:
             self.discoverable_technologies.extend(list(RamScoopEngines))
 
-        if not LesserRacialTrait.OnlyBasicRemoteMining in self.race.lesser_racial_traits:
+        if not LesserRacialTrait.OnlyBasicRemoteMining in lrts:
             self.discoverable_technologies.extend(list(NormalRemoteMiners))
 
-        if not (self.race.primary_racial_trait == PrimaryRacialTrait.AlternateReality or
-                LesserRacialTrait.NoAdvancedScanners in self.race.lesser_racial_traits):
-            self.discoverable_technologies.extend(list(AdvancedPlanetaryScanners))
+        if not (prt == PrimaryRacialTrait.AlternateReality or
+                LesserRacialTrait.NoAdvancedScanners in lrts):
+            self.discoverable_technologies.extend(
+                list(AdvancedPlanetaryScanners))
+
+        if LesserRacialTrait.NoAdvancedScanners not in lrts:
             self.discoverable_technologies.extend(list(AdvancedShipScanners))
 
         if(self.race.expensive_tech_boost):
-            if(self.race.energy_cost == ResearchCostOption.Expensive):
-                self.energy_tech_level = max(self.energy_tech_level, 3)
-            if(self.race.propulsion_cost == ResearchCostOption.Expensive):
-                self.propulsion_tech_level = max(self.propulsion_tech_level, 3)
-            if(self.race.biotechnology_cost == ResearchCostOption.Expensive):
-                self.biotechnology_tech_level = max(self.biotechnology_tech_level, 3)
-            if(self.race.electronics_cost == ResearchCostOption.Expensive):
-                self.electronics_tech_level = max(self.electronics_tech_level, 3)
-            if(self.race.weapons_cost == ResearchCostOption.Expensive):
-                self.weapons_tech_level = max(self.weapons_tech_level, 3)
-            if(self.race.construction_cost == ResearchCostOption.Expensive):
-                self.construction_tech_level = max(self.construction_tech_level, 3)
+            cost_percents = [
+                self.race.energy_cost,
+                self.race.weapons_cost,
+                self.race.propulsion_cost,
+                self.race.construction_cost,
+                self.race.electronics_cost,
+                self.race.biotechnology_cost
+            ]
 
-        if(self.race.primary_racial_trait == PrimaryRacialTrait.InterstellarTraveler):
-            self.propulsion_tech_level = max(self.propulsion_tech_level, 5)
-            self.construction_tech_level = max(self.construction_tech_level, 5)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.SpaceDemolition):
-            self.propulsion_tech_level = max(self.propulsion_tech_level, 2)
-            self.biotechnology_tech_level = max(self.biotechnology_tech_level, 2)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.WarMonger):
-            self.propulsion_tech_level = max(self.propulsion_tech_level, 1)
-            self.energy_tech_level = max(self.energy_tech_level, 1)
-            self.weapons_tech_level = max(self.weapons_tech_level, 6)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.PacketPhysics):
-            self.energy_tech_level = max(self.energy_tech_level, 4)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.JackOfAllTrades):
-            self.energy_tech_level = max(self.energy_tech_level, 3)
-            self.propulsion_tech_level = max(self.propulsion_tech_level, 3)
-            self.biotechnology_tech_level = max(self.biotechnology_tech_level, 3)
-            self.electronics_tech_level = max(self.electronics_tech_level, 3)
-            self.weapons_tech_level = max(self.weapons_tech_level, 3)
-            self.construction_tech_level = max(self.construction_tech_level, 3)
-        elif(self.race.primary_racial_trait == PrimaryRacialTrait.ClaimAdjuster):
-            self.biotechnology_tech_level = max(self.biotechnology_tech_level, 6)
+            for i in xrange(len(cost_percents)):
+                if cost_percents[i] == ResearchCostOption.Expensive:
+                    self.tech_level[i] = max(self.tech_level[i], 3)
 
-        if(LesserRacialTrait.ImprovedFuelEfficiency in self.race.lesser_racial_traits or
-           LesserRacialTrait.CheapEngines in self.race.lesser_racial_traits):
-            self.propulsion_tech_level += 1
+        if(prt == PrimaryRacialTrait.InterstellarTraveler):
+            self.tech_level[ResearchAreas.Propulsion] = max(
+                self.tech_level[ResearchAreas.Propulsion], 5)
+
+            self.tech_level[ResearchAreas.Construction] = max(
+                self.tech_level[ResearchAreas.Construction], 5)
+
+        elif(prt == PrimaryRacialTrait.SpaceDemolition):
+            self.tech_level[ResearchAreas.Propulsion] = max(
+                self.tech_level[ResearchAreas.Propulsion], 2)
+
+            self.tech_level[ResearchAreas.Biotechnology] = max(
+                self.tech_level[ResearchAreas.Biotechnology], 2)
+
+        elif(prt == PrimaryRacialTrait.WarMonger):
+            self.tech_level[ResearchAreas.Propulsion] = max(
+                self.tech_level[ResearchAreas.Propulsion], 1)
+
+            self.tech_level[ResearchAreas.Energy] = max(
+                self.tech_level[ResearchAreas.Energy], 1)
+
+            self.tech_level[ResearchAreas.Weapons] = max(
+                self.tech_level[ResearchAreas.Weapons], 6)
+
+        elif(prt == PrimaryRacialTrait.PacketPhysics):
+            self.tech_level[ResearchAreas.Energy] = max(
+                self.tech_level[ResearchAreas.Energy], 4)
+
+        elif(prt == PrimaryRacialTrait.JackOfAllTrades):
+            for i in xrange(ResearchAreas.Total):
+                self.tech_level[i] = max(self.tech_level[i], 3)
+
+        elif(prt == PrimaryRacialTrait.ClaimAdjuster):
+            self.tech_level[ResearchAreas.Biotechnology] = max(
+                self.tech_level[ResearchAreas.Biotechnology], 6)
+
+        if ((LesserRacialTrait.ImprovedFuelEfficiency in lrts) or
+           (LesserRacialTrait.CheapEngines in lrts)):
+            self.tech_level[ResearchAreas.Propulsion] += 1
 
         other_techs = self.find_new_technologies()
         for t in other_techs:
             self.available_technologies.append(t)
             self.discoverable_technologies.remove(t)
 
-    def total_tech_levels(self):
-        return (self.energy_tech_level + self.propulsion_tech_level +
-                self.biotechnology_tech_level + self.electronics_tech_level +
-                self.weapons_tech_level + self.construction_tech_level)
-
     def find_new_technologies(self):
         new_technologies = []
 
         for tech_id in self.discoverable_technologies:
             tech = Technologies[tech_id]
-            if player_meets_tech_requirements(self, tech.requirements):
+            if self.meets_tech_requirements(tech.requirements):
                 new_technologies.append(tech_id)
 
         return new_technologies
@@ -180,57 +202,17 @@ class CPU(Player):
         self.cpu = True
 
 
-def player_meets_tech_requirements(player, requirements):
-    """
-    Returns True if the given player has met the given research requirements.
-    """
-    l = player.get_tech_level_array()
-
-    for i in xrange(len(l)):
-        req = requirements[i]
-        current_level = l[i]
-
-        if current_level < req:
-            return False
-
-    return True
-
-
 def total_cost_to_requirement_level(player, requirements, slow_tech_advance):
     """
     Calculates the total cost (could be 0) for the given player to reach the
     given requirement level.
     """
-    if player_meets_tech_requirements(player, requirements):
+    if player.meets_tech_requirements(requirements):
         return 0
 
     deficits = []
-    levels = [
-        player.energy_tech_level,
-        player.weapons_tech_level,
-        player.propulsion_tech_level,
-        player.construction_tech_level,
-        player.electronics_tech_level,
-        player.biotechnology_tech_level
-    ]
-
-    cost_percents = [
-        player.race.energy_cost,
-        player.race.weapons_cost,
-        player.race.propulsion_cost,
-        player.race.construction_cost,
-        player.race.electronics_cost,
-        player.race.biotechnology_cost
-    ]
-
-    for i in xrange(len(cost_percents)):
-        cost_enum = cost_percents[i]
-        if cost_enum == ResearchCostOption.Expensive:
-            cost_percents[i] = 175
-        elif cost_enum == ResearchCostOption.Normal:
-            cost_percents[i] = 100
-        else:
-            cost_percents[i] = 50
+    levels = list(player.tech_level)
+    cost_percents = player.get_cost_multipliers()
 
     for i in xrange(len(levels)):
         plevel = levels[i]
@@ -241,17 +223,35 @@ def total_cost_to_requirement_level(player, requirements, slow_tech_advance):
             deficits.append(rlevel - plevel)
 
     running_cost = 0
-    current_total_levels = player.total_tech_levels()
+    current_total_levels = sum(levels)
     for i in xrange(len(deficits)):
         deficit = deficits[i]
         if deficit != 0:
             for j in xrange(deficit):
                 running_cost += total_cost_to_next_level(
-                    levels[i], current_total_levels, cost_percents[i], slow_tech_advance)
+                    levels[i], current_total_levels, cost_percents[i],
+                    slow_tech_advance)
                 levels[i] += 1
                 current_total_levels += 1
 
     return int(running_cost)
+
+
+def player_cost_to_next_level(player, research_area, slow_tech_advance):
+    """
+    Calculates the cost in resources for the given player to achieve the next
+    level in the given research category.
+    """
+    current_level = player.tech_level[research_area]
+    current_progress = player.research_progress[research_area]
+    cost_percents = player.get_cost_multipliers()
+    cost_percent_for_area = cost_percents[research_area]
+
+    total_cost = total_cost_to_next_level(
+        current_level, sum(player.tech_level), cost_percent_for_area,
+        slow_tech_advance)
+
+    return int(total_cost - current_progress)
 
 
 def total_cost_to_next_level(current_level, total_tech_levels, cost_percent,

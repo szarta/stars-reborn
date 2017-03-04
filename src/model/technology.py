@@ -331,7 +331,7 @@ def calculate_next_n_techs(player, research_field, n, threshold):
     This is mostly used by the research window, in which the next 6 techs are
     selected, which is threshold 7?
     """
-    current_levels = list(player.get_tech_level_array())
+    current_levels = list(player.tech_level)
     ret_techs = []
 
     starting_level = current_levels[research_field]
