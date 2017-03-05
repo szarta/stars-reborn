@@ -118,12 +118,21 @@ def generate_turn_zero(game, save_directory):
 
             if planet.homeworld:
                 if game.accelerated_play:
-                    planet.population = starting_population * 4
+                    """
+                    Corrected (and verified) accelerated play calculation per:
+                    http://wiki.starsautohost.org/wiki/Accelerated_BBS_Play
+
+                    Actual calculation is not 4x starting population, but
+                    rather 5k pop per percent growth rate.
+                    """
+                    ap_multiplier = 5000 * owner_player.race.growth_rate
+                    planet.population = starting_population + ap_multiplier
                 else:
                     planet.population = starting_population
             else:
                 if game.accelerated_play:
-                    planet.population = starting_population * 2
+                    ap_multiplier = 5000 * owner_player.race.growth_rate
+                    planet.population = (starting_population + ap_multiplier) / 4
                 else:
                     planet.population = starting_population / 2
 

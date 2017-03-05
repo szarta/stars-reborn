@@ -173,7 +173,7 @@ class Race(object):
 
         min = GrowthRateParameter.Minimum
         max = GrowthRateParameter.Maximum
-        self._mine_production = get_bounded_value(
+        self._growth_rate = get_bounded_value(
             "growth_rate", val, min, max)
 
     def habitable_world_estimation(self):
