@@ -16,6 +16,7 @@ from src.model.player import Player
 from src.model.universe import Universe
 from src.model.space import Planet
 from src.model.space import calculate_planet_value
+from src.model.enumerations import PrimaryRacialTrait
 
 
 class TurnMessageType:
@@ -107,6 +108,12 @@ def apply_scanning(player, actual_universe, visible_universe):
 def generate_turn_zero(game, save_directory):
 
     logging.debug("generating turn zero")
+
+    for pid in game.players.keys():
+        player = game.players[pid]
+        player.last_year_research_resources = 0
+        player.annual_resources = 0
+
     logging.debug("setting up homeworlds")
     planet_ids = game.universe.planets.keys()
     for planet_id in planet_ids:
@@ -117,6 +124,12 @@ def generate_turn_zero(game, save_directory):
                 owner_player.race, game.universe)
 
             if planet.homeworld:
+                prt = owner_player.race.primary_racial_trait
+
+                if prt != PrimaryRacialTrait.AlternateReality:
+                    planet.mines = 10
+                    planet.factories = 10
+
                 if game.accelerated_play:
                     """
                     Corrected (and verified) accelerated play calculation per:
@@ -130,11 +143,22 @@ def generate_turn_zero(game, save_directory):
                 else:
                     planet.population = starting_population
             else:
+                if prt != PrimaryRacialTrait.AlternateReality:
+                    planet.mines = 10
+                    planet.factories = 10
+
                 if game.accelerated_play:
                     ap_multiplier = 5000 * owner_player.race.growth_rate
                     planet.population = (starting_population + ap_multiplier) / 4
                 else:
                     planet.population = starting_population / 2
+
+            owner_player.annual_resources += (
+                planet.population / owner_player.race.resource_production)
+
+            owner_player.annual_resources += (
+                (planet.factories / 10) *
+                (owner_player.race.factory_production))
 
     turns = [Turn() for i in xrange(len(game.players))]
     game.turns = turns
