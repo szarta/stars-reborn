@@ -8,9 +8,10 @@
 """
 import os
 import logging
+from PySide.QtGui import QWidget
 from PySide.QtGui import QMainWindow
-from PySide.QtGui import QLabel
 from PySide.QtGui import QSplitter
+from PySide.QtGui import QBoxLayout
 from PySide.QtCore import Qt
 
 from src.ui.dialogs import about
@@ -18,7 +19,8 @@ from src.ui.dialogs.technology_browser import TechnologyBrowser
 
 from space import SpaceMap
 from resourceinfo import PlanetInfo
-from planetimage import PlanetImage
+from statuspane import PlanetImage
+from statuspane import MineralsOnHand
 import menu
 import toolbar
 
@@ -86,8 +88,8 @@ class CoreUI(QMainWindow):
 
         homeworld = self.universe.planets[self.active_player.homeworld]
         self.focus_object = homeworld
+        self.interest_object = homeworld
         self.planet_info = PlanetInfo(homeworld, self.active_player.race)
-
         generated_svg = self.universe.to_svg(
             self.view_options, self.active_player)
 
@@ -97,9 +99,29 @@ class CoreUI(QMainWindow):
         self.space_map.update_coords(homeworld.id, x, y, homeworld.name)
 
         left_pane = QSplitter(Qt.Vertical)
-        self.planet_image = PlanetImage(homeworld)
-        left_pane.addWidget(self.planet_image)
-        left_pane.addWidget(QLabel(" Message box"))
+
+        left_pane_top = QWidget()
+
+        left_side_top = QBoxLayout(QBoxLayout.LeftToRight)
+        left_side_1 = QBoxLayout(QBoxLayout.TopToBottom)
+        left_side_2 = QBoxLayout(QBoxLayout.TopToBottom)
+
+        self.planet_image = PlanetImage()
+        self.minerals_on_hand = MineralsOnHand(self.active_player)
+
+        left_side_1.addWidget(self.planet_image)
+        left_side_1.addWidget(self.minerals_on_hand)
+        left_side_1.addStretch(1)
+
+        left_side_top.addLayout(left_side_1)
+        left_side_top.addLayout(left_side_2)
+
+        left_pane_top.setLayout(left_side_top)
+
+        left_pane_bottom = QWidget()
+
+        left_pane.addWidget(left_pane_top)
+        left_pane.addWidget(left_pane_bottom)
 
         right_pane = QSplitter(Qt.Vertical)
         right_pane.addWidget(self.space_map)
@@ -111,19 +133,23 @@ class CoreUI(QMainWindow):
 
         self.setCentralWidget(main_layout)
 
-        self.statusBar().showMessage('Ready')
+        self.handle_planet_selected(homeworld.id)
+
+        self.statusBar().showMessage("{0}.".format(
+            Language_Map["ui"]["general"]["ready"]))
 
     def handle_planet_selected(self, pid):
         planet = self.universe.planets[pid]
 
         if(self.interest_object == planet):
-            # TODO: change the left pane to have planet information
-            # if owned by current player
 
-            # TODO: check if owned before making this assignment
-            self.focus_object = planet
+            if pid in self.active_player.planets:
+                self.focus_object = planet
 
-            # TODO: also, if focused already, will cycle through any ships
+                self.planet_image.update_planet(self.focus_object)
+                self.minerals_on_hand.update_planet(self.focus_object)
+
+            # TODO: if focused already, will cycle through any ships
         else:
             self.interest_object = planet
             (x, y) = planet.location

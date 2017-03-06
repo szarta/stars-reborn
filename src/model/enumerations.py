@@ -1438,6 +1438,12 @@ class LeftoverPointsOption:
     Default = SurfaceMinerals
 
 
+class Installations:
+    Mines = 0
+    Factories = 1
+    Defenses = 2
+
+
 class ZoomLevel:
     Level25 = 0
     Level38 = 1

@@ -120,6 +120,7 @@ def generate_turn_zero(game, save_directory):
         planet = game.universe.planets[planet_id]
         if planet.owner is not None:
             owner_player = game.players[planet.owner]
+            owner_player.planets.append(planet_id)
             starting_population = get_starting_population(
                 owner_player.race, game.universe)
 

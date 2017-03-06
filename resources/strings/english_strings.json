@@ -198,6 +198,12 @@
         "Mineral Concentration"
     ],
 
+    "installations": [
+        "Mines",
+        "Factories",
+        "Defenses"
+    ],
+
     "leftover-points-option-descriptions": [
         "10kT rarest surface mineral on homeworld for each point leftover.",
         "One mine for every two points leftover.",
@@ -531,8 +537,13 @@
             "create-game": "C&reate Game",
             "help": "&Help",
             "advanced-game": "&Advanced Game",
-            "begin-tutorial": "&Begin Tutorial"
+            "begin-tutorial": "&Begin Tutorial",
+            "ready": "Ready"
          },
+
+        "editor": {
+            "minerals-on-hand": "Minerals On Hand"
+        },
 
         "intro": {
             "tutorial-run-before-text": "The tutorial has been run before.",

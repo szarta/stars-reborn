@@ -28,6 +28,7 @@ class Player(object):
         self.id = id
         self.cpu = False
         self.homeworld = 0
+        self.planets = []
 
         self.current_research_field = 0
         self.next_research_field = 0
