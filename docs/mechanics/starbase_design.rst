@@ -8,11 +8,15 @@ have at most one starbase at a time.
 Design Limits
 -------------
 
-- Each player may have at most **20 active starbase designs** (shared pool with
-  the ship design limit of 20 each).
+- Each player may have at most **10 active starbase designs** (separate pool
+  from the 16-design ship limit).
 - A starbase is upgraded by scrapping the existing one and building a new design
   in its place, or by directly upgrading via the production queue if the hull
   supports it.
+- Starbase hull parts (weapons, shields, etc.) cost **50% less** to build than
+  the same parts on a ship hull.
+
+*Source: Stars! in-game help, Starbases section.*
 
 Starbase vs. Ship Design Differences
 -------------------------------------

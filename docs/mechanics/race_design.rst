@@ -229,7 +229,7 @@ Factory cost
 - Parameter: ``factory_cost`` (range 5–25, step 1)
 - Meaning: each factory costs X resources to build
 - Default: 10
-- Cheap germanium option: factories cost 1 germanium instead of 4 germanium
+- Cheap germanium option: factories cost 3 germanium instead of 4 germanium ("costs one less")
 
 Colonists that operate factories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,8 +287,8 @@ Starting Population
 -------------------
 
 - Normal start: 25,000 colonists
-- Accelerated BBS: 4× normal
-- Low Starting Population LRT: 17.5% of normal
+- Accelerated BBS: 4× normal (100,000)
+- Low Starting Population LRT: 17,500 (70% of normal; 30% fewer colonists)
 
 .. todo::
 

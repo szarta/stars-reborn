@@ -32,7 +32,7 @@ Example: 1,000,000 colonists, ``resource_production=1000``, 100 factories × 10 
 Factories
 ---------
 
-- Cost to build: ``factory_cost`` resources + 4 germanium (or 1 germanium with cheap-G)
+- Cost to build: ``factory_cost`` resources + 4 germanium (or 3 germanium with the "costs one less" race option)
 - Production: ``factory_production`` resources/year when operated
 - Capacity: max ``(population / 10,000) × colonists_operate_factories`` factories
 - Factories beyond capacity sit idle (no production, no cost)
@@ -54,10 +54,22 @@ Mines
 Mineral Concentration Decay
 ----------------------------
 
-Each mine-year of extraction reduces concentration slightly. Formula unknown;
-community sources suggest it decays roughly 1% per 10 years at full mining.
+Concentrations range from 0 to 200 (not 0–100 as colloquially described).
 
-.. todo:: Validate mineral decay rate via Wine automation.
+Each mine-year of extraction reduces concentration by:
+
+.. code-block:: text
+
+   mine_years_to_reduce_by_1 = 12,500 / current_concentration
+
+So a concentration-100 mineral requires 125 mine-years to drop by 1 point.
+A concentration-50 mineral requires 250 mine-years. At concentration 1 (the
+floor), no further reduction occurs.
+
+**Homeworld special rule:** concentration never drops below 30% on a homeworld
+regardless of mining, for any race that owns it.
+
+*Source: Stars! in-game help, Minerals section.*
 
 Production Queue
 ----------------
@@ -184,7 +196,10 @@ Queue item types:
 * **Defense** — costs 5 resources; up to 100 defenses per planet
 * **Ship** — costs vary by hull + installed parts (hull cost + sum of part costs)
 * **Starbase** — same as ship but immobile; upgrades existing starbase
-* **Mineral Alchemy** — 100 resources → 25 kT of each mineral (MA trait only)
+* **Mineral Alchemy** — converts resources to minerals:
+  - With MA trait: **25 resources → 1 kT each** of Ironium, Boranium, Germanium
+  - Without MA trait: **100 resources → 1 kT each** (much less efficient)
+  *Source: Stars! in-game help.*
 * **Terraforming** — 100 resources → 1 unit shift on one hab axis
 Auto-items (infinite quantity):
 * **Auto-factory** — keep building factories until max reached

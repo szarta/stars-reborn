@@ -36,6 +36,11 @@ Only one field is the "current" primary research target. All resources allocated
 to research go to that field. The remaining fields advance when the primary field
 gains a level (see Generalized Research LRT).
 
+Only one field receives research resources at a time. Switching fields at any
+time is allowed; **accumulated progress is retained** when switching — points
+already spent in a field are not lost. A "next field" queue entry can be set
+to automatically switch when the current field levels up.
+
 .. todo:: Confirm whether multiple simultaneous field research is ever possible.
 
 Tech Level Costs
@@ -87,25 +92,32 @@ Formula:
 Bleeding Edge Technology (BET LRT)
 ------------------------------------
 
-Races with BET pay double for tech items at the level they are first unlocked:
+Races with BET pay ×2 to **build** any tech item at the moment it is first
+unlocked (when the player's tech level exactly meets the item's requirements).
 
-.. code-block:: text
+The penalty drops to normal once the player **exceeds all tech requirements**
+for that item by at least 1 level.
 
-   if tech_level == item_required_level:
-       cost × 2
-   else:
-       normal miniaturization
+BET races also get slightly better miniaturization overall:
 
-At levels beyond the required level, normal miniaturization applies.
+- BET: **5% cost reduction per level above requirement**, minimum 20% of base cost
+- Non-BET: 4% per level, minimum 25% of base cost
+
+*Source: Stars! in-game help, Bleeding Edge Technology section.*
 
 Generalized Research (GR LRT)
 ------------------------------
 
-GR races distribute 15% of their research budget to all other fields
-automatically. This makes advancement more uniform at the cost of slightly
-slower progress in the primary field.
+GR races distribute research resources as follows:
 
-.. todo:: Confirm exact GR distribution formula.
+- **50%** of the research budget goes to the current primary field
+- **15%** goes to each of the other 5 fields (= 75% total to other fields)
+- Grand total: 125% of the budget (the game intentionally gives GR races a bonus)
+
+This makes advancement more uniform; the primary field advances slower but
+all others advance steadily without player attention.
+
+*Source: Stars! in-game help, Generalized Research section.*
 
 Starting Tech Levels
 --------------------

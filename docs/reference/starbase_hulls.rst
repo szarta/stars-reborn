@@ -3,6 +3,18 @@ Starbase Hull Reference
 
 All data from the Python engine ``factory.py``. Needs oracle verification.
 
+**Availability restrictions (from in-game help):**
+
+- **Space Dock**: ISB (Improved Starbases) LRT required
+- **Ultra Station**: ISB (Improved Starbases) LRT required
+- **Death Star**: AR (Alternate Reality) PRT required
+
+**Cost discount:** all components installed on starbases (weapons, shields, etc.)
+cost **50% less** than the same parts on a ship hull.
+
+**Scoring:** the Orbital Fort does **not** count toward a player's score.
+All other starbase types count as 3 points each in the default scoring formula.
+
 Costs: ``[Ir, Bo, Ge, R]``. ``Dock`` = max ship mass (kT) buildable/repairable;
 ``∞`` = unlimited. See :doc:`../mechanics/starbase_design` for design rules.
 

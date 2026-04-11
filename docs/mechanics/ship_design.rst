@@ -7,14 +7,18 @@ components. A design is then built through the production queue.
 Design Limits
 -------------
 
-- Each player may have at most **20 active ship designs** and **20 active
-  starbase designs** simultaneously.
+- Each player may have at most **16 active ship designs** simultaneously.
+- Starbases have a separate limit of **10 active starbase designs**.
+- Additional fleet/ship limits: **512 fleets per player**; **32,000 ships of
+  one design in a single fleet**.
 - A design slot is freed only when **no ships of that design remain** in the
   game (all scrapped or destroyed). Scrapping a ship does not free the slot
   until the last ship of that design is gone.
 - The ship designer is available from turn 1; however, building ships requires
   production queue capacity, which is unlocked through the colony development
   phase. Designs themselves cost nothing to create.
+
+*Source: Stars! in-game help, Ship Design section.*
 
 .. uml::
 

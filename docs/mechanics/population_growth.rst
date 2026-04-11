@@ -11,12 +11,20 @@ Annual Growth Formula
 
 Where ``capacity_factor`` accounts for overcrowding (see below).
 
+Planets with a positive value below 5% are treated as 5% for population
+calculations (floor to prevent near-zero growth from being zero).
+
 If ``planet_value ≤ 0`` (red planet):
 
 .. code-block:: text
 
-   annual_loss = floor(population × abs(planet_value) / 100)
+   annual_loss = floor(population × abs(planet_value) / 10 / 100)
    new_pop     = population - annual_loss
+
+The loss rate is ``|planet_value| / 10`` percent of colonists per year.
+Example: a −10% planet kills 1% of colonists per year.
+
+*Source: Stars! in-game help, Population section.*
 
 Planet Capacity
 ---------------
@@ -47,7 +55,13 @@ value assigned during universe generation).
    sources. The original game assigns planet size during generation but the exact
    distribution and capacity table needs Wine validation.
 
-.. todo:: HE (Hyper Expansion) races have a lower maximum population cap.
+**HE (Hyper Expansion):** max population is 500,000 on a 100% value planet
+(half the normal cap of 1,000,000).
+
+**OBRM (Only Basic Remote Mining):** +10% maximum population — 1,100,000 on a
+100% planet (550,000 for HE).
+
+Population above the planet cap continues to work but at 50% efficiency.
 
 Overcrowding Penalty
 --------------------
@@ -114,9 +128,9 @@ Starting Population
    * - Normal game
      - 25,000
    * - Accelerated BBS
-     - 4 × normal
+     - 4 × normal (100,000)
    * - Low Starting Population (LRT)
-     - 17.5% of normal (~4,375)
+     - 17,500 (70% of normal; LSP gives 30% fewer colonists)
 
 Some sources suggest starting population scales with growth rate::
 
@@ -157,3 +171,6 @@ Open Questions
 .. todo:: HE maximum population cap (believed to be 50% of normal)
 
 .. todo:: AR growth rate formula
+
+.. todo:: Confirm max population table for planet sizes (help gives 1,000,000 on a 100%
+   value planet; the "planet size" enumeration in universe_generation may map to this)

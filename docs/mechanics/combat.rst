@@ -79,9 +79,31 @@ Ship Battle Speed
 -----------------
 
 Battle movement is separate from warp speed. A ship's battle speed determines
-how many squares it can move per round. This is a property of the engine.
+how many squares it can move per round.
 
-Battle speeds are in the fuel tables (``data/fuel_tables/``).
+Battle movement formula (in ¼-square units):
+
+.. code-block:: text
+
+   movement = (ideal_engine_speed − 4) / 4
+             − (ship_mass / 70 / 4 / num_engines)
+             + (0.25 × num_maneuvering_jets)
+             + (0.5 × num_overthrusters)
+
+Movement is capped in the range **½ to 2½ squares per round**.
+WM (War Monger) race gets an additional **+½ square** bonus.
+
+Each round has 3 movement phases:
+
+1. Tokens that can move ≥3 squares this round move 1 square
+2. Tokens that can move ≥2 squares this round move 1 square
+3. All remaining tokens move 1 square
+
+Within each phase, tokens move heaviest-to-lightest (±15% margin for ties).
+
+*Source: Stars! in-game help, Battle Board section.*
+
+Per-engine battle speeds are also in the fuel tables (``data/fuel_tables/``).
 
 Weapons
 -------
@@ -97,18 +119,63 @@ Beams
   Phaser Bazooka, Pulsed Sapper, Disruptor, Syncro Sapper, Mega Disruptor,
   Big Mutha Cannon, Streaming Pulverizer, Anti-Matter Pulverizer
 
-.. todo:: Document exact attenuation formula.
+Beam Decay Formula
+^^^^^^^^^^^^^^^^^^
+
+Beam damage decays linearly from full power (range 0) to 90% power (max range):
+
+.. code-block:: text
+
+   effective_damage = base_damage × (1 − 0.1 × d / R)
+
+Where ``d`` = distance to target, ``R`` = weapon max range.
+
+Example: 100 dp weapon, max range 3, target at distance 2:
+``100 × (1 − 0.1 × 2/3) = 94 dp``
+
+*Source: Stars! in-game help, Beam Weapons section.*
 
 Missiles & Torpedoes
 ~~~~~~~~~~~~~~~~~~~~~
 
 - Fire second each round
 - Travel to target; can miss (affected by accuracy and jammers)
-- Deal full damage if they hit; no damage if they miss
-- Missiles spread damage across armor; torpedoes punch through shields
-- Accuracy formula: ``base_accuracy × (1 + computers_bonus) × (1 - jammers_penalty)``
+- Hit: deals damage (50% to shields, 50% direct to armor)
+- Miss: **collateral damage** = 1/8 normal damage to shields only
+- Overflow if target token destroyed: applied to other tokens in same square
 
-.. todo:: Document exact accuracy formula and computer/jammer interactions.
+Battle Computers
+^^^^^^^^^^^^^^^^
+
+Three types, reducing torpedo **inaccuracy** by 20%, 30%, or 50%:
+
+.. code-block:: text
+
+   new_accuracy = 100 − ((100 − old_accuracy) × (1 − BC_factor))
+
+Multiple battle computers apply sequentially (multiplicative on inaccuracy):
+
+.. code-block:: text
+
+   Example: 75% base + two 30% BCs:
+   100 − (25 × 0.70 × 0.70) = 87.75% ≈ 88%
+
+*Source: Stars! in-game help, Battle Computers section.*
+
+Jammers
+^^^^^^^
+
+Jammer values are additive percentage reductions, applied multiplicatively:
+
+.. code-block:: text
+
+   Example: three 20% jammers:
+   75% × 0.8 × 0.8 × 0.8 = 38% accuracy
+
+BC vs Jammer interaction: 1% BC decrease in inaccuracy cancels 1% jammer
+decrease in accuracy; net effect applies to remaining difference.
+
+*Source: Stars! in-game help, Jammers section.*
 
 Bombs
 ~~~~~
@@ -135,18 +202,43 @@ Shield regeneration per round:
 
 IS race (or RS LRT): 25% regeneration rate.
 
+**RS (Regenerating Shields) LRT specifics:**
+
+- Shields are **40% stronger** than their listed rating (e.g., a 100-rating shield
+  provides 140 shield points)
+- Armor is **50% of rated strength** (penalty)
+- Regeneration: **10% of max shield value per round** (not base rated value)
+
+*Source: Stars! in-game help, Regenerating Shields section.*
+
 Capacitors & Jammers
 --------------------
 
-- **Beam capacitors:** multiply beam damage by a factor (e.g., ×1.1, ×1.5)
-- **Deflectors:** reduce beam damage taken (the opposing effect)
-- **Jammers:** reduce incoming missile accuracy (each jammer stacks multiplicatively)
-- **Battle computers:** increase beam and missile accuracy
+Capacitors
+~~~~~~~~~~
 
-.. todo::
+Two types of beam capacitors: +10% or +20% beam damage per capacitor.
+Stacking is **multiplicative**:
 
-   Document exact capacitor damage multipliers and jammer accuracy reduction
-   tables from Posey's spreadsheet.
+.. code-block:: text
+
+   Example: three 10% capacitors: ×1.1 × 1.1 × 1.1 = ×1.331
+
+**Hard cap:** capacitors may not contribute more than **250% additional damage**
+(= ×3.5 total multiplier).
+
+*Source: Stars! in-game help, Capacitors section.*
+
+Energy Dampener
+~~~~~~~~~~~~~~~
+
+The Energy Dampener (SD PRT exclusive) slows **all ships in the battle** by
+−1 square per round for the entire battle. Notable properties:
+
+- Effect persists even if the ship carrying it is destroyed
+- Multiple dampeners in one battle provide **no additional effect** (not stacked)
+
+*Source: Stars! in-game help, Energy Dampener section.*
 
 Movement Strategy
 -----------------
@@ -169,18 +261,50 @@ After combat:
   that can be picked up by any fleet
 - Battle report is generated for all players involved
 
+Damage Repair
+-------------
+
+Damaged ships repair a percentage of damage each year based on location:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 55 20
+
+   * - Location
+     - Annual repair rate
+   * - Moving through space
+     - 1%
+   * - Stopped in space
+     - 2%
+   * - Orbiting enemy planet (not bombing)
+     - 3%
+   * - Orbiting own planet, no starbase
+     - 5%
+   * - Orbiting own planet, starbase (no space dock)
+     - 8%
+   * - Orbiting own planet, space dock
+     - 20%
+   * - + Fuel Transport hull in fleet (bonus)
+     - +5%
+   * - + Super Fuel Xport hull in fleet (bonus)
+     - +10%
+
+- Fuel Transport/Xport bonuses are not stacked; only the best hull in the fleet applies
+- No repair when using a stargate
+- No repair when fleet has Attack orders while orbiting an enemy planet
+
+*Source: Stars! in-game help, Damage Repair section.*
+
 Open Questions
 --------------
 
 .. todo:: Starting formation placement rules on the 32×32 grid
 
-.. todo:: Exact beam attenuation formula (linear? logarithmic?)
+.. todo:: Exact beam attenuation formula (confirmed linear from help; verify with oracle)
 
-.. todo:: Exact missile accuracy formula with computers and jammers
+.. todo:: Exact missile accuracy formula with computers and jammers (BC formula confirmed above; needs oracle verification)
 
-.. todo:: Capacitor damage multiplier table (from Posey's spreadsheet)
-
-.. todo:: Jammer accuracy reduction table
+.. todo:: Capacitor damage multiplier table (10%/20% confirmed; oracle verify exact values)
 
 .. todo:: Reverse-engineer the exact AI movement heuristics for each strategy
 

@@ -153,6 +153,62 @@ Where ``cloak_percent`` is the fleet's total cloaking percentage.
 .. todo:: Confirm cloaking detection formula via oracle test. See
    ``stars-reborn-research/docs/open_questions/cloaking_detection_formula.rst``.
 
+Cloak Percentage Calculation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A ship's cloak percentage is derived from its **cloak units per kT** of ship mass.
+The conversion is piecewise (from the in-game "Appendix of Cloaking"):
+
+.. code-block:: text
+
+   if units ≤ 100:    percent = units / 2
+   elif units ≤ 300:  percent = 50 + (units − 100) / 8
+   elif units ≤ 612:  percent = 75 + (units − 300) / 24
+   elif units ≤ 1124: percent = 88 + (units − 612) / 64
+   elif units < 1380: percent = 96
+   elif units < 1612: percent = 97
+   else:              percent = 98
+
+Key checkpoints: 100 u/kT → 50%, 300 u/kT → 75%, 612 u/kT → 87.5%,
+1124 u/kT → 96%, ≥1612 u/kT → 98%.
+
+For a **loaded** ship: ``units/kT = device_units/kT × empty_mass / loaded_mass``.
+Uncloaked ships in the fleet add to loaded_mass but contribute no cloak units.
+
+**SS race exception:** cargo does NOT reduce cloaking for SS ships.
+
+Multiple cloaking devices on the same ship: their combined cloak units/kT is
+summed first, then the piecewise table is applied. Diminishing returns are
+inherent to the table, not an explicit stacking penalty.
+
+*Source: Stars! in-game help, Appendix of Cloaking.*
+
+Tachyon Detector
+~~~~~~~~~~~~~~~~~
+
+Each Tachyon Detector in a fleet reduces enemy cloaking by 5%. Multiple
+detectors stack with diminishing returns:
+
+.. code-block:: text
+
+   cloak_reduction_factor = 0.95 ^ sqrt(num_detectors)
+
+Example: 4 detectors: ``0.95^2 = 0.9025`` → 9.75% total reduction.
+
+*Source: Stars! in-game help, Tachyon Detector section.*
+
+Cloaking in Minefields
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Inside a minefield, cloaking is treated as an absolute hit-chance modifier:
+a fleet cloaked at 90% has a **10% hit chance** per minefield detonation check,
+regardless of field density. This differs from the scanner-range reduction model.
+
+Against penetrating scanners: minefields have **0% cloak** (always detectable).
+Against non-penetrating scanners: minefields have **82% cloak**.
+
+*Source: Stars! in-game help, Minefields section.*
+
 Information Staleness
 ---------------------
 
