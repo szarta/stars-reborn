@@ -147,20 +147,32 @@ Gravity
 ~~~~~~~
 
 - 101 discrete values: 0.12g, 0.13g, ..., 8.00g (from the ``Gravity_Map`` table)
-- Distribution: uniform random choice from the 101 keys
+- Distribution: **center-weighted** (not uniform) — values near the middle of the
+  range are more common.
 - See :doc:`habitability` for the normalization table
 
 Temperature
 ~~~~~~~~~~~
 
 - Range: −200°C to +200°C, step 4 (101 discrete values)
-- Distribution: uniform random integer index × 4 − 200
+- Distribution: **center-weighted** (not uniform).
 
 Radiation
 ~~~~~~~~~
 
 - Range: 0 to 100 mR/yr (integer)
-- Distribution: uniform random integer
+- Distribution: **uniform random** — all values equally likely.
+
+.. note::
+
+   The center-weighted claim for gravity and temperature (vs. uniform for
+   radiation) is from Art Lathrop's *Basic Race Design* article (stars.arglos.net,
+   1999).  The original design doc assumed uniform for all three.  This has
+   practical race-design implications: shifting the radiation window costs nothing
+   statistically but shifting gravity/temperature does.  Needs oracle verification
+   (generate a large universe, plot distributions).
+
+   See ``stars-reborn-research/docs/open_questions/hab_axis_distribution.rst``.
 
 Mineral Generation
 ------------------

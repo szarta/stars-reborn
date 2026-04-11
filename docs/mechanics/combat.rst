@@ -54,13 +54,31 @@ Custom orders allow:
 Battle Grid
 -----------
 
-Combat takes place on a **32×32 grid**. Ships are placed at their starting
-positions based on their initial formation.
+Combat takes place on a **10×10 grid** of squares.  Ships are placed at their
+starting positions, which are determined by player number (the lowest-numbered
+player in the battle is assigned position 1, the next lowest position 2, etc.).
+These positions are **deterministic and fixed** — they do not vary by fleet
+composition.
+
+The exact starting squares for 2–16 players are well-documented in the community
+(SAH Forum, thread on battle board positioning).  Example (2-player battle):
+player 1 starts at row 4 col 1; player 2 at row 5 col 8 (0-indexed).
+
+Players can attempt to manipulate their effective player number (e.g., by
+transferring a single ship to an ally the turn before a battle) to influence
+starting position.
+
+.. note::
+
+   The design doc previously stated "32×32 grid" — this appears to be an
+   implementation artifact.  Community data and FreeStars source consistently
+   describe a 10×10 visible board.  See
+   ``stars-reborn-research/docs/open_questions/battle_board_dimensions.rst``.
 
 .. todo::
 
-   Document starting formation rules (which squares are used, how many ships
-   can stack in one square).
+   Confirm board dimensions and starting square table via oracle test or Ghidra.
+   Document how many tokens can share one square.
 
 Battle Rounds
 -------------
@@ -143,6 +161,36 @@ Missiles & Torpedoes
 - Hit: deals damage (50% to shields, 50% direct to armor)
 - Miss: **collateral damage** = 1/8 normal damage to shields only
 - Overflow if target token destroyed: applied to other tokens in same square
+- **One missile = one kill (per round):** the game caps missile kills at the
+  number of missiles fired in a round.  Each missile destroys at most one ship
+  (excess damage is not applied to the next ship in the stack).  Beam weapons do
+  not share this limit — a single beam hit can kill multiple ships.
+
+*Source: SAH Forum, Chaff article (Art Lathrop) / community consensus.*
+
+Targeting Algorithm
+^^^^^^^^^^^^^^^^^^^
+
+Missiles and torpedoes select targets by **attractiveness**, which combines cost
+and vulnerability.  Cheaply-built, lightly-armored ships are the most attractive
+targets.  Attractiveness is roughly proportional to:
+
+.. code-block:: text
+
+   attractiveness ∝ (armor + shields) / (resource_cost + boranium_cost)
+
+Practical effects:
+
+- Scouts/frigates with cheap engines and minimal armor are chosen first, soaking
+  missiles before capital ships are targeted ("chaff" strategy).
+- Adding shields to a cheap ship reduces its attractiveness as a missile target
+  (more durability per cost → less attractive).
+- Adding armor to capital ships decreases their attractiveness relative to chaff.
+
+.. todo::
+
+   Verify exact targeting attractiveness formula via Ghidra.  See
+   ``stars-reborn-research/docs/open_questions/targeting_attractiveness_formula.rst``.
 
 Battle Computers
 ^^^^^^^^^^^^^^^^
@@ -193,6 +241,14 @@ Each ship has:
 
 When armor reaches 0, the ship is destroyed. Partial armor damage carries over
 between rounds.
+
+**Minimum damage resolution:** Armor damage is stored in **1/512th increments**
+of the token's total armor.  Any hit that would deal armor damage rounds up to
+the nearest 1/512th of total armor (≈ 0.2%).  In normal play this is negligible,
+but a large number of individually-weak salvos (e.g., 900 separate torpedo shots)
+can collectively destroy a token via accumulated 0.2% hits.
+
+*Source: SAH Forum Known Bugs thread; also confirmed in FreeStars source.*
 
 Shield regeneration per round:
 

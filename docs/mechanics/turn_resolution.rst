@@ -1,18 +1,16 @@
 Turn Resolution Order
 =====================
 
-.. warning::
+.. note::
 
-   The sequence below is **unverified**. It is a best-effort reconstruction
-   from community sources and prior research. Several steps — particularly
-   the relative ordering of packet movement, mine-laying, mine-field sweeping,
-   fleet movement, bombing, and population growth — have been subjects of
-   competitive debate because the order creates exploitable strategic
-   differences. Every step must be confirmed by oracle testing before the
-   engine implements it.
-
-   See ``stars-reborn-research/docs/open_questions/turn_resolution_order.rst``
-   for the research task.
+   The sequence below is sourced from a **direct statement by Jeff McBride**
+   (original Stars! developer, Mare Crisium), preserved in the FreeStars
+   project documentation (``freestars/Docs/EventOrder2.txt``,
+   rec.games.computer.stars 1996-06-27).  Sub-step details from the FreeStars
+   community ``EventOrder.txt`` are also incorporated and are rated medium trust.
+   Core ordering from McBride is treated as authoritative (equivalent to the
+   strategy guide).  Individual steps still benefit from oracle confirmation —
+   see ``stars-reborn-research/docs/open_questions/turn_resolution_order.rst``.
 
 Each year, the |original| engine processes events in the following order. |project| must
 reproduce this sequence exactly for behavioral fidelity.
@@ -20,93 +18,142 @@ reproduce this sequence exactly for behavioral fidelity.
 Sequence
 --------
 
-1. **Wormhole jiggles**
-   Wormholes drift slightly each year. Endpoints shift by a small random amount.
+**Phase 0 — Apply player orders**
 
-2. **Random events**
-   Comet strikes, mystery trader appearances, etc. (low probability per year).
+  Load the ``.hst`` file, then apply each player's ``.x`` orders: split/merge
+  fleet instructions, production queue changes, waypoint assignments, research
+  setting, battle plans, and ship designs.  When two players' by-hand cargo
+  transfers conflict (both grabbing the same salvage), a coin flip resolves it.
 
-3. **Packets and salvage move**
-   Mineral packets fired from mass drivers advance toward their targets. Salvage
-   drifts and decays (each year reduces mineral content).
+**Phase 1 — Waypoint 0 tasks** *(before any movement)*
 
-4. **Fleets move**
-   All fleets advance along their waypoints at their ordered speed. When a fleet
-   arrives at a waypoint, it executes the waypoint order (colonize, mine, transfer
-   cargo, etc.) and advances to the next waypoint. Mine-laying occurs during movement.
+  Each fleet executes its current-location waypoint order.  Unload operations
+  are processed before load operations so that exchanges work.  Colonization
+  and ground combat at waypoint 0 resolve here.
 
-5. **Mine fields sweep**
-   After all fleets have moved, mine fields check for fleets that entered or crossed
-   through them. Mine-sweeping by fleets with mine-sweep weapons is also resolved here.
+  W0 tasks cannot be blocked by enemy fleets arriving later — a colonizer
+  already in orbit that is given a Colonize task at W0 will colonize before any
+  attacker arrives.
 
-6. **Bombing**
-   Fleets with bomb orders attack undefended planets. Normal and smart bombs apply
-   population and defense kill percentages. Retroviruses (SD trait) spread genetic
-   damage.
+**Phase 2 — MT and packet movement**
 
-7. **Population growth**
-   Each owned planet grows by ``growth_rate × planet_value / 100``. Overcrowding
-   applies a penalty when population exceeds 25% over planet capacity.
+  Mystery Traders advance.  In-space mineral packets (already in flight) advance
+  toward their targets.  PP packets terraform during this step.  All fleets
+  chasing an MT or packet update their waypoints to the new location.
 
-8. **Factories and mines built**
-   Production queues are processed for factory and mine construction items.
+  **Sub-step:** Wormhole endpoints jiggle/degrade/shift (after packets, before
+  fleet movement).
 
-9. **Minerals mined**
-   Each planet mines ``mine_count × mine_output × concentration / 100`` kT per mineral.
-   Concentration decreases by a small amount each year.
+**Phase 3 — Fleet movement**
 
-10. **Resources generated; production queues run**
-    Total resources = colonists × (resource_production / 10000) + factories × factory_output.
-    Resources are applied to production queue items (ships, defenses, terraforming, etc.).
+  All fleets move along their waypoints.  Fleet movement includes: minefield
+  hits (damage/speed reduction), fuel exhaustion (fleet stops or slows), wormhole
+  traversal, and stargate jumps.  Circular-chase fleets spiral in (1/10th
+  movement × 10 iterations).
 
-11. **Research applied**
-    Resources allocated to research are credited to the appropriate tech fields.
-    When a field accumulates enough resources, the tech level increases and new
-    technologies become available.
+**Phase 4 — IS fleet growth; salvage and packet decay**
 
-12. **Battles**
-    At any location where fleets from opposing players meet (and at least one is armed),
-    a battle is resolved. The battle engine runs up to 16 rounds. Surviving ships remain;
-    destroyed ships become salvage.
+  Inner Strength colonists aboard freighters grow (conceptually simultaneous
+  with movement).  In-space mass packets and salvage lose a fraction of their
+  cargo each year.  SD minefield remote detonation occurs here (after movement,
+  before mining).
 
-13. **Fleet merge/split**
-    Player orders to merge or split fleets are executed.
+**Phase 5 — Mining**
 
-14. **Messages generated**
-    Turn messages are compiled for each player: discoveries, battle results, tech advances,
-    random events, victory/defeat notifications.
+  Each planet extracts minerals: ``mines × rate × concentration / 100 / 10`` kT
+  per mineral.  Concentration degrades slightly.
+
+**Phase 6 — Production**
+
+  All production queues run: factories, mines, defenses, ships, starbases,
+  terraforming, alchemy, packets.  Research resources are credited.
+
+  Minerals mined in Phase 5 are available for production this same year.
+  Newly-launched packets (from packet launch production items) can reach their
+  destination this turn if close enough.
+
+  SS spy tech bonus is applied here (after the galaxy total of tech spent is
+  known).
+
+**Phase 7 — Population growth; research; random events**
+
+  Population grows (or declines on red worlds).  Research fields advance if
+  enough resources have accumulated.  Random events fire (comet strikes, MT
+  appearances, wormhole spawning).
+
+  Refueling at starbases occurs after random events, before battle.
+
+**Phase 8 — Battles**
+
+  At every location where opposing players' fleets meet and at least one is
+  armed, a battle resolves.  Surviving fleets remain; destroyed ships become
+  salvage.
+
+  *Important:* destination waypoint tasks (W1) have NOT yet occurred.  A fleet
+  ordered to colonize that arrives this turn will fight first — the colony is
+  not yet established.
+
+**Phase 9 — Bombing and invasion**
+
+  Fleets with bombers attack undefended planets (no defending starbase).  Ground
+  invasions are also resolved here.
+
+**Phase 10 — Waypoint 1 tasks** *(destination tasks)*
+
+  Fleets execute their destination waypoint orders: colonize, unload/load cargo,
+  transfer minerals, scrap, etc.  Mine-laying occurs here (NOT during movement).
+  CA instaforming occurs here.
+
+**Phase 11 — Minesweeping**
+
+  Fleets with mine-sweep weapons reduce enemy minefields.  Minefield decay
+  (annual percentage loss) also occurs after mine-laying.
+
+**Phase 12 — Repair**
+
+  Starbases and fleets repair damaged ships.
+
+**Phase 13 — Scanning; patrol**
+
+  Scanner coverage is computed.  Patrol orders are assigned to fleets targeting
+  in-range enemies.
+
+**Phase 14 — Output**
+
+  The updated ``.hst`` and per-player ``.m#`` files are written.
 
 Notes
 -----
 
-* Steps 4–5 are critical for mine field interactions. A fleet that is moving through a mine
-  field has a chance of hitting a mine at each ly of travel.
-* Research (step 11) happens *after* production (step 10), so resources spent on production
-  queues are not available for research in the same turn.
-* Battle (step 12) happens *after* population growth, meaning bombing survivors may still
-  grow before combat.
+* **Packets precede fleets** (Phase 2 before Phase 3).  A packet and a fleet
+  sent to the same destination in the same turn: the packet arrives first
+  (arrives in Phase 2); the fleet arrives in Phase 3 and battles in Phase 8.
+  Colonization order: packet impact then fleet arrival.
+
+* **Mine-laying is W1 (Phase 10)**, not during movement.  A fleet ordered to lay
+  mines cannot mine the corridor it is flying through that same turn.  Enemy
+  fleets moving through that corridor in Phase 3 will not hit those mines until
+  the following year.
+
+* **Battles are post-production, post-growth** (Phase 8 after Phase 6–7).
+  Population growth has already occurred for the turn when battles fire.
+
+* **W0 colonization is safe from interception.**  W1 colonization (arriving
+  fleet) is not — the arriving fleet fights before it colonizes.
 
 .. todo::
 
-   Confirm the exact turn resolution order via oracle testing. The following
-   sub-questions are the highest-priority targets because each has known
-   competitive implications:
+   Confirm each phase ordering with oracle tests.  Priority sub-questions
+   (each is a distinct observable outcome):
 
-   - **Packets vs. fleet movement**: do mineral packets resolve before or after
-     fleets move? A packet arriving at a planet with a defending fleet in the
-     same turn could interact differently depending on order.
-   - **Mine-laying vs. mine-field sweep**: does a fleet laying mines in a field
-     it is currently traversing affect the sweep calculation for that same turn?
-   - **Mine-field sweep vs. fleet arrival**: if a fleet enters a mine field and
-     hits a mine, does it still execute its waypoint order that turn?
-   - **Bombing vs. population growth**: confirmed post-growth above, but needs
-     oracle verification (a bombed population that grew first is a different
-     result than one bombed before growth).
-   - **Battle vs. bombing**: can a fleet bomb a planet and then also fight a
-     battle at the same location in the same turn?
-   - **Packet arrival damage vs. colonization**: if a packet hits a planet the
-     same turn a fleet colonizes it, which resolves first?
+   - **Packets vs. fleet movement**: Phase 2 before Phase 3 (McBride confirms;
+     oracle test to verify).
+   - **Mine-laying vs. fleet traversal**: Phase 10 vs. Phase 3 (McBride + FreeStars
+     confirm mine-laying is W1; oracle to verify).
+   - **Battle vs. bombing**: Phase 8 before Phase 9 (McBride confirms; oracle to verify).
+   - **Bombing vs. population growth**: Phase 9 after Phase 7 (McBride confirms;
+     oracle to verify).
+   - **Newly-launched packets reaching destination same turn** (Phase 6 sub-step;
+     needs oracle confirmation of exact range cutoff).
 
-   Community competitive play identified at least some of these as strategically
-   significant. Check the starsautohost.org article library for any documented
-   community findings before running oracle tests.
+   See ``stars-reborn-research/docs/open_questions/turn_resolution_order.rst``.

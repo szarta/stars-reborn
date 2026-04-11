@@ -62,14 +62,95 @@ with one additional slot type exclusive to starbases:
 - Mass Drivers (``MassDriver5`` through ``UltraDriver13``)
 - Electrical parts (cloaks, jammers, battle computers, etc.)
 
-Only one stargate and one mass driver may be active per starbase at a time
-(placing a second overwrites the first in that orbital slot).
+**Two stargates in two OrbitalElect slots:** only one gate is active at a time.
+The active gate is determined by slot position:
 
-.. todo::
+- **Starbase / Space Dock hull:** the **leftmost** gate slot is used.
+- **Ultrastation / Death Star hull:** the **uppermost** gate slot is used.
 
-   Confirm whether placing two stargates of different types in two OrbitalElect
-   slots is valid or whether the engine enforces a single-stargate limit per
-   starbase.
+This means a 100/Any gate and an Any/300 gate on the same starbase do **not**
+combine into Any/Any capability. Players who accidentally place two gates only
+get the capabilities of one.
+
+The same slot-priority rule applies to IT gate scanning (see :ref:`it-gate-scanning`
+below).
+
+**Two Mass Drivers** on the same starbase do provide an additive advantage; see
+the in-game help for details.
+
+*Source: SAH Forum (starsautohost.org), Starbase FAQ thread.  Needs oracle
+confirmation.*
+
+.. _it-gate-scanning:
+
+IT Gate Scanning
+----------------
+
+Interstellar Traveler (IT) races can use their stargates to scan remote
+starbases.  Details:
+
+- The gate used for scanning is the same slot-priority gate as for transit
+  (leftmost for Starbase/Space Dock; uppermost for Ultrastation/Death Star).
+- IT gate scanning reveals **planet stats only**: colonist count, habitability,
+  mineral concentrations, and defense percentage.
+- IT gate scanning does **not** reveal: the scanned starbase's design, or ships
+  in orbit of that planet.
+- A starbase with maximum cloaking (98%) is still visible to an IT gate whose
+  range is "Any", because 2% of infinite range is still infinite.  Non-infinite
+  gate ranges are reduced by cloaking in the normal way.
+
+*Source: SAH Forum, Starbase FAQ thread.*
+
+Starbase Battle Behaviour
+--------------------------
+
+- Starbases use **any/any** as their combat target (primary and secondary),
+  regardless of the default battle plan's primary/secondary target settings.
+- However, the starbase does respect the default battle plan's **"attack who"**
+  (enemy/neutral/friend) setting.  Example: if a player's default plan is
+  "attack everyone," the starbase will initiate battle against a friend who
+  enters orbit even though no player ships are present.
+- A stationary starbase has no move tactic, but it can still *initiate* a
+  battle if its "attack who" setting triggers.
+- Starbases **always sweep neutral minefields**, independent of the default
+  battle plan's "attack who" setting.
+- Specific slot firing order applies to starbases (community-documented;
+  needs oracle confirmation).
+
+*Source: SAH Forum, Starbase FAQ thread.*
+
+Starbase Salvage and Tech
+--------------------------
+
+- Starbases leave **no salvage** when destroyed.
+- Players cannot gain tech from destroying a starbase, even if the starbase
+  carries higher-tech components than the attacking fleet.
+
+*Source: SAH Forum, Starbase FAQ thread.*
+
+Starbase Jamming and Cloaking
+------------------------------
+
+- Starbase jamming is **75% as effective** as equivalent ship jamming.
+  The maximum jamming a starbase can achieve is 75% (= 0.75 × 99%),
+  compared to the 95% ship cap.
+- Starbase cloaking obeys the same **98% maximum** as ships.
+- Cloaking a starbase reduces IT gate scan range (as with any scanner).
+  Exception: an IT gate with "any" range still detects all gates in the
+  universe even at maximum cloak (2% of ∞ = ∞).
+
+*Source: SAH Forum, Starbase FAQ thread.*
+
+Mystery Trader Items on Starbases
+-----------------------------------
+
+- **Langston Shell / Mega Poly Shell** mounted on a starbase provides
+  jamming and cloaking, but **does not** provide the scanning bonus those
+  items give on ships.
+- Multi-Contained Munition in weapon slots cannot lay mines on a starbase
+  (starbases cannot issue waypoint orders).
+
+*Source: SAH Forum, Starbase FAQ thread.*
 
 Dock Capacity
 -------------

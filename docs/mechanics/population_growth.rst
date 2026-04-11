@@ -100,21 +100,36 @@ above ~25% capacity. Absolute growth (population × rate) peaks at ~33% capacity
 even though the rate is still at 100% there, because the rate is capped while
 population is still increasing.
 
-The table implies a ``capacity_factor`` function applied to the growth formula:
+The formula for ``capacity_factor`` is:
 
 .. code-block:: text
 
-   annual_growth = floor(population × growth_rate × planet_value_fraction × capacity_factor)
+   if capacity ≤ 0.25:
+       capacity_factor = 1.0   (no crowding penalty)
+   else:
+       capacity_factor = (16/9) × (1 − capacity)²
 
-Where ``capacity_factor`` falls from 1.0 at ≤20% capacity to 0 at 100% capacity.
-The exact mathematical form of ``capacity_factor`` is not given in the strategy
-guide; the table provides ground-truth calibration points.
+This formula reproduces all eight strategy guide calibration points exactly
+(e.g. at 50% capacity: (16/9) × 0.5² = 0.444 ≈ 0.44 ✓).  The function is
+continuous at the 25% breakpoint: (16/9) × (0.75)² = 1.0.
 
-.. note:: *Source: Stars! Strategy Guide, Chapter 6. Requires oracle verification
-   of the exact capacity_factor formula (see research open question).*
+Applied in the growth formula:
 
-.. todo:: Reverse-engineer ``capacity_factor`` formula from original. Research
-   open question tracked in ``stars-reborn-research/docs/open_questions/population_growth_capacity_factor.rst``.
+.. code-block:: text
+
+   annual_growth = round(population × growth_rate × planet_value_fraction × capacity_factor)
+
+*Sources: FreeStars C++ source (Planet.cpp PopGrowth()); cross-confirmed against
+Stars! Strategy Guide Chapter 6 (8/8 table values match). Pending final oracle
+confirmation.*
+
+**Overpopulation (population > max_population):**
+
+.. code-block:: text
+
+   annual_loss = round(population × (population / max_population) × 4)
+
+At 110% capacity: annual loss ≈ 4.4% of population per year.
 
 Starting Population
 -------------------
@@ -132,11 +147,18 @@ Starting Population
    * - Low Starting Population (LRT)
      - 17,500 (70% of normal; LSP gives 30% fewer colonists)
 
-Some sources suggest starting population scales with growth rate::
+FreeStars implements starting population as:
 
-   starting_pop = 5,000 × growth_rate   (so 10% GR → 50,000)
+.. code-block:: text
 
-.. todo:: Validate via Wine automation.
+   starting_pop = 25,000 + 500,000 × growth_rate_decimal
+
+Examples: 1% GR → 30,000; 5% GR → 50,000; 10% GR → 75,000; 20% GR → 125,000.
+
+The alternative formula sometimes cited ("5,000 × GR") matches the bonus
+component only (500,000 × 0.10 = 50,000) and omits the 25,000 base.
+
+.. todo:: Confirm starting population formula with oracle test (R2.1).
 
 Homeworld Population
 --------------------
@@ -163,10 +185,6 @@ Open Questions
 .. todo:: Confirm max population table for all planet sizes
 
 .. todo:: Confirm planet size distribution during universe generation
-
-.. todo:: Exact overcrowding formula
-
-.. todo:: Starting population formula (flat 25k vs. growth_rate dependent)
 
 .. todo:: HE maximum population cap (believed to be 50% of normal)
 

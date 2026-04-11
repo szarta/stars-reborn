@@ -147,65 +147,191 @@ Complete Example
      "icon_index": 0
    }
 
-Original ``.r`` File Import
-----------------------------
+Original ``.r`` / ``.r1`` File Import
+--------------------------------------
 
-The original |original| game saves race designs as binary ``.r`` files.
-The engine (or a standalone import utility) must be able to read these and
-produce an equivalent ``race.json``.
+The original |original| game saves race designs as ``.r`` files (one per
+player slot, numbered ``.r1``–``.r16``).  The engine ships an import utility
+(``r1_to_json``, in ``stars-reborn-engine/engine/src/bin/``) that reads these
+and emits the equivalent ``race.json``.
 
-File Structure
-~~~~~~~~~~~~~~
+Container Format
+~~~~~~~~~~~~~~~~
 
-The ``.r`` file is a fixed-length binary record.  All multi-byte integers are
-little-endian.
+Each ``.r1`` file is a Stars! record container (the same format as ``.m``,
+``.hst``, ``.xy`` files).  Record headers are 2-byte LE: high 6 bits = record
+type, low 10 bits = payload length.  Payloads are XOR-encrypted with a
+L'Ecuyer (1988) combined LCG seeded from the type-8 header record.
+
+A race file contains exactly 3 records:
+1. Type 8 (16-byte plaintext header — seeds the LCG)
+2. Type 6 (race data payload — encrypted)
+3. Type 0 (empty end-of-file marker)
+
+Cipher
+~~~~~~
+
+L'Ecuyer combined LCG with two streams:
+
+- s1: a=40014, m=2^31−85 (Schrage params q=53668, r=12211)
+- s2: a=40692, m=2^31−249 (q=52774, r=3791)
+
+Per 4-byte chunk: ``key = (new_s1 − new_s2) & 0xFFFFFFFF``.
+Bytes are the 4 LE bytes of this 32-bit value.
+Seeds are derived from bytes 12-13 of the type-8 payload; a small
+pre-advance count is computed from other bytes in that payload.
+
+Payload Field Map
+~~~~~~~~~~~~~~~~~
+
+The type-6 payload is a direct ``memcpy`` of a 192-byte in-memory struct
+(confirmed via Ghidra decompilation of ``FUN_1070_551c``).
+
+All multi-byte integers are little-endian.  All confirmed fields are 1 byte
+unless noted.
 
 .. list-table::
    :header-rows: 1
-   :widths: 10 15 75
+   :widths: 10 10 80
 
    * - Offset
      - Size
      - Content
    * - 0
-     - 2
-     - Magic / version bytes.  Original game: ``0x0e 0x00`` (version 14).
-   * - 2
-     - 16
-     - Race name, null-terminated ASCII.
+     - 1
+     - ``0xFF`` constant (magic/version marker)
+   * - 16
+     - 1
+     - ``grav_center`` — gravity hab center (0–100 index; ``0xFF`` = immune)
+   * - 17
+     - 1
+     - ``temp_center`` — temperature hab center
    * - 18
-     - 16
-     - Plural name, null-terminated ASCII.
-   * - 34
      - 1
-     - PRT index (0–9; see :doc:`../mechanics/race_design` table)
-   * - 35
+     - ``rad_center`` — radiation hab center
+   * - 19
+     - 1
+     - ``grav_min`` — gravity hab minimum index (0–100)
+   * - 20
+     - 1
+     - ``temp_min`` — temperature hab minimum (0–100 scale)
+   * - 21
+     - 1
+     - ``rad_min`` — radiation hab minimum (0–100 mR/yr)
+   * - 22
+     - 1
+     - ``grav_max``
+   * - 23
+     - 1
+     - ``temp_max``
+   * - 24
+     - 1
+     - ``rad_max``
+   * - 25
+     - 1
+     - ``growth_rate`` (raw integer %, e.g. 15 → 15%)
+   * - 56
+     - 1
+     - ``0x0F`` constant (unknown purpose)
+   * - 62
+     - 1
+     - ``resource_production / 100`` (multiply by 100 to get RP)
+   * - 63
+     - 1
+     - ``factory_production``
+   * - 64
+     - 1
+     - ``factory_cost``
+   * - 65
+     - 1
+     - ``colonists_operate_factories`` (thousands, e.g. 10 → 10,000)
+   * - 66
+     - 1
+     - ``mine_production``
+   * - 67
+     - 1
+     - ``mine_cost``
+   * - 68
+     - 1
+     - ``colonists_operate_mines``
+   * - 69
+     - 1
+     - Leftover mines amount (meaning TBD)
+   * - 70
+     - 1
+     - Energy research cost (0=Expensive, 1=Normal, 2=Cheap)
+   * - 71
+     - 1
+     - Weapons research cost
+   * - 72
+     - 1
+     - Propulsion research cost
+   * - 73
+     - 1
+     - Construction research cost
+   * - 74
+     - 1
+     - Electronics research cost
+   * - 75
+     - 1
+     - Biotechnology research cost
+   * - 76
+     - 1
+     - PRT index (HE=0, SS=1, WM=2, CA=3*, IS=4, SD=5, PP=6, IT=7, AR=8*, JOAT=9)
+   * - 78
      - 2
-     - LRT bitmask (bit 0 = NRE, bit 1 = CE, … — see bit layout below)
-   * - 37
-     - 6
-     - Habitat settings (3 × 2 bytes: each pair is ``min_index``/``max_index``
-       into the discrete value tables; high bit set = immune)
-   * - 43
-     - 10
-     - Economy parameters (5 × 2 bytes: resource_production, factory values ×
-       3, mine values × 3, growth rate — exact byte layout TBD)
-   * - 53
+     - LRT bitmask and icon_index — **encoding unconfirmed** (see R1.2)
+   * - 81
      - 1
-     - Research cost flags (2 bits per field × 6 fields = 12 bits)
-   * - 54
-     - 1
-     - Icon index
-   * - 55
+     - Flags: bit 7 = ``factory_cheap_germanium``, bit 5 = ``expensive_tech_boost``
+   * - 112+
      - varies
-     - Padding / trailing bytes (exact length TBD)
+     - Name section (see below)
 
-.. todo::
+``*`` CA=3 and AR=8 are inferred, not yet oracle-confirmed.
 
-   Reverse-engineer the exact ``.r`` binary layout from the original
-   executable.  Priority fields: LRT bitmask bit order, habitat byte layout,
-   economy byte layout, research cost encoding.  Document in
-   ``stars-reborn-research`` first, then promote confirmed layout here.
+Habitat Encoding
+~~~~~~~~~~~~~~~~
+
+Immunity to an axis: all three bytes for that axis (center, min, max) = ``0xFF``.
+
+Gravity index (0–100) maps to g values via the ``Gravity_Map`` lookup table
+(see :doc:`../mechanics/habitability`).
+
+Temperature scale: ``temp_°C = (index − 50) × 4``.
+Range: index 0 = −200°C, index 50 = 0°C, index 100 = +200°C.
+
+Radiation: direct 0–100 mR/yr.
+
+Center byte is always ``floor((min + max) / 2)``; a bounds checker in Stars!
+enforces this at save time.
+
+Name Section
+~~~~~~~~~~~~
+
+The name section starts at payload offset 112 with a ``0x00`` constant byte,
+followed by two name blocks (singular and plural).  Each block:
+
+- **1-byte marker**: determines block type and size
+  - 6 or 7 → preset name; ``marker`` data bytes follow (opaque lookup key)
+  - 8, 9, … → user-typed name; ``marker`` data bytes follow, each encoding
+    ``char = byte − 111`` (printable ASCII, base offset 111)
+- **marker bytes of data**: the block body
+
+Blocks are contiguous; plural block follows immediately after singular.
+If plural marker is ``0``, no plural is stored and the importer defaults to
+``singular + "s"``.
+
+Preset name lookup keys (full data block, singular first):
+
+.. code-block:: text
+
+   Humanoid:   [183,222,219,22,116,214]     / [183,222,219,22,116,214,159]
+   Antetheral: [176,106,42,50,129,95]       / [176,106,42,50,129,89]
+   Insectoid:  [184,105,45,90,116,214]      / [184,105,45,90,116,214,159]
+   Nucleotid:  [189,222,213,82,122,77,111]  / [189,222,213,82,122,77,105]
+   Rabbitoid:  [193,29,77,68,167,77,111]    / [193,29,77,68,167,77,105]
+   Silicanoid: [194,69,77,81,103,77,111]    / [194,69,77,81,103,77,105]
 
 LRT Bitmask Bit Order
 ~~~~~~~~~~~~~~~~~~~~~
