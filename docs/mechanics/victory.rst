@@ -62,32 +62,40 @@ This prevents trivially fast wins in small universes.
 Score Calculation
 -----------------
 
-Score is a composite of several factors:
+Score is a composite of several factors.  Ship counts are capped at the number
+of planets owned (excess ships beyond that count do not score).
 
 .. list-table::
    :header-rows: 1
-   :widths: 30 40
+   :widths: 30 50
 
    * - Component
      - Formula
-   * - Planets owned
-     - colonized planets × 1
+   * - Planets
+     - 1–6 pts; 1 pt per 100,000 colonists (max 6 pts per planet)
    * - Starbases
-     - starbases × 3
+     - 3 pts each (Orbital Forts do not count)
    * - Unarmed ships
-     - ships (unarmed) × 0.5
-   * - Armed ships
-     - ships (armed) × 1
-   * - Resources
-     - annual resources × 1
-   * - Tech levels
-     - sum of all tech levels × 1
-   * - Population
-     - total population / 100,000
+     - 0.5 pt each (power rating = 0); capped at number of planets owned
+   * - Escort ships
+     - 2 pts each (power rating 1–1999); capped at number of planets owned
    * - Capital ships
-     - capital ships × 3
+     - ``8 × N_cap × N_planets / (N_cap + N_planets)`` pts each; capped at planets
+   * - Tech levels
+     - 1 pt per level for levels 1–3; 2 pt for 4–6; 3 pt for 7–9; 4 pt for 10+
+   * - Resources
+     - 1 pt per 30 annual resources
 
-.. todo:: Validate exact score formula components and multipliers.
+Capital ship scoring uses a harmonic-mean formula that rewards balanced
+fleet-to-planet ratios.  Example: 20 capital ships, 30 planets →
+``8 × 20 × 30 / (20 + 30) = 4.8 pts`` per capital ship.
+
+*Source: Stars! Players Guide (via Stars! FAQ advfaq/guts2.htm §4.13).*
+*Oracle validation of exact multipliers still recommended.*
+
+.. todo:: Validate capital ship "power rating" threshold (> 1999 = capital).
+   Confirm whether Orbital Forts are truly excluded from starbase scoring.
+   Confirm capping behavior (ship count vs planets owned).
 
 Winner Announcement
 -------------------

@@ -171,25 +171,59 @@ Missiles & Torpedoes
 Targeting Algorithm
 ^^^^^^^^^^^^^^^^^^^
 
-Missiles and torpedoes select targets by **attractiveness**, which combines cost
-and vulnerability.  Cheaply-built, lightly-armored ships are the most attractive
-targets.  Attractiveness is roughly proportional to:
+Missiles and torpedoes select targets by **attractiveness**.  Cheaply-built,
+lightly-armored ships are the most attractive targets and are fired upon first.
+
+The formula (Art Lathrop, April 1999 — community hypothesis, Ghidra confirmation
+pending):
 
 .. code-block:: text
 
-   attractiveness ∝ (armor + shields) / (resource_cost + boranium_cost)
+   Attractiveness = Cost / APN
+   Cost = boranium_cost + resource_cost
+   APN  = Attack Power Needed (effective durability against the weapon type)
+
+Higher cost and lower durability → higher attractiveness → targeted first.
+Attractiveness is floored to the nearest 0.01; ships with equal values are
+targeted randomly.
+
+**APN for beam weapons:**
+
+.. code-block:: text
+
+   Non-sappers:  APN = (Armor + Shields) / (.9 ^ n)
+   Sappers:      APN = Shields / (.9 ^ n)
+   n = number of beam deflectors on the target ship
+
+*(Range modifier likely applies but is unconfirmed.)*
+
+**APN for missiles and torpedoes:**
+
+.. code-block:: text
+
+   Accuracy = hit probability 0–1, including jamming and targeting computers.
+   Weapon_Type: 1 = torpedo, 2 = missile
+
+   If Shield >= Armor:  APN = Armor * 2 / Accuracy
+   If Shield < Armor:   APN = Shield * 2 / Accuracy
+                             + (Armor - Shield) / (Accuracy * Weapon_Type)
+
+The torpedo/missile distinction means they can target different ships when a
+target has more armor than shields.
 
 Practical effects:
 
 - Scouts/frigates with cheap engines and minimal armor are chosen first, soaking
   missiles before capital ships are targeted ("chaff" strategy).
-- Adding shields to a cheap ship reduces its attractiveness as a missile target
-  (more durability per cost → less attractive).
+- Adding shields to cheap chaff reduces attractiveness (raises APN), but increases
+  durability — a design tradeoff.
 - Adding armor to capital ships decreases their attractiveness relative to chaff.
+- Stack size does not affect attractiveness.
 
 .. todo::
 
-   Verify exact targeting attractiveness formula via Ghidra.  See
+   Confirm via Ghidra: range modifier on beamer APN; exact accuracy rounding;
+   whether miniaturized costs or base costs are used in ``Cost``.  See
    ``stars-reborn-research/docs/open_questions/targeting_attractiveness_formula.rst``.
 
 Battle Computers
@@ -415,12 +449,112 @@ Destroyed ships leave salvage: a percentage of their hull + parts mineral cost.
 Salvage drifts in space and decays each year.
 Bombing
 -------
-When a fleet with bomb weapons is at a planet with no defending fleet:
-**Normal bombs** — each bomb kills a percentage of population and defenses:
+
+Bombing occurs after fleet battles in the turn order.  A fleet with bomb weapons
+at a planet that has no defending fleet executes its bombing orders.
+
+Defense Coverage
+^^^^^^^^^^^^^^^^
+
+Each planetary defense installation provides a base coverage value.  Multiple
+defenses stack with diminishing returns:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 20
+
+   * - Defense type
+     - Base coverage (per unit)
+   * - SDI
+     - 0.99%
+   * - Missile Battery
+     - 1.99%
+   * - Laser Battery
+     - 2.39%
+   * - Planetary Shield
+     - 2.99%
+   * - Neutron Dampener
+     - 3.79%
+
+Coverage of n defenses of base value d:
+
 .. code-block:: text
-    pop_killed = colonists * kill_percent / 100
-    defenses_killed = floor(defenses * defense_kill_percent / 100)
-**Smart bombs** — kill only colonists, not defenses.
-**Retroviruses** (SD PRT only) — spread a retrovirus that causes population loss in
+
+   Def(pop)   = 1 - (1 - d)^n          # vs. normal bombs and packet hits
+   Def(build) = Def(pop) * 0.5          # vs. normal bombs, buildings only
+   Def(inv)   = Def(pop) * 0.75         # vs. invasion (ground combat)
+   Def(smart) = 1 - (1 - d/2)^n        # vs. smart bombs (base coverage halved)
+
+Normal Bombs
+^^^^^^^^^^^^
+
+Each bomb type has a kill percentage, building-kill count, and minimum kill:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 15 15
+
+   * - Bomb
+     - Pop kill %
+     - Bldg kill
+     - Min kill
+   * - Lady Finger
+     - 0.6%
+     - 2
+     - 300
+   * - Black Cat
+     - 0.9%
+     - 4
+     - 300
+   * - M70
+     - 1.2%
+     - 6
+     - 300
+   * - M80
+     - 1.7%
+     - 7
+     - 300
+   * - Cherry Bomb
+     - 2.5%
+     - 10
+     - 300
+   * - LBU-17
+     - 0.2%
+     - 16
+     - 0
+   * - LBU-32
+     - 0.3%
+     - 28
+     - 0
+   * - LBU-74
+     - 0.4%
+     - 45
+     - 0
+   * - Orbital Colony Module
+     - 0%
+     - 0
+     - 2000
+   * - Hush-a-Boom
+     - 3.0%
+     - 2
+     - ?
+   * - Multicont. Munition
+     - 2.0%
+     - 5
+     - ?
+
+Normal bombs stack linearly.  Pop killed = max(percentage × pop, min_kill), all
+modified by ``(1 - Def(pop))``.  Buildings killed similarly using ``Def(build)``.
+
+Smart Bombs
+^^^^^^^^^^^
+
+Smart bombs kill only colonists, not defenses or buildings.  Defense coverage
+against smart bombs uses ``Def(smart)`` (halved base coverage).
+
+**Retroviruses** (SD PRT only) — spread a retrovirus causing population loss over
 subsequent years (decreasing effect over 3 years).
-Reference: Leonard Dickens 1998 bombing formula (``sr-old/reference/research/``).
+
+*Source: Leonard Dickens, rec.games.computer.stars 1998-07-17, via*
+*Stars! FAQ advfaq/guts1.htm.  Community hypothesis; oracle confirmation pending*
+*for exact bomb kill percentages and minimum kill values.*
