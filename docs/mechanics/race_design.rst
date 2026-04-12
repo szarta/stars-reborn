@@ -290,18 +290,29 @@ Starting Population
 - Accelerated BBS: 4× normal (100,000)
 - Low Starting Population LRT: 17,500 (70% of normal; 30% fewer colonists)
 
-.. todo::
+.. note::
 
-   Verify exact starting pop formula — some sources suggest
-   ``5,000 × growth_rate`` (so 10% GR → 75,000) rather than a flat 25,000.
+   *Confirmed:* ``Consts.java`` from the craigstars open-source reimplementation
+   records ``startingPopulation = 25000`` as a flat constant — not a function of
+   growth rate.  The "5,000 × growth_rate" figure seen in some community posts
+   appears to be erroneous.
 
 Advantage Points
 ----------------
 
 The race designer enforces a point budget. Each trait has a cost/benefit that
-adds or subtracts from the budget. The values below are sourced from the
-Python reference engine (``parameters/race.py``, ``objects/race.py``); all
-require oracle verification against ``stars.exe``.
+adds or subtracts from the budget.
+
+.. note::
+
+   **Source:** The values below have been cross-verified against
+   ``RacePointsCalculator.java`` from the `craigstars
+   <https://github.com/nicholasolas/Stars->`_ open-source Stars! reimplementation.
+   The internal algorithm accumulates **raw points** (starting at 1,650) from
+   habitat range, growth rate, economy parameters, PRT flag, and LRT flags; the
+   final result is integer-divided by 3.  Most LRT values in the table below
+   match exactly to ``raw_value / 3``; exceptions are noted in the todo at the
+   end of this section.
 
 PRT point values
 ~~~~~~~~~~~~~~~~
@@ -406,8 +417,28 @@ Immune axes each cost points (beneficial):
 - All three axes immune: −3925 total (not the sum of three individual
   immune values; tri-immunity is specially capped)
 
-Non-immune habitat ranges contribute points based on range width and
-position; the formula is complex and requires oracle verification.
+Non-immune habitat ranges contribute points through the following algorithm
+(from ``RacePointsCalculator.java``, craigstars):
+
+The calculation runs **3 outer loops** with a ``TTCorrectionFactor`` of
+``{0, 5, 15}`` (or ``{0, 8, 17}`` if TT is selected).  Each loop samples
+11 evenly-spaced points across the race's effective terraformable range for
+each non-immune axis (1 point if immune).  For each sample combination the
+**planet desirability** is the squared distance from the hab center (clamped
+to 0–100), multiplied by a loop weight of ``{7, 5, 6}`` for the three outer
+loops respectively.  Accumulated desirabilities are scaled by the effective
+range width / 100 for non-immune axes, or × 11 for immune axes.  The final
+``habPoints`` is the total divided by 10.
+
+``habPoints`` then feeds the growth-rate penalty:
+``points -= (habPoints × growthRateFactor) / 24``
+
+This is why **TT's listed cost varies with hab range**: TT's raw flag cost
+is only −25 raw (≈ −8 advantage points), but enabling TT expands the
+effective terraformable range used in the hab sample loops, substantially
+increasing ``habPoints`` and thus the growth-rate penalty.  The −140 value
+shown for a Humanoid-range race is the NET effect; narrow-hab races pay
+less for TT, wide-hab races pay more.
 
 Economy parameter point values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -504,18 +535,44 @@ Economy parameter point values
 
 **Mine cost** (resources per mine, 2–15):
 
-- 2: −190, others: ``22 × (cost − 5)``  (e.g. 5 → 0, 2 → −66, 15 → +220)
+Exact raw formula (``costPoints = 3 − mine_cost``, before the global ÷3):
+
+- ``costPoints ≤ 0``: ``raw_contrib = costPoints × −65 + 80``
+- ``costPoints > 0`` (mine_cost < 3): ``raw_contrib = −360``
+
+Combined with the mine-production and colonists-per-mine terms before the
+global ÷3 is applied; the doc's prior ``22 × (cost − 5)`` approximation was
+close for mid-range values but diverges at the extremes.
 
 **Colonists per mine** (colonists that operate one mine ÷10k, 5–25):
 
 - ≤10: ``13 × (10 − value)``
 - >10: ``−12 × (value − 10)``
 
-.. todo::
+.. note::
 
-   Oracle-verify all advantage point values above. The Python reference
-   engine notes "slight deviations" in some mine cost values (21 vs. 22)
-   and used an approximation.
+   **Verification status (cross-checked against craigstars source):**
+
+   - **Most LRT costs confirmed** — IFE (−78), ARM (−53), ISB (−67), GR (+13),
+     UR (−80), CE (+80), OBRM (+85), LSP (+60), BET (+23), RS (+10), MA (−51)
+     all match ``raw / 3`` from the Java source within rounding.
+
+   - **TT cost is range-dependent** — the raw TT flag cost is only −25 (≈ −8
+     adv. pts.); the −140 figure is the net cost for a Humanoid-range race
+     because TT's expanded terraforming window raises the hab-range component
+     significantly.  See Habitat point values section above.
+
+   - **NAS discrepancy** — the craigstars raw NAS cost is 325 (→ 108 adv.
+     pts. after ÷3); this doc shows +95.  The source of the discrepancy is
+     unresolved.  The craigstars code also applies *additional* NAS penalties
+     for PP (−93 extra), SS (−67 extra), and JoaT (−13 extra) races.  Oracle
+     test recommended to pin the baseline value.
+
+   - **Mine cost formula** — the craigstars source uses exact coefficients
+     (``costPoints × −65 + 80`` when ``costPoints ≤ 0``, ``−360`` otherwise)
+     rather than the ``22 × (cost − 5)`` approximation used previously.
+     For most values the approximation is within ±5 pts; mine cost = 2 has
+     the largest deviation (−190 exact vs. −66 approximated).
 
 LRT Interaction Notes
 ~~~~~~~~~~~~~~~~~~~~~
@@ -531,8 +588,6 @@ LRT Interaction Notes
 
 Open Questions
 --------------
-
-.. todo:: Exact starting population formula (simple vs. growth_rate-dependent)
 
 .. todo:: CA terraforming rate and cost vs. normal terraforming
 

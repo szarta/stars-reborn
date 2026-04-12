@@ -11,3 +11,4 @@ Community documentation, strategy guide excerpts, and raw notes from the
    engines
    ship_hulls
    starbase_hulls
+   abbreviations
