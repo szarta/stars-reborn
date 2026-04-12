@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-validate-race.json",
+  "description": "The payload response to validate a race.",
+  "version": "0.0.1",
+  "definitions": {},
+  "additionalProperties": false,
+  "required": [
+    "request-is-valid"
+  ],
+  "properties": {
+    "request-is-valid": {
+      "type": "boolean"
+    },
+    "race-is-valid": {
+      "type": "boolean"
+    },
+    "failure-reason": {
+      "type": "string",
+      "maxLength": 1024
+    }
+  }
+}

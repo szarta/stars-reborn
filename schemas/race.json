@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/race.json",
+  "version": "0.0.1",
+  "definitions": {
+    "predefined-race": {
+      "enum": [
+        "Humanoid",
+        "Rabbitoid",
+        "Insectoid",
+        "Nucleotid",
+        "Silcanoid",
+        "Antetheral"
+      ]
+    },
+    "primary-racial-trait": {
+      "enum": [
+        "Claim Adjuster",
+        "Jack of All Trades",
+        "Interstellar Traveler",
+        "Inner Strength",
+        "Space Demolition",
+        "War Monger",
+        "Packet Physics",
+        "Super Stealth",
+        "Hyper Expansion",
+        "Alternate Reality"
+      ]
+    },
+    "lesser-racial-trait": {
+      "enum": [
+        "No Ramscoop Engines",
+        "Cheap Engines",
+        "Only Basic Remote Mining",
+        "No Advanced Scanners",
+        "Low Starting Population",
+        "Bleeding Edge Technology",
+        "Regenerating Shields",
+        "Improved Fuel Efficiency",
+        "Total Terraforming",
+        "Advanced Remote Mining",
+        "Improved Starbases",
+        "Generalized Research",
+        "Ultimate Recycling",
+        "Mineral Alchemy"
+      ]
+    },
+    "technology-cost": {
+      "enum": [
+        "Cheap",
+        "Normal",
+        "Expensive"
+      ]
+    },
+    "race": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "singular-name",
+        "plural-name",
+        "primary-racial-trait",
+        "growth-rate",
+        "resource-production",
+        "factory-cost",
+        "factory-production",
+        "colonists-operate-factories",
+        "mine-cost",
+        "mine-production",
+        "colonists-operate-mines",
+        "factory-cheap-germanium",
+        "expensive-tech-boost",
+        "weapons-cost",
+        "construction-cost",
+        "electronics-cost",
+        "propulsion-cost",
+        "energy-cost",
+        "biotechnology-cost",
+        "leftover-points-spend"
+      ],
+      "properties": {
+        "advantage-points-left": {
+          "type": "integer"
+        },
+        "singular-name": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "plural-name": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "primary-racial-trait": {
+          "$ref": "#/definitions/primary-racial-trait"
+        },
+        "lesser-racial-traits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/lesser-racial-trait"
+          }
+        },
+        "radiation-immune": {
+          "type": "boolean"
+        },
+        "temperature-immune": {
+          "type": "boolean"
+        },
+        "gravity-immune": {
+          "type": "boolean"
+        },
+        "growth-rate": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "resource-production": {
+          "type": "integer",
+          "minimum": 700,
+          "maximum": 2500
+        },
+        "factory-production": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 15
+        },
+        "factory-cost": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25
+        },
+        "mine-cost": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 15
+        },
+        "mine-production": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25
+        },
+        "colonists-operate-mines": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25
+        },
+        "colonists-operate-factories": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25
+        },
+        "factory-cheap-germanium": {
+          "type": "boolean"
+        },
+        "energy-cost": {
+          "$ref": "#/definitions/technology-cost"
+        },
+        "propulsion-cost": {
+          "$ref": "#/definitions/technology-cost"
+        },
+        "biotechnology-cost": {
+          "$ref": "#/definitions/technology-cost"
+        },
+        "electronics-cost": {
+          "$ref": "#/definitions/technology-cost"
+        },
+        "weapons-cost": {
+          "$ref": "#/definitions/technology-cost"
+        },
+        "construction-cost": {
+          "$ref": "#/definitions/technology-cost"
+        },
+        "expensive-tech-boost": {
+          "type": "boolean"
+        },
+        "leftover-points-spend": {
+          "enum": [
+            "Surface Minerals",
+            "Mines",
+            "Factories",
+            "Defenses",
+            "Mineral Concentration"
+          ]
+        }
+      }
+    }
+  }
+}
