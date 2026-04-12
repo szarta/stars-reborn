@@ -44,3 +44,9 @@ JSON Schema definitions live in ``stars-reborn-schemas``.
    :caption: Reference
 
    reference/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Project
+
+   credits
