@@ -7,9 +7,12 @@ Community documentation, strategy guide excerpts, and raw notes from the
 .. toctree::
    :maxdepth: 1
 
-   universe_sizes
+   technology_access
+   components
+   planetary_tech
    engines
    ship_hulls
    starbase_hulls
+   universe_sizes
    abbreviations
    ai_races
