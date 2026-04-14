@@ -22,6 +22,10 @@ Slot types: ``Weapons`` = BeamWeapons|Torpedoes; ``Shields`` = shields only;
 ``Protection`` = Armor|Shields; ``Electrical`` = electrical parts;
 ``OrbitalElect`` = stargates, mass drivers, or electrical parts.
 
+.. seealso::
+
+   :doc:`starbase_components` — full stargate and mass driver tech tables.
+
 .. list-table::
    :header-rows: 1
    :widths: 20 8 8 8 8 8 52

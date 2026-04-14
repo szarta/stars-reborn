@@ -1,16 +1,20 @@
 Planetary Technology
 =====================
 
-Orbital and planetary installations: planetary scanners, planetary defenses,
-stargates, mass drivers, and terraforming.
+Planetary and orbital installations that are built on planets (not on ships
+or starbases): planetary scanners, planetary defenses, and terraforming.
+
+For starbase-mounted orbital items (stargates, mass drivers) see
+:doc:`starbase_components`.  For the GenesisDevice (MT ship component that
+terraforms an entire planet) see :doc:`components`.
 
 **Source:** Python engine ``factory.py``.  All values need oracle verification.
 
 Tech requirements: ``En/We/Pr/Co/El/Bio``.  Costs: ``[Ir, Bo, Ge, Resources]``.
 
-Access: see :doc:`technology_access` — none of these items are in the base
-research pool.  They are granted via ``PRT_Technologies`` and/or ``LRT_Technologies``
-lists.
+Access: see :doc:`technology_access` — planetary scanners and defenses are not
+in the base research pool; they are granted via ``PRT_Technologies`` lists.
+Terraforming is in the base pool (axis-specific) or via TT LRT (total terraform).
 
 .. _planetary-scanners-ref:
 
@@ -140,158 +144,6 @@ colonist protection = 1 − (1 − 0.0099)^100 = 1 − 0.9901^100 ≈ 63.3%.
      - 3.79% (0.0379)
      - All PRTs except WM and AR
 
-.. _stargates-ref:
-
-Stargates
----------
-
-Stargates are starbase-mounted orbital installations (no mass; built on
-starbases only, not ships).  They allow instantaneous fleet teleportation
-between two gates; fleets exceeding the safe limits take damage or may
-be destroyed.
-
-``safe_mass`` — maximum fleet mass (kT) that can transit without damage.
-``safe_range`` — maximum gate-to-gate distance (ly) for safe transit.
-``any`` indicates no limit.
-
-Cost for all stargates: ``[50, 20, 20, N]`` (resources vary by type).
-
-Access: see :doc:`technology_access` for per-PRT gate availability.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 22 20 18 12 12 16
-
-   * - Item
-     - Tech Req
-     - Cost [Ir,Bo,Ge,R]
-     - Safe mass (kT)
-     - Safe range (ly)
-     - Access
-   * - Stargate 100/250
-     - Pr 5 / Co 5
-     - [50,20,20,200]
-     - 100
-     - 250
-     - All PRTs
-   * - StargateAny/300
-     - Pr 6 / Co 10
-     - [50,20,20,250]
-     - any
-     - 300
-     - IT only
-   * - Stargate 150/600
-     - Pr 11 / Co 7
-     - [50,20,20,500]
-     - 150
-     - 600
-     - All PRTs except CA and HE
-   * - Stargate 300/500
-     - Pr 9 / Co 13
-     - [50,20,20,600]
-     - 300
-     - 500
-     - All PRTs except CA and HE
-   * - Stargate100/Any
-     - Pr 16 / Co 12
-     - [50,20,20,700]
-     - 100
-     - any
-     - IT only
-   * - StargateAny/800
-     - Pr 12 / Co 18
-     - [50,20,20,700]
-     - any
-     - 800
-     - IT only
-   * - StargateAny/Any
-     - Pr 19 / Co 24
-     - [50,20,20,800]
-     - any
-     - any
-     - IT only
-
-.. note::
-   HE has **no stargate access** — Stargate100/250 is absent from the HE
-   ``PRT_Technologies`` list.  This appears intentional: HE races expand via
-   mass drivers and high growth rate rather than gate networks.
-
-.. _mass-drivers-ref:
-
-Mass Drivers
-------------
-
-Mass drivers are starbase-mounted orbital installations (no mass; built on
-starbases only).  They accelerate mineral packets to a target planet at
-``warp_speed``.  Packets traveling faster than the receiving driver's speed
-lose minerals on arrival; packets arriving at an undefended planet cause
-damage.
-
-Cost formula: varies by driver tier (see table).  Base access depends on PRT:
-MassDriver7 and UltraDriver10 are in the base pool (all races).
-Odd-tier drivers (5, 6, 8, 9, 11, 12, 13) are PP-exclusive.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 22 16 22 12 28
-
-   * - Item
-     - Tech Req
-     - Cost [Ir,Bo,Ge,R]
-     - Speed
-     - Access
-   * - MassDriver5
-     - En 4
-     - [24,20,20,70]
-     - Warp 5
-     - PP only
-   * - MassDriver6
-     - En 7
-     - [24,20,20,144]
-     - Warp 6
-     - PP only
-   * - MassDriver7
-     - En 9
-     - [100,100,100,512]
-     - Warp 7
-     - Base pool (all races)
-   * - SuperDriver8
-     - En 11
-     - [24,20,20,256]
-     - Warp 8
-     - PP only
-   * - SuperDriver9
-     - En 13
-     - [24,20,20,324]
-     - Warp 9
-     - PP only
-   * - UltraDriver10
-     - En 15
-     - [100,100,100,968]
-     - Warp 10
-     - Base pool (all races)
-   * - UltraDriver11
-     - En 17
-     - [24,20,20,484]
-     - Warp 11
-     - PP only
-   * - UltraDriver12
-     - En 20
-     - [24,20,20,576]
-     - Warp 12
-     - PP only
-   * - UltraDriver13
-     - En 24
-     - [24,20,20,676]
-     - Warp 13
-     - PP only
-
-.. note::
-   MassDriver7 and UltraDriver10 have disproportionately high resource costs
-   (512 and 968 vs. the ~70–676 range of PP-exclusive drivers).  PP races can
-   always build the cheaper tier-adjacent drivers; non-PP races pay the high
-   cost for the two base-pool drivers.
-
 .. _terraforming-ref:
 
 Terraforming
@@ -393,15 +245,3 @@ Axis-Specific Terraforming (base pool — all races)
    * - RadiationTerraform15
      - We 16 / Bio 4
      - Radiation ±15 steps/yr
-
-GenesisDevice (MT)
-~~~~~~~~~~~~~~~~~~~
-
-The GenesisDevice is a Mystery Trader item that terraforms an entire planet
-to ideal habitability in one use.
-
-- **ID:** 234
-- **Tech req:** En 20 / We 10 / Pr 10 / Co 20 / El 10 / Bio 20
-- **Cost:** [0, 0, 0, 5000]
-- **Effect:** Sets all three hab axes to the race's ideal values (100% value)
-  on any planet.

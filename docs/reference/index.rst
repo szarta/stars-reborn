@@ -10,6 +10,7 @@ Community documentation, strategy guide excerpts, and raw notes from the
    technology_access
    components
    planetary_tech
+   starbase_components
    engines
    ship_hulls
    starbase_hulls

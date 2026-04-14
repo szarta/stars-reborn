@@ -1030,6 +1030,11 @@ Mechanical Components
      - [12,0,3,25]
      - 9
      - MT item; +250 cargo; 10% cloak; +50 armor dp
+   * - GenesisDevice *(MT)*
+     - En 20 / We 10 / Pr 10 / Co 20 / El 10 / Bio 20
+     - [0,0,0,5000]
+     - 0
+     - MT item; one-use; sets all three hab axes to race ideal (100% value) on any planet
 
 .. _electrical-ref:
 
