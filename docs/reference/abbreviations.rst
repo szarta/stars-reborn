@@ -18,7 +18,7 @@ Primary Racial Traits (PRTs)
    * - Abbrev
      - Full Name
    * - HE
-     - Hyper Expander
+     - Hyper Expansion
    * - SS
      - Super Stealth
    * - WM
@@ -26,7 +26,7 @@ Primary Racial Traits (PRTs)
    * - CA
      - Claim Adjuster
    * - IS
-     - Inner-Strength
+     - Inner Strength
    * - SD
      - Space Demolition
    * - PP
@@ -61,6 +61,8 @@ Lesser Racial Traits (LRTs)
      - Ultimate Recycling
    * - MA
      - Mineral Alchemy
+   * - CE
+     - Cheap Engines
    * - NRSE
      - No Ram Scoop Engines
    * - OBRM
@@ -170,6 +172,10 @@ Playstyles
      - Hyper Growth race
    * - HP
      - Hyper Producer race
+   * - Monster
+     - Race able to reach 25 000 resources by 2450 in standard test conditions
+   * - QS
+     - Quick Start race (cheap factories, small/tiny universes)
    * - OWW / 1WW
      - One World Wonder race
 

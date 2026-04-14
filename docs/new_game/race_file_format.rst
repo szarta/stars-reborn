@@ -151,9 +151,9 @@ Original ``.r`` / ``.r1`` File Import
 --------------------------------------
 
 The original |original| game saves race designs as ``.r`` files (one per
-player slot, numbered ``.r1``–``.r16``).  The engine ships an import utility
-(``r1_to_json``, in ``stars-reborn-engine/engine/src/bin/``) that reads these
-and emits the equivalent ``race.json``.
+player slot, numbered ``.r1``–``.r16``).  The import utility
+(``r1_to_json``, in ``stars_file_parser/src/bin/``) reads these and emits
+the equivalent ``race.json``.
 
 Container Format
 ~~~~~~~~~~~~~~~~
@@ -200,6 +200,9 @@ unless noted.
    * - 0
      - 1
      - ``0xFF`` constant (magic/version marker)
+   * - 6
+     - 1
+     - ``icon_index`` — race icon (see `Icon Index Encoding`_ below)
    * - 16
      - 1
      - ``grav_center`` — gravity hab center (0–100 index; ``0xFF`` = immune)
@@ -280,7 +283,7 @@ unless noted.
      - PRT index (HE=0, SS=1, WM=2, CA=3*, IS=4, SD=5, PP=6, IT=7, AR=8*, JOAT=9)
    * - 78
      - 2
-     - LRT bitmask and icon_index — **encoding unconfirmed** (see R1.2)
+     - LRT bitmask — 16-bit LE word; see `LRT Bitmask Bit Order`_ for file bit layout
    * - 81
      - 1
      - Flags: bit 7 = ``factory_cheap_germanium``, bit 5 = ``expensive_tech_boost``
@@ -289,6 +292,17 @@ unless noted.
      - Name section (see below)
 
 ``*`` CA=3 and AR=8 are inferred, not yet oracle-confirmed.
+
+Icon Index Encoding
+~~~~~~~~~~~~~~~~~~~
+
+The icon index is stored at payload byte 6.  Bits 3–7 hold the 1-based icon
+number modulo 32 (so icon 32 encodes as 0); bits 0–2 are always ``0b111``.
+
+- **Encode**: ``byte = (((icon_0idx + 1) & 0x1F) << 3) | 0x07``
+- **Decode**: ``icon_0idx = ((byte >> 3) - 1) & 0x1F``
+
+``icon_0idx`` is 0-based (0–31); there are 32 unique race icons.
 
 Habitat Encoding
 ~~~~~~~~~~~~~~~~
@@ -336,48 +350,47 @@ Preset name lookup keys (full data block, singular first):
 LRT Bitmask Bit Order
 ~~~~~~~~~~~~~~~~~~~~~
 
-Confirmed via differential analysis of known-race ``.r1`` files
-(``scripts/analyze_r1.py`` in ``stars-reborn-research``):
+The 16-bit LE word at payload bytes 78–79 encodes all 14 LRTs.  Bits 14–15
+are unused.  The bit layout does **not** follow the logical LRT order;
+it is a fixed scramble confirmed by single-LRT differential experiments
+(``scripts/analyze_r1.py`` in ``stars-reborn-research``, 2026-04-11).
 
 .. list-table::
    :header-rows: 1
    :widths: 10 90
 
-   * - Bit
+   * - File bit
      - LRT
    * - 0
-     - No Ramscoop Engines (NRE)
-   * - 1
      - Improved Fuel Efficiency (IFE)
-   * - 2
-     - Cheap Engines (CE)
-   * - 3
+   * - 1
      - Total Terraforming (TT)
-   * - 4
-     - Only Basic Remote Mining (OBRM)
-   * - 5
+   * - 2
      - Advanced Remote Mining (ARM)
-   * - 6
-     - No Advanced Scanners (NAS)
-   * - 7
+   * - 3
      - Improved Starbases (ISB)
-   * - 8
-     - Low Starting Population (LSP)
-   * - 9
+   * - 4
      - Generalized Research (GR)
-   * - 10
-     - Bleeding Edge Technology (BET)
-   * - 11
+   * - 5
      - Ultimate Recycling (UR)
-   * - 12
-     - Regenerating Shields (RS)
-   * - 13
+   * - 6
      - Mineral Alchemy (MA)
-
-.. note::
-
-   Byte offset of the bitmask within the record payload is still TBD.
-   See research task R1.2.
+   * - 7
+     - No Ramscoop Engines (NRE)
+   * - 8
+     - Cheap Engines (CE)
+   * - 9
+     - Only Basic Remote Mining (OBRM)
+   * - 10
+     - No Advanced Scanners (NAS)
+   * - 11
+     - Low Starting Population (LSP)
+   * - 12
+     - Bleeding Edge Technology (BET)
+   * - 13
+     - Regenerating Shields (RS)
+   * - 14–15
+     - unused
 
 Import Validation
 ~~~~~~~~~~~~~~~~~

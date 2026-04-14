@@ -43,34 +43,34 @@ Every race has exactly one PRT. The PRT defines fundamental abilities and tech a
      - Description
    * - JOAT
      - Jack of All Trades
-     - No specialty. Gets free tech bonuses across the board; can build any ship type.
+     - Built-in penetrating scanners on all ships; slightly larger planet capacity; no specialty bonus or penalty.
    * - HE
      - Hyper Expansion
-     - Double colonist growth rate; can colonize with pop packets fired from mass drivers.
+     - Double population growth rate; maximum planet population is half that of other races.
    * - SS
      - Super Stealth
-     - Cloaking devices; built-in scanner/cloak on ships; steal tech from enemies.
+     - All ships 75% cloaked; PickPocket and Robber Baron scanners steal minerals; tech theft.
    * - WM
      - War Monger
-     - Best weapons tech discounts; built-in battle computers; ramscoops.
+     - Weapons cost less; exclusive Battle Cruiser and Dreadnought hulls; higher starting weapons tech.
    * - CA
      - Claim Adjuster
-     - Terraforming technology; can terraform all axes regardless of race hab.
+     - Auto-terraforms planets toward race hab preferences; can total-terraform any axis.
    * - IS
-     - Interstellar Traveler
-     - Stargates built-in; regenerating shields in combat.
+     - Inner Strength
+     - Shields regenerate 25% per combat round; colonists grow while traveling in ships; bonus ground combat defense.
    * - SD
      - Space Demolition
-     - Mine-laying specialists; retroviruses in bombing.
+     - Mine-laying specialists; minefields act as scanners; can detonate own minefields; retroviruses in bombing.
    * - PP
      - Packet Physics
-     - Mass driver specialists; auto-terraforming via packet bombardment.
+     - Mass driver specialists; cheap mineral packets as weapons and scanners; auto-terraforming via packet bombardment.
    * - IT
-     - Interstellar Traveler (alt)
-     - Long-range stargates; can exceed normal stargate mass limits.
+     - Interstellar Traveler
+     - Builds stargates cheaply; gates fleets without mass-limit damage; stargates scan enemy planets; starts Prop 5 / Construction 5.
    * - AR
-     - Artifact Reality
-     - Population lives in starbases, not on planets; no conventional colonization.
+     - Alternate Reality
+     - Population lives in starbases; resource generation scales with orbital population; no planetary colonization.
 
 Lesser Racial Traits (LRT)
 --------------------------
@@ -118,3 +118,46 @@ For each of the six tech fields, set cost to:
 * **Expensive** — 175% of normal cost
 
 One field may also be set to **Expensive** as a disadvantage to earn extra points.
+
+Race Archetypes
+---------------
+
+Community-established design philosophies for competitive play.  Every race
+should be designed around one of these themes rather than hedging between them.
+
+**HP — Hyper-Production**
+   Maximise long-term resource output. Narrow habitat (1-in-6 to 1-in-10),
+   typically Total Terraforming, slower growth rate (16–17%), Advanced Remote
+   Mining, and high factory settings. Needs time to ramp up; vulnerable early.
+   Typical factory settings: 15 factories / cost 9 / 25 per 10k colonists.
+
+**HG — Hyper-Growth**
+   Maximise expansion speed. Wider habitat (1-in-4 to 1-in-6), Only Basic
+   Remote Mining, high growth rate (18–19%), moderate factory settings. Target
+   benchmark: 25 000 resources by year 2450 in a test bed (no AI, Accelerated
+   BBS, maximum minerals, small packed universe).
+   Typical factory settings: 11–13 factories / cost 8–9 / 14–17 per 10k colonists.
+
+**Hybrid**
+   Mix of HG and HP. Best hybrids use HG habitat and growth settings combined
+   with HP resource (factory) settings; start slow, catch up to HG races by
+   approximately 2430–2440.
+
+**-F — Factoryless**
+   Set factory parameters to their worst values and redirect the freed points
+   to mines, ships, and tech. Fast early game; "low density" — needs many
+   planets to compensate.  Usually paired with OBRM and a wide habitat; often
+   CA to avoid terraforming costs.  Should target 20% growth rate; mine cost
+   should still be set to 3.
+
+**Monster**
+   Any race achieving 25 000 resources by 2450 in the standard HG test bed.
+   The gravity-immune CA is the easiest archetype; immunities significantly
+   simplify play at the cost of advantage points that must be recouped elsewhere.
+
+**QS — Quick Start**
+   Cheap factory settings (7 or below) for a fast early surge. Best in small
+   and tiny universes. Trades late-game potential for early-game pressure.
+
+.. note:: *Archetypes documented by Art Lathrop, "Basic Race Design" (1999);
+   corroborated by Mahrin Skel, "Race Design, Step by Step" (1997).*

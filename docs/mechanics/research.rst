@@ -50,27 +50,45 @@ Research cost to advance from level N to level N+1:
 
 .. code-block:: text
 
-   base_cost(N) = 50 × (N + 1)²   [resources needed]
+   cost = (BaseCost[N + 1] + total_all_levels × 10) × (cost_percent / 100)
 
-Adjusted by race modifier:
+   × 2 if the game option "Slower Tech Advances" is enabled
 
-- Cheap field: ``floor(base_cost × 0.50)``
-- Normal field: ``base_cost``
-- Expensive field: ``floor(base_cost × 1.75)``
+Where:
 
-Example: Advancing Weapons from level 5 to 6:
+- ``BaseCost[N+1]`` — a fixed table of base costs (see below)
+- ``total_all_levels`` — sum of the player's current levels in all 6 fields
+- ``cost_percent`` — 50 (Cheap), 100 (Normal), or 175 (Expensive)
+
+Base cost table (index = level being reached):
 
 .. code-block:: text
 
-   base_cost = 50 × (5+1)² = 50 × 36 = 1800 resources
-   Normal:    1800
-   Cheap:      900
-   Expensive: 3150
+   Reach  1:    50     Reach  2:    80     Reach  3:   130
+   Reach  4:   210     Reach  5:   340     Reach  6:   550
+   Reach  7:   890     Reach  8:  1440     Reach  9:  2330
+   Reach 10:  3770     Reach 11:  6100     Reach 12:  9870
+   Reach 13: 13850     Reach 14: 18040     Reach 15: 22440
+   Reach 16: 27050     Reach 17: 31870     Reach 18: 36900
+   Reach 19: 42140     Reach 20: 47590     Reach 21: 53250
+   Reach 22: 59120     Reach 23: 65200     Reach 24: 71490
+   Reach 25: 77990     Reach 26: 84700
 
-.. todo::
+Example: Advancing Weapons from level 5 to 6, total race tech currently at 15:
 
-   Validate the exact cost formula from the original. Some sources use a different
-   formula. Need Wine automation to record actual costs.
+.. code-block:: text
+
+   base = BaseCost[6] = 550
+   penalty = 15 × 10 = 150
+   Normal:    (550 + 150) × 1.00 =  700 resources
+   Cheap:     (550 + 150) × 0.50 =  350 resources
+   Expensive: (550 + 150) × 1.75 = 1225 resources
+
+*Source: original Python engine (src/model/player.py), citing SAH wiki
+"Guts of research costs" and Posey's Spreadsheet.*
+
+.. todo:: Oracle-validate: confirm total_all_levels × 10 penalty by observing
+   costs at different total tech levels in the original game.
 
 Miniaturization
 ---------------
@@ -122,12 +140,16 @@ all others advance steadily without player attention.
 Starting Tech Levels
 --------------------
 
-All races start at level 0 in all fields, with the following exception:
+All races start at level 0 in all fields, modified by:
 
-- **Expensive Tech Boost:** If a field is set to Expensive in the race designer,
-  the race starts at level 3 in that field.
+- **PRT minimums** — see ``docs/new_game/initial_state.rst`` (IT: Prop/Con ≥ 5;
+  JOAT: all ≥ 3; WM: Weapons ≥ 6; CA: Bio ≥ 6; etc.)
+- **IFE or CE LRT** — each adds +1 to Propulsion after all PRT minimums are applied
+- **Expensive Tech Boost flag** — raises every field set to Expensive to
+  max(current, 3)
 
-.. todo:: Verify the starting bonus level (3 is community consensus but needs confirmation).
+*Source: original Python engine (src/model/player.py).  IT/JOAT oracle-confirmed
+2026-04-14; WM/SD/CA/PP need oracle.*
 
 Technology Items
 ----------------
@@ -144,17 +166,19 @@ The full technology tree is in ``schemas/tech.json``.
 Open Questions
 --------------
 
-.. todo:: Exact tech level cost formula (validate against original)
+.. todo:: Oracle-validate the tech level cost formula — specifically the
+   ``total_all_levels × 10`` penalty term (need to observe actual costs at
+   varying total tech levels in the original game).
 
-.. todo:: Exact miniaturization formula and minimum cost cap
+.. todo:: Exact miniaturization formula — current formula is from Python engine;
+   confirm rounding, multi-field requirement overlevel logic, and BET 2× penalty
+   via oracle.
 
-.. todo:: Starting level for Expensive Tech Boost (3 vs other)
+.. todo:: GR distribution formula — 50%/15%/125% confirmed from Pullen web source;
+   verify engine implementation matches (does GR actually give a 25% resource bonus?).
 
-.. todo:: GR distribution formula (15%? exact split?)
-
-.. todo:: Whether any PRT gives additional starting tech
-
-.. todo:: Maximum tech level (26 in schema; confirm no items require above 26)
+.. todo:: Maximum tech level — 26 in base cost table and item requirements;
+   confirm no item requires level 27+ in any field.
 
 
 .. _stars-reborn-impl:

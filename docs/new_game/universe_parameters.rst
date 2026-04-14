@@ -110,9 +110,9 @@ Boolean flags that modify generation or gameplay.
      - All mineral concentrations set to 100.  Removes mineral scarcity.
    * - ``accelerated_bbs``
      - false
-     - Starting population ×4; all planets +20% minerals; poor mineral
-       worlds improved.  Changes starting pop formula — see
-       :doc:`../mechanics/race_design`.
+     - Starting population = ``25,000 + 5,000 × GR%`` (scales with growth
+       rate; ≈ 100,000 for a 15% race); all planets +20% minerals; poor
+       mineral worlds improved.  See :doc:`initial_state` for full formula.
    * - ``slower_tech_advances``
      - false
      - Research costs doubled universe-wide.

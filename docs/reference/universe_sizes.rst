@@ -59,10 +59,10 @@ Game Options
    more important element of play.
 
 **Accelerated BBS Play**
-   Players start with a population 4× larger than normal. All planets have
-   20% more minerals. Planets with poor mineral densities are improved slightly.
-   A rough approximation: ~5k pop for every 1% GR (e.g., 10% GR → ~75,000,
-   20% GR → ~125,000).
+   All planets have 20% more minerals; poor mineral worlds are improved
+   slightly.  Starting population uses the formula
+   ``25,000 + 5,000 × GR%`` — e.g., 10% GR → 75,000; 15% GR → 100,000;
+   20% GR → 125,000.  See :doc:`../new_game/initial_state` for details.
 
 **No Random Events**
    Disables all random occurrences: new mineral and artifact discoveries,

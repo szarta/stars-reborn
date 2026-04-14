@@ -143,9 +143,9 @@ Starting Population
    * - Normal game
      - 25,000
    * - Accelerated BBS
-     - 4 × normal (100,000)
+     - ``25,000 + 5,000 × GR%`` (e.g. 15% → 100,000; see below)
    * - Low Starting Population (LRT)
-     - 17,500 (70% of normal; LSP gives 30% fewer colonists)
+     - 70% of the above (30% fewer colonists)
 
 FreeStars implements starting population as:
 

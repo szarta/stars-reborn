@@ -12,3 +12,4 @@ Community documentation, strategy guide excerpts, and raw notes from the
    ship_hulls
    starbase_hulls
    abbreviations
+   ai_races

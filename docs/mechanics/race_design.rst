@@ -130,6 +130,12 @@ Lesser Racial Traits (LRT)
 
 Any combination may be chosen (some have prerequisites or conflicts).
 
+.. note::
+
+   Point costs shown here are for the default Humanoid race.  Actual costs vary
+   slightly with growth rate and hab settings (TT's effective cost rises sharply
+   with wider hab ranges; see Advantage Points section).
+
 .. list-table::
    :header-rows: 1
    :widths: 35 45 20
@@ -137,47 +143,47 @@ Any combination may be chosen (some have prerequisites or conflicts).
    * - LRT
      - Effect
      - Cost
-   * - No Ramscoop Engines (NRE)
-     - Cannot use ramscoop engines
+   * - No Ramscoop Engines (NRSE)
+     - Cannot use ramscoop engines; gains IS-10 warp-10 engine (requires Prop 11)
      - earns points
    * - Cheap Engines (CE)
-     - Engines cost 75%
+     - Engines cost 50% in resources and minerals; starting Propulsion +1; 10% chance fleet does not move each year at warp 7+
      - earns points
    * - Only Basic Remote Mining (OBRM)
-     - Cannot use advanced mining hulls
+     - Loses Robo-Miner, Robo-Maxi-Miner, Robo-Super-Miner robots and Maxi-Miner hull; maximum planet population +10%
      - earns points
    * - No Advanced Scanners (NAS)
-     - No penetrating scanners
+     - Loses all penetrating scanners; standard scanner ranges doubled
      - earns points
    * - Low Starting Population (LSP)
-     - Start with 70% of normal pop (30% fewer colonists)
+     - Starting planets have 30% fewer colonists (70% of normal)
      - earns points
    * - Bleeding Edge Technology (BET)
-     - New tech items cost ×2 at level+1
+     - Items cost ×2 until all tech requirements are exceeded by one level; miniaturization is 5%/level to 80% (vs. 4%/level to 75%)
      - earns points
    * - Regenerating Shields (RS)
-     - +IS-like shield regen (partial)
-     - costs points
+     - Shields regenerate 10% of max strength per combat round; shield items 40% stronger; armor slabs 50% weaker
+     - earns points
+   * - Generalized Research (GR)
+     - Only 50% of research resources apply to the current field; 15% goes to each of the five other fields (125% effective total)
+     - earns points
    * - Improved Fuel Efficiency (IFE)
-     - Engines use 15% less fuel
+     - Grants Fuel Mizer engine (and Galaxy Scoop if not NRSE); all engines use 15% less fuel; starting Propulsion +1
      - costs points
    * - Total Terraforming (TT)
-     - Can terraform any axis
+     - Terraforming costs only 70 resources per click (vs. 100); unlocks TT ±3, 5, 7, 10, 15, 20, 25, and 30 levels
      - costs points
    * - Advanced Remote Mining (ARM)
-     - Better remote mining hulls
+     - Grants Midget Miner, Miner, and Ultra-Miner hulls and Robo-Midget Miner and Robo-Ultra-Miner robots; starts with two Midget Miners
      - costs points
    * - Improved Starbases (ISB)
-     - Starbases get bonus armor/shields
-     - costs points
-   * - Generalized Research (GR)
-     - Research benefits all fields equally
+     - Grants Spacedock and Ultra Station hulls; all starbases cost 20% less and have built-in 20% cloak
      - costs points
    * - Ultimate Recycling (UR)
-     - Scrap ships returns 90% minerals
+     - Ships scrapped at starbases yield 90% minerals and some resources; scrapping at planets yields 45% minerals
      - costs points
    * - Mineral Alchemy (MA)
-     - Can convert resources to minerals
+     - Mineral Alchemy production costs only 25 resources per kT (vs. 100); converts resources into each mineral type
      - costs points
 
 Habitat Ranges
@@ -287,15 +293,17 @@ Starting Population
 -------------------
 
 - Normal start: 25,000 colonists
-- Accelerated BBS: 4× normal (100,000)
-- Low Starting Population LRT: 17,500 (70% of normal; 30% fewer colonists)
+- Accelerated BBS: ``25,000 + 5,000 × growth_rate_percent``
+  — e.g., 15% GR → 100,000;  10% GR → 75,000;  20% GR → 125,000
+- Low Starting Population LRT: 70% of the above (30% fewer colonists)
 
 .. note::
 
-   *Confirmed:* ``Consts.java`` from the craigstars open-source reimplementation
-   records ``startingPopulation = 25000`` as a flat constant — not a function of
-   growth rate.  The "5,000 × growth_rate" figure seen in some community posts
-   appears to be erroneous.
+   The base 25,000 is confirmed flat (``Consts.java`` from craigstars).
+   The Accelerated BBS bonus scales with growth rate — confirmed by the Python
+   engine (``turn.py``) and FreeStars source.  The shorthand "4× normal =
+   100,000" is the 15%-growth-rate case, not a general multiplier.
+   Oracle validation across multiple growth rates is pending (R2.1).
 
 Advantage Points
 ----------------
@@ -364,7 +372,7 @@ LRT point values
 
    * - LRT
      - Points
-   * - No Ramscoop Engines (NRE)
+   * - No Ramscoop Engines (NRSE)
      - +53
    * - Improved Fuel Efficiency (IFE)
      - −78
@@ -580,11 +588,18 @@ LRT Interaction Notes
 - **OBRM + ARM conflict:** Only Basic Remote Mining and Advanced Remote Mining
   cancel each other out. If both are selected, OBRM wins and ARM has no effect,
   wasting its cost. Never select both.
+- **IFE + NRSE interaction:** IFE grants the Galaxy Scoop only when NRSE is *not*
+  also selected.  Taking both is valid; you simply forgo the Galaxy Scoop.
+- **CE + UR interaction:** If a CE player builds a mostly-engine ship and a UR
+  player scraps it, the UR player can receive more minerals and resources than
+  the CE player spent — a cooperative exploit in team games.
 - **LRT count penalty:** After 4 lesser traits are selected, each additional LRT
   chosen *costs* advantage points rather than earning or spending at face value.
   Limit selections to 4 unless a 5th is critically necessary.
 
-.. note:: *Source: Stars! Strategy Guide, Chapter 3.*
+.. note:: *Sources: Stars! Strategy Guide Chapter 3; Walter D. Pullen,
+   "Lesser Racial Traits" (1997, v2.6/7); Mahrin Skel, "Race Design, Step
+   by Step" (1997, v2.6/7).*
 
 Open Questions
 --------------

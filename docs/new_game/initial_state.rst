@@ -22,89 +22,210 @@ selected:
    - Values are snapped to the nearest discrete step (see
      :doc:`../mechanics/habitability`).
 
-2. **Minerals** on the surface: 1 000 kT ironium, 1 000 kT boranium, 1 000 kT
-   germanium.
+2. **Mineral concentrations** are random per homeworld — not fixed at any
+   value.  Oracle corpus (130+ homeworlds across all map sizes and difficulty
+   tiers) shows concentrations spanning roughly 30–126 for each mineral.
+   ``beginner_max_minerals`` is believed to affect non-homeworld planets only.
 
-3. **Mineral concentrations** are set to 50 for all three minerals on
-   the homeworld (unaffected by ``beginner_max_minerals``).
+3. **Minerals on the surface** vary with concentration and are not a fixed
+   1 000 kT.  Observed homeworld surface minerals in the oracle corpus range
+   from roughly 100 kT to 800+ kT per mineral; the exact formula relating
+   concentration to initial surface amount is not yet determined.
 
 4. **Population** set per race and game options.  See
-   :doc:`../mechanics/race_design` for the formula.
+   :ref:`accelerated-bbs-pop` below and :doc:`../mechanics/race_design`.
 
-5. **Factories and mines** are built up to the race's starting capacity
-   from the starting population.
+5. **Factories, mines, and defenses** are pre-built at game start — the
+   player does not spend year-1 production to create them.
+
+   Oracle-confirmed values (turn-1 ``.m`` files, 130+ games):
+
+   - All PRTs except AR: **10 factories, 10 mines, 10 defenses.**
+   - AR (Alternate Reality): **no installations** — the Installations flag
+     is not set on AR homeworlds; mines, factories, and defenses are absent.
+
+   .. note::
+
+      These counts are independent of the race's economy parameters
+      (colonists-operate-factories, etc.).  The starting 10/10/10 appears
+      to be a fixed game constant, not derived from the starting population.
+
+.. _accelerated-bbs-pop:
+
+Accelerated BBS Starting Population
+-------------------------------------
+
+When the game option ``accelerated_bbs`` is enabled, each player's starting
+population on their homeworld is boosted by an amount that scales with the
+race's growth rate.
+
+Formula (Python engine ``turn.py``, citing SAH wiki Accelerated_BBS_Play;
+also confirmed by FreeStars open-source source):
+
+.. code-block:: text
+
+   ap_bonus     = 5 000 × growth_rate_percent   (growth_rate_percent as integer 1–20)
+   homeworld    = base_pop + ap_bonus
+   second_world = (base_pop + ap_bonus) / 4     [PP and any other multi-start PRT]
+
+Where ``base_pop`` is the normal starting population (25 000, or × 0.70 with
+LSP).
+
+Examples:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 20 20 20 25
+
+   * - GR%
+     - Bonus
+     - Homeworld (no LSP)
+     - Homeworld (LSP)
+     - Second world (no LSP)
+   * - 5%
+     - 25 000
+     - 50 000
+     - 35 000
+     - 12 500
+   * - 10%
+     - 50 000
+     - 75 000
+     - 52 500
+     - 18 750
+   * - 15%
+     - 75 000
+     - 100 000
+     - 70 000
+     - 25 000
+   * - 20%
+     - 100 000
+     - 125 000
+     - 87 500
+     - 31 250
+
+The commonly cited figure "4× normal = 100,000" is the 15% growth rate case.
+It is *not* a fixed multiplier — population scales linearly with growth rate.
 
 .. todo::
 
-   Confirm homeworld mineral concentrations: is 50 the correct value or does
-   the homeworld concentration match the surface amount (1 000 kT is unusual;
-   verify against original game files).
-
-.. todo::
-
-   Confirm starting factories and mines formula: does the original game
-   pre-build them, or does the player start with resources to build them
-   in year 1?
+   Oracle-validate the Accelerated BBS formula against multiple growth rates
+   (e.g., 5%, 10%, 20%) to confirm the 5 000 × GR scaling.  The "second world"
+   formula for PP also needs oracle confirmation.  (R2.1)
 
 Starting Technology
 -------------------
 
-All races start at tech level 3 in all six fields by default.
+Starting tech is computed as follows (applied in order, taking the maximum
+at each step):
 
-Modifiers applied in order:
+1. **Base level: 0** in all six fields for all PRTs.
 
-1. **Expensive tech boost:** if a field is set to Expensive *and* the
-   "Expensive Tech Boost" checkbox is enabled, that field starts at
-   ``max(base, 3)`` — granting the level-3 boost at no extra cost.
-   This is a flat +60 advantage-point trade for the starting levels.
+2. **PRT tech minimums** raise specific fields.  Oracle-confirmed values
+   from turn-1 ``.m`` files (130+ games); unconfirmed PRTs marked:
 
-2. **PRT tech boosts:** applied as ``max(current, minimum)``; they
-   override the base-3 where the PRT minimum is higher.
+   .. list-table::
+      :header-rows: 1
+      :widths: 10 50 40
+
+      * - PRT
+        - Starting tech minimums
+        - Status
+      * - JOAT
+        - All 6 fields ≥ 3
+        - Oracle-confirmed
+      * - CA
+        - Biotechnology ≥ 6
+        - Oracle-confirmed
+      * - SS
+        - Electronics ≥ 5
+        - Oracle-confirmed
+      * - PP
+        - Energy ≥ 4, Propulsion ≥ 4
+        - Oracle-confirmed (all corpus PP designs include IFE; see note)
+      * - AR
+        - Energy ≥ 1, Propulsion ≥ 1
+        - Oracle-confirmed (all corpus AR designs include IFE; see note)
+      * - IT
+        - Propulsion ≥ 5, Construction ≥ 5
+        - Not in corpus — sourced from strategy guide; needs oracle verify
+      * - WM
+        - Weapons ≥ 6, Energy ≥ 1, Propulsion ≥ 1
+        - Not in corpus — sourced from strategy guide; needs oracle verify
+      * - SD
+        - Propulsion ≥ 2, Biotechnology ≥ 2
+        - Not in corpus — sourced from strategy guide; needs oracle verify
+      * - HE, IS
+        - None
+        - Oracle-confirmed
+
+   .. note::
+
+      PP and AR corpus designs all include the IFE LRT (see step 3 below).
+      It is not yet confirmed from oracle data whether PP's Propulsion=4
+      is a PRT minimum or IFE applied to a lower PRT base.  The table
+      above reflects observed values; the split between PRT and IFE
+      contribution is unresolved for these two PRTs.
+
+3. **Expensive tech boost (EB):** if the race has the "Expensive Tech
+   Boost" flag set, every field whose research cost is ``75% extra``
+   is raised to ``max(current, 3)``.
+
+4. **LRT Propulsion bonus:** IFE (Improved Fuel Efficiency) and CE
+   (Cheap Engines) each add +1 to the Propulsion starting level.
+   Applied after all other modifiers.
+
+**Oracle examples** (harder/expert AI templates, turn-1 ``.m`` corpus):
 
 .. list-table::
    :header-rows: 1
-   :widths: 10 50 40
+   :widths: 10 30 10 40
 
    * - PRT
-     - Starting tech minimums
-     - Notes
-   * - IT
-     - Propulsion 5, Construction 5
-     - Gate capability requires C5; IT starts with stargates
-   * - SD
-     - Propulsion 2, Biotechnology 2
-     - Mine layer tech focus
-   * - WM
-     - Energy 1, Propulsion 1, Weapons 6
-     - Combat-ready from turn 1
-   * - PP
-     - Energy 4
-     - Mass driver tech requires Energy
-   * - CA
-     - Biotechnology 6
-     - Full terraforming capability from turn 1
+     - Relevant LRTs
+     - EB?
+     - Observed starting tech (E/W/P/C/El/B)
    * - JOAT
-     - All 6 fields at 3
-     - Brings all fields to the base level explicitly
-   * - HE, IS, SS, AR
-     - No PRT tech boost
-     - Start at base 3 (or Expensive-field modifiers only)
-
-.. note::
-
-   IFE (Improved Fuel Efficiency) and CE (Cheap Engines) LRTs each add
-   +1 to Propulsion starting level, applied after PRT boosts.
-
-.. todo::
-
-   Oracle-verify starting tech levels. Values sourced from the Python
-   reference engine (``objects/player.py``); may contain approximations.
+     - (none)
+     - No
+     - 3 / 3 / 3 / 3 / 3 / 3
+   * - HE
+     - IFE
+     - No
+     - 0 / 0 / 1 / 0 / 0 / 0
+   * - SS
+     - IFE
+     - No
+     - 0 / 0 / 1 / 0 / 5 / 0
+   * - CA
+     - IFE + all-Expensive fields
+     - Yes
+     - 3 / 3 / 4 / 3 / 3 / 6
+   * - IS
+     - CE + all-Expensive fields
+     - Yes
+     - 3 / 3 / 4 / 3 / 3 / 3
+   * - PP
+     - IFE + mixed costs
+     - Yes
+     - 4 / 0 / 4 / 0 / 0 / 0
+   * - AR
+     - IFE
+     - No
+     - 1 / 0 / 2 / 0 / 0 / 0
 
 Starting Fleets
 ---------------
 
 Each player starts with a small fleet sufficient to begin exploration and
 colonisation.  Fleet composition varies by PRT.
+
+.. note::
+
+   **PP (Packet Physics) starts with two planets** in non-tiny universes.
+   Oracle corpus confirms ``PlanetCount = 2`` in the turn-1 type-6 block for
+   PP in all map sizes except Tiny (where only one homeworld fits at the
+   required minimum spacing).  The second planet is not a random colony —
+   it appears to be a guaranteed second starting world specific to the PP PRT.
 
 .. list-table::
    :header-rows: 1
@@ -129,6 +250,9 @@ colonisation.  Fleet composition varies by PRT.
    * - AR
      - Unique — lives in starbases; no conventional colony ships
      - See :doc:`../mechanics/race_design` AR section
+   * - PP
+     - Unknown — likely includes mass driver on second starting world
+     - Needs oracle verification
    * - Others
      - 1× Long Range Scout, 1× Colony Ship
      - Standard complement
@@ -139,14 +263,17 @@ Fuel tanks are full.  The fleet is orbiting the homeworld at game start.
 .. todo::
 
    Verify per-PRT starting fleet composition against the original game.
-   The above is best-guess from community knowledge.  Confirm:
+   The above is best-guess from community knowledge + oracle corpus notes.
+   Confirm all of the following (R2.3):
 
    - Exact hull types (Long Range Scout vs. Scout)
    - Whether any PRT starts with an armed ship
-   - IT's additional starting ship type
-   - AR's starting state (no fleet at all? starts with an orbital fort?)
-   - PP starting fleet (do they get a mass driver immediately?)
-   - SD starting fleet (do they get a mine layer?)
+   - IT's additional starting ship type and whether it arrives with a stargate
+   - AR's starting state (no conventional fleet; does it start with an
+     orbital fort / starbase already placed?)
+   - PP starting fleet and second planet fleet/installations
+   - SD starting fleet (mine layer hull confirmed by strategy guide; verify
+     component loadout)
 
 .. todo::
 
