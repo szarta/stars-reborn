@@ -50,6 +50,23 @@ selected:
       (colonists-operate-factories, etc.).  The starting 10/10/10 appears
       to be a fixed game constant, not derived from the starting population.
 
+Starting Population
+-------------------
+
+Normal (non-Accelerated BBS) starting population:
+
+- **All PRTs except PP:** 25 000 colonists on the homeworld.  With LSP: 25 000 × 70% = 17 500.
+- **PP (Packet Physics):** 30 000 colonists total across two starting planets:
+
+  - Homeworld: 20 000 colonists.
+  - Second planet: 10 000 colonists.
+  - With LSP (70%): 21 000 total — 14 000 (homeworld) + 7 000 (second planet).
+
+  Oracle-confirmed (human race, SamplePP.m1): homeworld (Cerebus) 20 000, second planet (Clay) 10 000.
+
+Growth rate does **not** affect normal starting population — it determines year-over-year growth only,
+not the initial colonist count.  (Oracle-confirmed across GR 1%–20% for non-PP PRTs; R2.1 closed.)
+
 .. _accelerated-bbs-pop:
 
 Accelerated BBS Starting Population
@@ -68,8 +85,14 @@ also confirmed by FreeStars open-source source):
    homeworld    = base_pop + ap_bonus
    second_world = (base_pop + ap_bonus) / 4     [PP and any other multi-start PRT]
 
-Where ``base_pop`` is the normal starting population (25 000, or × 0.70 with
-LSP).
+Where ``base_pop`` is the normal starting population: 25 000 for all PRTs except PP (see
+above), or × 0.70 with LSP.
+
+.. note::
+
+   PP's ``base_pop`` in the Accelerated BBS formula is unconfirmed — it may be 30 000
+   (the PP normal base) rather than 25 000.  The second-world formula and the AP bonus
+   scaling for PP+BBS both need oracle verification.  (R2.1 partially open)
 
 Examples:
 
@@ -109,8 +132,10 @@ It is *not* a fixed multiplier — population scales linearly with growth rate.
 .. todo::
 
    Oracle-validate the Accelerated BBS formula against multiple growth rates
-   (e.g., 5%, 10%, 20%) to confirm the 5 000 × GR scaling.  The "second world"
-   formula for PP also needs oracle confirmation.  (R2.1)
+   (e.g., 5%, 10%, 20%) to confirm the 5 000 × GR scaling.  PP+BBS starting
+   population (both homeworld and second-planet amounts) also needs oracle
+   confirmation; PP's ``base_pop`` in the BBS formula may differ from the
+   standard 25 000.  (R2.1 partially open)
 
 Starting Technology
 -------------------
@@ -147,13 +172,13 @@ at each step):
         - Oracle-confirmed (all corpus AR designs include IFE; see note)
       * - IT
         - Propulsion ≥ 5, Construction ≥ 5
-        - Not in corpus — sourced from strategy guide; needs oracle verify
+        - Oracle-confirmed (human race, basic_it.r1)
       * - WM
         - Weapons ≥ 6, Energy ≥ 1, Propulsion ≥ 1
-        - Not in corpus — sourced from strategy guide; needs oracle verify
+        - Oracle-confirmed (human race, basic_wm.r1)
       * - SD
-        - Propulsion ≥ 2, Biotechnology ≥ 2
-        - Not in corpus — sourced from strategy guide; needs oracle verify
+        - Propulsion ≥ 3, Biotechnology ≥ 2
+        - Oracle-confirmed (human race, SampleSD.m1)
       * - HE, IS
         - None
         - Oracle-confirmed
@@ -251,8 +276,9 @@ colonisation.  Fleet composition varies by PRT.
      - Unique — lives in starbases; no conventional colony ships
      - See :doc:`../mechanics/race_design` AR section
    * - PP
-     - Unknown — likely includes mass driver on second starting world
-     - Needs oracle verification
+     - Both starting planets have a mass driver; fleet details otherwise unconfirmed
+     - Oracle-confirmed (SamplePP.m1): both planets have mass driver installations.
+       See "Starting Population" above for the 20 000 / 10 000 colonist split.
    * - Others
      - 1× Long Range Scout, 1× Colony Ship
      - Standard complement

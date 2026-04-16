@@ -63,6 +63,33 @@ the allowed tolerance).  The steps match the original game's wizard pages:
 The designer must show a running point total and block submission if the
 budget is out of range.
 
+Leftover Advantage Points
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a race design has points remaining within the allowed tolerance, those
+leftover points can be spent on starting bonuses.  The original game's rates
+(community source: GameFAQs FAQ v1.11; oracle verification pending):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Option
+     - Rate
+   * - Surface minerals
+     - 10 kT per point; distributed toward the rarest mineral
+   * - Mines
+     - 1 mine per 2 points
+   * - Factories
+     - 1 factory per 5 points
+   * - Defenses
+     - 1 defense installation per 10 points
+   * - Mineral concentration
+     - +1% concentration on the rarest homeworld mineral per 3 points
+
+The homeworld's mineral concentration is floored at 30 regardless of depletion,
+so the mineral-concentration option has limited practical value.
+
 Saving and Loading
 ------------------
 

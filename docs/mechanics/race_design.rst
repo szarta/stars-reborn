@@ -81,8 +81,10 @@ Key mechanical properties per PRT beyond the summary table above.
 - Unique scanners: **PickPocket** and **Robber Baron** can steal minerals from
   other players' planets or ships within scanner range.
 - All ships and mineral packets have built-in cloaking.
-- Starting tech bonus: receives a small spying bonus enabling easier technology
-  acquisition from other races.
+- **Research bonus**: each turn, gains research equal to **½ the average spent
+  in each tech field by all races** (including itself), as long as at least one
+  other race exists.  This applies to whichever field SS is currently researching.
+  (Community source: GameFAQs FAQ v1.11; oracle verification pending.)
 
 **Interstellar Traveler (IT)**
 
@@ -110,13 +112,18 @@ Key mechanical properties per PRT beyond the summary table above.
 
 **Space Demolition (SD)**
 
-- Minefields act as **scanners** (SD can see through its own minefields).
-- Own minefields decay **slower** than normal.
-- Can **detonate** their own minefields at will (inflicts mine damage on all
-  fleets in the field).
+- Minefields act as **non-penetrating scanners**.  Cloaks work as an absolute
+  percentage against mine scanning: a 75% cloaked ship has a 25% chance of
+  detection per year inside a SD minefield.
+- Own minefields decay at **1% per enclosed planet per year**; other races'
+  minefields decay at **4% per enclosed planet per year**.  (Community source:
+  GameFAQs FAQ v1.11; oracle verification pending.)
+- Can **remotely detonate** their own standard minefields (damages all fleets
+  in the field; SD mine layer hulls are immune to their own detonations).
+- Learns the **exact design** of any enemy ship that hits a mine.
 - Can **lay minefields while moving** (other races must be stationary to lay).
-- Travel through **opposing** minefields at approximately **2 warp factors higher**
-  than the normal safe speed (e.g., safe at Warp 7 where others are safe at Warp 5).
+- Travel through **opposing** minefields at **2 warp factors higher** than the
+  normal safe speed (e.g., safe at Warp 7 where others are safe at Warp 5).
 - Exclusive hulls: **Mini Mine Layer** and **Super Mine Layer** — lay mines twice
   as efficiently and are immune to detonation of their own minefields.
 - Exclusive bomb type: **Retrovirus** bomb spreads a genetic payload that causes
@@ -609,8 +616,24 @@ Open Questions
 .. todo:: HE maximum population cap — strategy guide confirms it is 50% of
    normal (half max planet size); exact cap per planet size needs oracle verification.
 
-.. todo:: AR growth model (lives in starbases; pop count different)
+.. todo:: AR growth model (lives in starbases; pop count different).
+   GameFAQs FAQ v1.11 (plague006/Mars Jenkar, 2006) gives these formulas
+   (community source; oracle verification needed):
+
+   - **Scanner range**: ``sqrt(population / 10)`` light years (standard scan);
+     Ultra Station / Death Star have penetrating scans at half this range.
+   - **Resource generation**: ``hab_value × sqrt(pop × energy_TL / coeff)``
+     where ``coeff`` is the single Page-5 efficiency slider (range 7–25, lower
+     is better) and ``hab_value`` is 0.0–1.0.
+   - **Mine generation** (auto-mining from orbit): ``sqrt(population) / 10``
+     mines per year, which then mine the planet automatically.
+
+   See ``stars-reborn-research/docs/findings/gamefaqs_faq_race_mechanics.rst``.
 
 .. todo:: WM ship cost reduction: exact percentage? Speed bonus?
+   GameFAQs FAQ v1.11 says: all **weapons** cost 25% less to build (not ships
+   generally); battle movement bonus is **½ square per round**.  Community source
+   only — oracle verification needed before closing this TODO.
+   See ``stars-reborn-research/docs/findings/gamefaqs_faq_race_mechanics.rst``.
 
 .. todo:: IT secondary starting planet — confirm it is absent in Tiny universes.
