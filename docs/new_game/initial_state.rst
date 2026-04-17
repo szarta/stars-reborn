@@ -40,29 +40,39 @@ selected:
 
    Oracle-confirmed values (turn-1 ``.m`` files, 130+ games):
 
-   - All PRTs except AR: **10 factories, 10 mines, 10 defenses.**
+   - All PRTs except AR: **10 factories, 10 mines, 10 defenses** on the
+     homeworld.
    - AR (Alternate Reality): **no installations** — the Installations flag
      is not set on AR homeworlds; mines, factories, and defenses are absent.
+   - IT second planet (Molybdenum in oracle): **10 mines, 4 factories,
+     0 defenses** — the second IT starting planet receives a reduced package.
 
    .. note::
 
-      These counts are independent of the race's economy parameters
-      (colonists-operate-factories, etc.).  The starting 10/10/10 appears
-      to be a fixed game constant, not derived from the starting population.
+      The homeworld 10/10/10 is independent of economy parameters and
+      appears to be a fixed game constant.  However, choosing
+      ``leftover_spend = mines``, ``factories``, or ``defenses`` in race
+      design may increase the respective count beyond 10.  This has not yet
+      been researched; see ``open_questions/leftover_spend_starting_values``.
 
 Starting Population
 -------------------
 
 Normal (non-Accelerated BBS) starting population:
 
-- **All PRTs except PP:** 25 000 colonists on the homeworld.  With LSP: 25 000 × 70% = 17 500.
-- **PP (Packet Physics):** 30 000 colonists total across two starting planets:
+- **Most PRTs:** 25 000 colonists on the homeworld.  With LSP: 25 000 × 70% = 17 500.
+- **PP (Packet Physics) and IT (Interstellar Traveler):** Both start with two
+  colonised planets using the same 20 000 / 10 000 split:
 
   - Homeworld: 20 000 colonists.
   - Second planet: 10 000 colonists.
   - With LSP (70%): 21 000 total — 14 000 (homeworld) + 7 000 (second planet).
 
-  Oracle-confirmed (human race, SamplePP.m1): homeworld (Cerebus) 20 000, second planet (Clay) 10 000.
+  Oracle-confirmed for PP (human race, SamplePP.m1): homeworld (Cerebus) 20 000,
+  second planet (Clay) 10 000.
+
+  Oracle-confirmed for IT (``race_fleet_permutation_games/IT/game_0001/IT0001.m1``):
+  homeworld (Beethoven) 20 000, second planet (Molybdenum) 10 000.
 
 Growth rate does **not** affect normal starting population — it determines year-over-year growth only,
 not the initial colonist count.  (Oracle-confirmed across GR 1%–20% for non-PP PRTs; R2.1 closed.)
@@ -246,11 +256,76 @@ colonisation.  Fleet composition varies by PRT.
 
 .. note::
 
-   **PP (Packet Physics) starts with two planets** in non-tiny universes.
-   Oracle corpus confirms ``PlanetCount = 2`` in the turn-1 type-6 block for
-   PP in all map sizes except Tiny (where only one homeworld fits at the
-   required minimum spacing).  The second planet is not a random colony —
-   it appears to be a guaranteed second starting world specific to the PP PRT.
+   **PP and IT both start with two planets** in non-tiny universes.  Oracle
+   corpus confirms ``PlanetCount = 2`` for both PRTs.  For PP both planets carry a
+   Mass Driver 5 starbase (homeworld = Space Station; second planet = Orbital Fort
+   "Accelerator Platform"); for IT both planets carry a Stargate 100/250
+   (the IT PRT's defining game-start feature).
+
+IT Starting Fleet (oracle-confirmed)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Confirmed from ``race_fleet_permutation_games/IT/game_0001/IT0001.m1`` and
+client inspection (IT + ARM + CE + ISB, ``leftover_spend = surface_minerals``).
+
+**Ship designs:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 5 22 20 53
+
+   * - Slot
+     - Name
+     - Hull
+     - Components
+   * - 0
+     - Smaugarian Peeping Tom
+     - Scout
+     - Daddy Long Legs 7, Fuel Tank, Bat Scanner
+   * - 1
+     - Mayflower
+     - Colony Ship
+     - Daddy Long Legs 7, Colonization Module
+   * - 2
+     - Stalwart Defender
+     - Destroyer
+     - Daddy Long Legs 7, Fuel Tank, Battle Computer, 2× Crobmnium,
+       Alpha Torpedo, Laser, Bat Scanner
+   * - 3
+     - Swashbuckler
+     - Privateer
+     - Daddy Long Legs 7, Laser, Alpha Torpedo, 2× Crobmnium, Bat Scanner
+   * - 4
+     - Potato Bug
+     - Midget Miner
+     - Daddy Long Legs 7, 2× Robo-Midget Miner
+
+**Fleet positions at game start:**
+
+- Beethoven (homeworld): 2× Scout, 1× Colony Ship, 2× Destroyer, 2× Privateer,
+  1× Midget Miner (fleet 5), 1× Midget Miner (fleet 6)
+- Molybdenum (second planet): 2× Scout
+
+**Starbases:**
+
+- Beethoven: design named **"Starbase"** (Space Station hull) — 4 weapon slots
+  (8/16 Laser), 4 shield slots (8/16 Mole-skin Shield), Stargate 100/250.
+- Molybdenum: **"Porthole to Beyond"** (Orbital Fort hull) — 2 shield slots
+  (6/12 Mole-skin Shield), 2 weapon slots (6/12 Laser), Stargate 100/250.
+
+Starting ship designs are **pre-named and pre-loaded** by the engine — the
+player receives them at turn 1 as fixed designs, not a blank slate.
+
+.. note::
+
+   The above was confirmed with ``leftover_spend = surface_minerals``.  Fleet
+   composition and design names are not expected to vary with leftover_spend,
+   but this has not been systematically verified across all five options.  See
+   ``open_questions/leftover_spend_starting_values`` for the open research item
+   on how leftover_spend affects starting installations and surface minerals.
+
+Summary table (all PRTs)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -259,52 +334,81 @@ colonisation.  Fleet composition varies by PRT.
    * - PRT
      - Starting fleet
      - Notes
-   * - HE
-     - 2× Long Range Scout, 1× Colony Ship
-     - Extra scout compensates for small max pop / fast expansion need
    * - IT
-     - 1× Long Range Scout, 1× Colony Ship, 1× Privateer (or equivalent
-       freighter)
-     - IT starts with gate technology; freighter primes the gate network
-   * - WM
-     - 1× Armed Scout (weapon-equipped), 1× Colony Ship
-     - Early offensive capability
+     - 2× Scout, 1× Colony Ship, 2× Destroyer, 2× Privateer, 2× Midget Miner
+     - Oracle-confirmed (see above).  Scouts split 2/2 across both planets.
+       Both planets have Stargate 100/250 starbases.
+   * - HE
+     - 2× Scout, 3× Mini-Colony Ship, 2× Midget Miner
+     - Hull types confirmed from one LRT permutation (ARM+ISB+CE, game_0001).
+       3 colony ships instead of 1.  Mini-Colony Ship uses Settler's Delight engine
+       (the only engine available to HE colony ships).
+       Starbase: Space Station "Starbase", no Stargate.
+   * - CA
+     - 2× Scout, 1× Colony Ship, 1× Mini-Miner (terraforming), 2× Midget Miner
+     - Hull types confirmed from one LRT permutation.  Mini-Miner carries Orbital
+       Adjusters; count may vary with starting Construction tech.
+       Starbase: Space Station "Starbase", no Stargate.
    * - SS
-     - 1× Cloaked Scout, 1× Colony Ship
-     - Stealth advantage from turn 1
+     - 2× Scout, 1× Small Freighter (cloaked), 1× Colony Ship, 2× Midget Miner
+     - Hull types confirmed from one LRT permutation.  Scout uses penetrating scanner.
+       Small Freighter carries Transport Cloaking.
+       Starbase: Space Station "Starbase", no Stargate.
+   * - WM
+     - 1× Scout (armed), 1× Colony Ship, 2× Midget Miner
+     - Hull types confirmed from one LRT permutation.  Only 1 scout; it carries a
+       beam weapon.  Weapon type depends on starting Weapons tech.
+       Starbase: Space Station "Starbase", no Stargate.
+   * - IS
+     - 2× Scout, 1× Colony Ship, 2× Midget Miner
+     - Hull types confirmed from one LRT permutation.  No PRT-unique design.
+       Starbase: Space Station "Starbase", no Stargate.
+   * - SD
+     - 2× Scout, 1× Colony Ship, 2× Mine Layer (normal), 2× Mine Layer (speed),
+       2× Midget Miner
+     - Hull types confirmed from one LRT permutation.  Two mine layer designs:
+       one lays normal mines, one lays speed mines.  Mine layer type and
+       component loadout depend on starting Propulsion tech.
+       Starbase: Space Station "Starbase", no Stargate.
    * - AR
-     - Unique — lives in starbases; no conventional colony ships
-     - See :doc:`../mechanics/race_design` AR section
+     - 1× Scout, 1× Colony Ship (Orbital Construction Module), 2× Midget Miner
+     - Oracle-confirmed (ARM+ISB+CE, game_0001).  AR colony ship deploys a copy
+       of the non-deletable "Starter Colony" Orbital Fort design when given Colonize
+       orders; AR population lives on that starbase (destroyed starbase = dead pop).
+       No mass driver; Space Station starbase has 4×(8/16 Laser), 4×(8/16 Mole-skin Shield).
+       No second planet.
    * - PP
-     - Both starting planets have a mass driver; fleet details otherwise unconfirmed
-     - Oracle-confirmed (SamplePP.m1): both planets have mass driver installations.
+     - 2× Scout + 1× Colony Ship + 2× Midget Miner at homeworld; 1× Scout at second planet
+     - Oracle-confirmed (ARM+ISB+CE, game_0001).  Both starting planets have Mass Driver 5
+       starbases: homeworld = Space Station "Starbase"; second planet = Orbital Fort
+       "Accelerator Platform" (2× 6/12 Laser, 2× 6/12 Cow-hide Shield, Mass Driver 5).
        See "Starting Population" above for the 20 000 / 10 000 colonist split.
-   * - Others
-     - 1× Long Range Scout, 1× Colony Ship
-     - Standard complement
+   * - JOAT
+     - 1× Armed Probe, 1× Long Range Scout, 1× Colony Ship, 1× Medium Freighter,
+       1× Destroyer, 1× Mini-Miner, 2× Midget Miner
+     - Oracle-confirmed (ARM+ISB+CE, game_0001).  Richest starting fleet of any PRT.
+       Armed Probe carries a beam weapon.  Destroyer carries beam + torpedo + armor.
+       Space Station starbase, no Stargate or mass driver.  No second planet.
 
-All starting ships use the baseline hull designs for the race's tech level.
-Fuel tanks are full.  The fleet is orbiting the homeworld at game start.
+.. note::
 
-.. todo::
-
-   Verify per-PRT starting fleet composition against the original game.
-   The above is best-guess from community knowledge + oracle corpus notes.
-   Confirm all of the following (R2.3):
-
-   - Exact hull types (Long Range Scout vs. Scout)
-   - Whether any PRT starts with an armed ship
-   - IT's additional starting ship type and whether it arrives with a stargate
-   - AR's starting state (no conventional fleet; does it start with an
-     orbital fort / starbase already placed?)
-   - PP starting fleet and second planet fleet/installations
-   - SD starting fleet (mine layer hull confirmed by strategy guide; verify
-     component loadout)
+   The hull and count observations in this table come from one LRT combination
+   (ARM + ISB + CE, ``race_fleet_permutation_games/*/game_0001/``).
+   **Hull types, component loadouts, design names, and ship counts are all dependent
+   on PRT, LRT, and the resulting starting tech levels** and may differ for other
+   combinations.  The permutation corpus (384 games × 16 players per PRT) covers all
+   LRT+tech combinations; full analysis is pending corpus generation and bulk decode (R2.3).
 
 .. todo::
 
-   Confirm whether starting fleet ship designs are fixed (named designs the
-   engine creates) or whether they are player-editable from the start.
+   Complete R2.3 — Starting fleet generation rules per PRT:
+
+   - Bulk-decode all permutation games once corpus generation completes
+   - Determine which hull slots are PRT-fixed vs. tech-dependent
+   - Map: (PRT, starting tech levels) → (component choices, design names)
+   - Confirm whether AI-template design names differ from human-player design names
+   - AR, PP, JOAT: generate dedicated oracle games and decode
+   - Whether designs are player-editable from turn 1 or locked (all PRTs)
 
 Turn 1 Output Structure
 -----------------------
