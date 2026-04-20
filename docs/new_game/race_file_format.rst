@@ -326,17 +326,40 @@ Name Section
 The name section starts at payload offset 112 with a ``0x00`` constant byte,
 followed by two name blocks (singular and plural).  Each block:
 
-- **1-byte marker**: determines block type and size
-  - 6 or 7 → preset name; ``marker`` data bytes follow (opaque lookup key)
-  - 8, 9, … → user-typed name; ``marker`` data bytes follow, each encoding
-    ``char = byte − 111`` (printable ASCII, base offset 111)
-- **marker bytes of data**: the block body
+- **1-byte marker**: number of data bytes that follow (observed range: 2–7)
+- **marker bytes of data**: opaque preset lookup key
 
-Blocks are contiguous; plural block follows immediately after singular.
+Blocks are contiguous; plural block immediately follows singular.
 If plural marker is ``0``, no plural is stored and the importer defaults to
 ``singular + "s"``.
 
-Preset name lookup keys (full data block, singular first):
+**All names use preset encoding** — including names typed by the user in the
+Stars! race editor.  Stars! maintains an internal name lookup table and stores
+every name as an opaque key regardless of origin.
+
+.. note::
+
+   A prior hypothesis held that markers ≥ 8 encoded user-typed names via
+   ``char = byte − 111``.  This was **never observed in any authentic Stars!
+   file** and was falsified on 2026-04-18 by oracle-testing a custom race named
+   "Terran / Terrans": Stars! stored it as a 4-byte preset key, not as
+   character-encoded bytes.
+
+Key structure (partially decoded, 2026-04-18):
+
+- **Byte 0** of the key always equals ``first_char + 111`` (confirmed across
+  all known names).
+- **Remaining bytes** are opaque — not a simple character encoding.
+- **Singular/plural pairs**: if the plural is just singular + ``s``, the two
+  blocks share a common prefix and differ only in the last byte (singular last
+  byte = plural last byte + 6; e.g., 111 vs 105).  Plurals with longer suffixes
+  have an extra trailing byte (``159``).
+
+The full name table lives in ``stars.exe``.  Enumeration is a pending research
+task (R1.7 in ``stars-reborn-research/PLAN.md``).  Any key not in the known
+list below decodes as ``<preset:hex>`` until the table is complete.
+
+Known preset lookup keys (singular / plural data bytes):
 
 .. code-block:: text
 
@@ -346,6 +369,9 @@ Preset name lookup keys (full data block, singular first):
    Nucleotid:  [189,222,213,82,122,77,111]  / [189,222,213,82,122,77,105]
    Rabbitoid:  [193,29,77,68,167,77,111]    / [193,29,77,68,167,77,105]
    Silicanoid: [194,69,77,81,103,77,111]    / [194,69,77,81,103,77,105]
+   Terran:     [195,40,129,111]             / [195,40,129,105]
+
+   (oracle-confirmed 2026-04-18 via terrans.r1)
 
 LRT Bitmask Bit Order
 ~~~~~~~~~~~~~~~~~~~~~

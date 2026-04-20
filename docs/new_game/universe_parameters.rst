@@ -111,8 +111,10 @@ Boolean flags that modify generation or gameplay.
    * - ``accelerated_bbs``
      - false
      - Starting population = ``25,000 + 5,000 × GR%`` (scales with growth
-       rate; ≈ 100,000 for a 15% race); all planets +20% minerals; poor
-       mineral worlds improved.  See :doc:`initial_state` for full formula.
+       rate; ≈ 100,000 for a 15% race); homeworld surface minerals ×1.25
+       (oracle-confirmed; community "+20%" claim is wrong — it is +25%);
+       non-homeworld surface minerals assumed ×1.25 (untestable without
+       ownership).  See :doc:`initial_state` for full formula.
    * - ``slower_tech_advances``
      - false
      - Research costs doubled universe-wide.

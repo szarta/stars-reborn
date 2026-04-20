@@ -31,6 +31,8 @@ selected:
    1 000 kT.  Observed homeworld surface minerals in the oracle corpus range
    from roughly 100 kT to 800+ kT per mineral; the exact formula relating
    concentration to initial surface amount is not yet determined.
+   With ``accelerated_bbs`` enabled, homeworld surface minerals are exactly
+   ×1.25 relative to the same game without BBS (oracle-confirmed; see below).
 
 4. **Population** set per race and game options.  See
    :ref:`accelerated-bbs-pop` below and :doc:`../mechanics/race_design`.
@@ -86,66 +88,96 @@ When the game option ``accelerated_bbs`` is enabled, each player's starting
 population on their homeworld is boosted by an amount that scales with the
 race's growth rate.
 
-Formula (Python engine ``turn.py``, citing SAH wiki Accelerated_BBS_Play;
-also confirmed by FreeStars open-source source):
+Oracle-confirmed formula (R2.6 Phase 1, 2026-04-19; JOAT GR=5/10/14, PP GR=5/10, IT GR=10):
 
 .. code-block:: text
 
-   ap_bonus     = 5 000 × growth_rate_percent   (growth_rate_percent as integer 1–20)
-   homeworld    = base_pop + ap_bonus
-   second_world = (base_pop + ap_bonus) / 4     [PP and any other multi-start PRT]
+   bbs_base     = 25 000 + 5 000 × growth_rate_percent   (growth_rate_percent as integer 1–20)
+   homeworld    = bbs_base                                 [single-start PRTs]
+   homeworld    = floor(bbs_base × 0.80)                  [PP and IT, multi-start]
+   second_world = floor(bbs_base × 0.40)                  [PP and IT only]
 
-Where ``base_pop`` is the normal starting population: 25 000 for all PRTs except PP (see
-above), or × 0.70 with LSP.
+Apply LSP after the BBS multiplier: multiply the result by 0.70.
 
-.. note::
+Where the non-BBS normal pop is 25 000 for single-start PRTs.  The BBS formula uses
+25 000 as the base for ALL PRTs (including PP and IT) — PP's non-BBS 20 000/10 000
+homeworld/second split is just the 0.80/0.40 factor applied to the normal 25 000 base.
 
-   PP's ``base_pop`` in the Accelerated BBS formula is unconfirmed — it may be 30 000
-   (the PP normal base) rather than 25 000.  The second-world formula and the AP bonus
-   scaling for PP+BBS both need oracle verification.  (R2.1 partially open)
-
-Examples:
+Examples (JOAT/single-start):
 
 .. list-table::
    :header-rows: 1
-   :widths: 15 20 20 20 25
+   :widths: 15 20 20 20
 
    * - GR%
-     - Bonus
+     - bbs_base
      - Homeworld (no LSP)
      - Homeworld (LSP)
-     - Second world (no LSP)
    * - 5%
-     - 25 000
+     - 50 000
      - 50 000
      - 35 000
-     - 12 500
    * - 10%
-     - 50 000
+     - 75 000
      - 75 000
      - 52 500
-     - 18 750
+   * - 14%
+     - 95 000
+     - 95 000
+     - 66 500
    * - 15%
-     - 75 000
+     - 100 000
      - 100 000
      - 70 000
-     - 25 000
    * - 20%
-     - 100 000
+     - 125 000
      - 125 000
      - 87 500
-     - 31 250
+
+Examples (PP and IT, multi-start):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 20 20 20
+
+   * - GR%
+     - bbs_base
+     - Homeworld (no LSP)
+     - Second planet (no LSP)
+   * - 5%
+     - 50 000
+     - 40 000
+     - 20 000
+   * - 10%
+     - 75 000
+     - 60 000
+     - 30 000
 
 The commonly cited figure "4× normal = 100,000" is the 15% growth rate case.
 It is *not* a fixed multiplier — population scales linearly with growth rate.
 
-.. todo::
+Accelerated BBS Surface Minerals
+---------------------------------
 
-   Oracle-validate the Accelerated BBS formula against multiple growth rates
-   (e.g., 5%, 10%, 20%) to confirm the 5 000 × GR scaling.  PP+BBS starting
-   population (both homeworld and second-planet amounts) also needs oracle
-   confirmation; PP's ``base_pop`` in the BBS formula may differ from the
-   standard 25 000.  (R2.1 partially open)
+When ``accelerated_bbs`` is enabled, homeworld starting surface minerals are
+multiplied by exactly 1.25 (floor of baseline × 1.25 per mineral).
+
+Oracle-confirmed (R2.6 Phase 3, 2026-04-20): 9/9 data points across 3 seeds
+(seeds 12345, 99999, 77777) show ``floor(baseline × 1.25)`` exactly for all
+three minerals.  The commonly cited community figure of "+20%" is **wrong** —
+the correct value is **+25%**.
+
+Surface minerals for non-homeworld planets cannot be read from the ``.m`` file
+without ownership; the ×1.25 is assumed to apply universe-wide (consistent with
+the in-game description "all planets +20%", which appears to be an under-reported
+approximation).
+
+.. note::
+
+   Mineral *concentrations* are NOT affected by BBS (oracle-confirmed Phase 2,
+   2026-04-19: 138/153 common planets had identical concentrations; the 15
+   differences were explained by homeworld placement artifact and remote-scan
+   noise).  The BBS bonus applies to surface mineral *amounts* only.
 
 Starting Technology
 -------------------

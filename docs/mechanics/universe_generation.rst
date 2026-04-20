@@ -177,31 +177,52 @@ Radiation
 Mineral Generation
 ------------------
 
-Each planet independently rolls three mineral concentrations:
+Each planet independently rolls three mineral concentrations.  All three
+minerals use the same algorithm and the same distribution shape.
+
+**Range:** 1–119 (oracle-confirmed; the common community assumption of 1–100 is wrong).
+
+**Distribution** (oracle-confirmed, 9,204 planets × 3 minerals = 27,612 readings
+across 10 large/dense games; see research R3.4):
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 20 40
+   :widths: 15 15 70
 
-   * - Mineral
-     - Range
-     - Notes
-   * - Ironium
-     - 1–100
-     - uniform random
-   * - Boranium
-     - 1–100
-     - uniform random
-   * - Germanium
-     - 1–100
-     - uniform random
+   * - Range
+     - Fraction
+     - Shape
+   * - 1–30
+     - ~30%
+     - Flat / uniform (≈1% per value)
+   * - 31–32
+     - <0.2%
+     - Near-zero valley (not a hard cutoff, but extremely rare)
+   * - 33–119
+     - ~70%
+     - Bell-shaped; peak at ~74–79; tails off to zero by 119
 
-Surface mineral amounts are initialized equal to their concentration.
+The bimodal structure (two clearly distinct pools) suggests that the game
+uses two separate generation paths rather than a single continuous distribution.
+The exact algorithm is not yet reverse-engineered.
 
-.. todo::
+**Radiation dependency:** When a planet's radiation value is ≥ 90 mR/yr, the
+high-concentration pool (33+) is shifted upward by approximately 5–6 points
+(mean ~81 vs ~75 for rad < 90).  The fraction of planets landing in the low
+pool (1–30) is unaffected by radiation.  This correlation is the only confirmed
+cross-axis dependency in mineral generation.
 
-   Verify exact distribution. Some community sources suggest concentrations
-   cluster around certain values. "Beginner: Maximum Minerals" option sets all to 100.
+**Surface mineral amounts** are initialized to a function of concentration
+(see :doc:`/new_game/initial_state`).
+
+.. note::
+
+   "Beginner: Maximum Minerals" game option — effect on concentrations not yet
+   oracle-verified.  Expected: sets all concentrations to 100 or similar cap.
+
+.. todo:: Verify ``beginner_max_minerals`` concentration behaviour (oracle R3.4 pending)
+
+.. todo:: Reverse-engineer the exact two-pool generation algorithm
 
 Homeworld Setup
 ---------------
@@ -224,7 +245,5 @@ Open Questions
 .. todo:: Exact planet count cap for Large/Packed, Huge/Dense, Huge/Packed combinations
 
 .. todo:: Whether "Galaxy Clumping" uses a spatial Poisson process or simple clustering
-
-.. todo:: Exact mineral concentration distribution (uniform vs. weighted)
 
 .. todo:: Whether mineral concentrations have a minimum guaranteed per homeworld
