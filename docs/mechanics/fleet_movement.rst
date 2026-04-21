@@ -115,6 +115,29 @@ Waypoint orders
      - Combine with another fleet
    * - Scrap Fleet
      - Dismantle ships; return minerals
+   * - Lay Mines
+     - Lay mines at current location (requires mine-layer component)
+
+Cargo Transfer Modes
+~~~~~~~~~~~~~~~~~~~~
+
+Load/Unload cargo orders support a **threshold** parameter:
+
+- **Load all**: load as much of the named mineral/colonists as available.
+- **Load to X kT**: load the mineral until the fleet carries X kT total.
+- **Unload all**: drop everything of the named type to the planet.
+- **Unload to X kT**: leave at least X kT on the source planet; only load
+  what keeps the planet at or above X.  This is the primary tool for
+  maintaining mineral reserves on source planets in repeat routes.
+
+Repeat Orders
+~~~~~~~~~~~~~
+
+A waypoint chain with the **repeat** flag set cycles back to waypoint 0 after
+the fleet executes the last waypoint's orders.  This enables fully automated
+freighter loops.  Repeat orders are compatible with all cargo threshold modes;
+a fleet can indefinitely run a route like "load Ironium at Pervo (leave 2000
+kT), deliver to Earth" without per-turn player intervention.
 
 Turn Resolution
 ---------------
@@ -152,6 +175,24 @@ If a fleet runs out of fuel mid-journey, it drops to warp 1 for the remainder
 of travel (consuming no additional fuel).
 
 .. todo:: Confirm the "out of fuel" behavior — does it stop completely or crawl?
+
+Fleet Routing
+-------------
+
+Each colonized planet with a starbase can have a **route destination** set.
+When a ship is produced at a planet that has a route destination, the game
+automatically assigns the ship waypoints toward that destination at the best
+safe speed (conserving fuel; using stargates when available).
+
+Route destinations chain: if planet A routes to planet B, and planet B routes
+to planet C, ships built at A travel A → B → C, stopping at C (which has no
+route set).
+
+Route orders are set per planet and apply to all ships built there in that
+turn.  They do not affect ships already in flight.
+
+.. todo:: Confirm whether route chains resolve transitively at build time
+   (full path pre-calculated) or hop-by-hop (each planet re-routes on arrival).
 
 Open Questions
 --------------

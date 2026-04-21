@@ -260,6 +260,11 @@ Bombers
 Remote Miners
 -------------
 
+The Midget Miner (no tech required) is exclusive to races with **Advanced
+Remote Mining (ARM)**.  The OBRM LRT limits any hull to one mining robot per
+ship design regardless of available slots.  See
+:doc:`../mechanics/ship_design` for recommended designs by LRT combination.
+
 .. list-table::
    :header-rows: 1
    :widths: 22 8 8 8 8 8 8 38
@@ -356,6 +361,10 @@ carried fuel capacity.
 
 Mine Layers
 -----------
+
+Mine-layer hulls dedicated to minelaying.  Note: any hull with a
+``MineLayers`` slot can lay mines; these are purpose-built hulls with high pod
+capacity.  Mine-laying pods require **Biotech 4** or the **SD PRT**.
 
 .. list-table::
    :header-rows: 1

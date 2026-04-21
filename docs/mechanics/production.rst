@@ -122,6 +122,20 @@ banked. The item will be completed in a subsequent turn.
 **Auto items:** Auto-mines and auto-factories continue building until the
 colonist-capacity limit is reached, then stop automatically.
 
+**"Up To N" items:** A queue item with an "Up To N" quantity builds at most
+*N* total of that item on this planet (counting items already built), then
+removes itself from the queue.  This lets players encode multi-phase priorities:
+build the first 100 factories, then mines, then more factories, etc., without
+manual queue edits each turn.
+
+**Mineral Alchemy as sentinel:** placing a Mineral Alchemy item at the bottom
+of the queue (set to "as needed") triggers alchemy only when everything above
+it is stalled for lack of Germanium.  Because alchemy generates a build message
+each year it fires, players use this message as a low-Germanium alert for that
+colony.
+
+*Source: Stars! Strategy Guide, Chapter 11.*
+
 Ship Construction
 -----------------
 

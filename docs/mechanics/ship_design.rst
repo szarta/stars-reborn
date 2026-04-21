@@ -171,6 +171,80 @@ Classification is determined at turn resolution time from hull type and loadout.
 These predicates affect scoring, combat stacking, and order validation.
 See :doc:`../architecture` for the full predicate table.
 
+Component Access Restrictions
+-----------------------------
+
+- **Mine-laying pods** require **Biotech level 4** unless the race has the
+  **Space Demolition (SD) PRT**, which grants access without research.
+- **Only Basic Remote Mining (OBRM) LRT**: limits a ship to at most **one
+  mining robot** in its design, regardless of hull slot count.
+- **Advanced Remote Mining (ARM) LRT**: grants the Midget Miner hull and
+  Robo-Midget Miner robot at tech level 0.  If using ARM, always prefer the
+  Robo-Midget Miner over the Robo-Mini Miner — it extracts more at half the
+  cost.
+
+*Source: Stars! Strategy Guide, Chapter 5.*
+
+Design Role Notes
+-----------------
+
+These notes summarise validated role conventions from the original strategy
+guide; they are design intent, not engine-enforced constraints.
+
+Scouts
+~~~~~~
+
+Effective scouts need scanning power, range, speed, and low cost.  The Long
+Range Scout pre-made design (engine + fuel pod + scanner) fulfils all four.  A
+**fuel pod quadruples** the hull's base fuel capacity, dramatically extending
+range.  Penetrating scanners require Electronics 7 (and the absence of the No
+Advanced Scanners LRT); a non-penetrating scanner suffices for exploration.
+
+Freighters
+~~~~~~~~~~
+
+The Privateer hull (Construction 4) offers 650 mg fuel, 250 kT base cargo,
+and three ``GeneralPurpose`` slots that accept fuel or cargo pods, with only
+2 kT Germanium hull cost — far less than Small Freighters (17 kT) or Medium
+Freighters (19 kT).  Its 50 kT Ironium cost is the main drawback on
+Ironium-scarce maps.
+
+Remote Miners
+~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
+
+   * - Situation
+     - Best design
+   * - OBRM LRT *or* cannot reach C4 + E2, with ARM
+     - Midget Miner + Robo-Midget Miner
+   * - OBRM LRT *or* cannot reach C4 + E2, without ARM
+     - Mini Miner + 2× Robo-Mini Miner
+   * - Standard or ARM, can reach Construction 4 + Electronics 2
+     - Midget Miner (ARM) or Mini Miner + 2× Robo-Miner
+
+Include a fuel pod in the spare slot (not a scanner — send a cheap scout with
+the mining fleet instead).
+
+Minelayers
+~~~~~~~~~~
+
+A Scout-hull minelayer (engine + mine pod + scanner) is the cheapest option
+and buildable early.  A Frigate-hull minelayer (Construction 6) outputs three
+times the mines per turn at similar cost-per-mine and accommodates two
+scanners.  Use the longest-range scanner available; penetrating is preferred
+for border patrol but not required.
+
+Warships
+~~~~~~~~
+
+For beam warships, aim for battle speed **≥ 1¾** squares/round (target 2 or
+2½).  The Frigate hull has no Mechanical or Electrical slots, so it cannot
+carry Maneuvering Jets or Battle Computers — this limits its effectiveness as
+a beam platform.  See :doc:`combat` for the battle speed formula.
+
 Hull Reference
 --------------
 
