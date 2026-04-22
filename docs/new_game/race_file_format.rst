@@ -280,7 +280,7 @@ unless noted.
      - Biotechnology research cost
    * - 76
      - 1
-     - PRT index (HE=0, SS=1, WM=2, CA=3*, IS=4, SD=5, PP=6, IT=7, AR=8*, JOAT=9)
+     - PRT index — see table below
    * - 78
      - 2
      - LRT bitmask — 16-bit LE word; see `LRT Bitmask Bit Order`_ for file bit layout
@@ -291,7 +291,49 @@ unless noted.
      - varies
      - Name section (see below)
 
-``*`` CA=3 and AR=8 are inferred, not yet oracle-confirmed.
+PRT Index Encoding
+~~~~~~~~~~~~~~~~~~
+
+The Python engine (``stars-reborn/src/model/enumerations.py``) uses a
+**different** ordering and must not be used as a reference for this table.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 15 70
+
+   * - Value
+     - PRT
+     - Confidence
+   * - 0
+     - CA
+     - Confirmed (silicanoid default race file)
+   * - 1
+     - ?
+     - Unknown — nucleotid default file; candidate IT, SS, or SD
+   * - 2
+     - WM
+     - Confirmed (insectoid default race file)
+   * - 3
+     - ?
+     - Unknown — no oracle test
+   * - 4
+     - IS
+     - Confirmed (``base_inner_strength.r1`` oracle test)
+   * - 5
+     - AR
+     - Strong inference (antetheral file; NRE+MA+CE match AR pattern)
+   * - 6
+     - PP
+     - Confirmed (``base_packet_physics.r1`` oracle test)
+   * - 7
+     - HE
+     - Strong inference (rabbitoid file; 20% growth + NAS match HE)
+   * - 8
+     - ?
+     - Unknown — no oracle test
+   * - 9
+     - JOAT
+     - Confirmed (humanoid default race file)
 
 Icon Index Encoding
 ~~~~~~~~~~~~~~~~~~~

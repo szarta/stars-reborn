@@ -42,34 +42,80 @@ Planet Count Formula
 
 .. code-block:: text
 
-   planet_count = floor((dim / 10)² × density / 100)
+   planet_count = floor((dim / 10)² × density_factor / 100)
 
-Where ``dim`` is the universe dimension in light years and ``density`` is:
+Where ``dim`` is the universe dimension in light years and ``density_factor`` is:
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 20
+   :widths: 20 20 60
 
    * - Setting
-     - Density value
+     - Density factor
+     - Confidence
    * - Sparse
-     - 1.5
-   * - Normal
      - 2.0
-   * - Dense
+     - Oracle-confirmed (Large/Sparse=512, Huge/Sparse=800)
+   * - Normal
      - 2.5
-   * - Packed
+     - Oracle-confirmed (Tiny=40, Small=160, Medium=360, Large=640)
+   * - Dense
      - 3.75
+     - Oracle-confirmed (Tiny/Dense=60, Small/Dense=240, Medium/Dense=540)
+.. note::
 
-Examples (validated against observed games):
+   ``Packed`` is **not a distinct density** in Stars!.  The Stars! game UI's
+   highest density option stores internally as code 3 (Dense), confirmed by
+   reading the ``.xy`` type-7 record across 10 manually-created games.
+   A ``packed`` token (internal code 4) exists in the ``game.def`` format but
+   is invalid — Stars! exits silently with no output when given code 4 headlessly.
 
-- Tiny / Normal:  ``floor((400/10)² × 2.0 / 100) = floor(1600 × 0.02) = 32``
-- Medium / Normal: ``floor((1200/10)² × 2.0 / 100) = floor(14400 × 0.02) = 288``
+Examples (oracle-confirmed 2026-04-21/22):
+
+- Tiny / Normal:  ``floor((400/10)² × 2.5 / 100) = floor(1600 × 0.025) = 40``
+- Medium / Normal: ``floor((1200/10)² × 2.5 / 100) = floor(14400 × 0.025) = 360``
+- Large / Dense:  ``floor((1600/10)² × 3.75 / 100) = floor(25600 × 0.0375) = 960``
+
+Planet Count Cap
+~~~~~~~~~~~~~~~~
+
+Stars! shipped with exactly 999 unique planet names — by design, the maximum
+achievable planet count in any configuration is below this limit.
+
+For combinations where the formula target exceeds roughly **960 planets**, the
+placement algorithm does not reliably reach the target.  Planet counts become
+**stochastic** (vary per seed) rather than exact, as the algorithm exhausts its
+iteration budget before placing every planet:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 18 20 40
+
+   * - Combination
+     - Formula Target
+     - Observed Range
+     - Notes
+   * - Huge / Normal
+     - 1 000
+     - 939–946
+     - Oracle-confirmed (2026-04-21, 3 seeds)
+   * - Huge / Dense
+     - 1 500
+     - 939–959
+     - Headless: 939–958 (10 seeds); UI: 939–959 (10 seeds, 2026-04-22)
+   * - Large / Dense
+     - 960
+     - 908–928
+     - Oracle-confirmed (2026-04-21, 10 seeds)
+
+All other combinations produce **exact, deterministic** planet counts matching
+the formula.  Examples: Large/Normal = 640, Huge/Sparse = 800, Medium/Dense = 540.
 
 .. note::
 
-   Large/Packed, Huge/Dense, and Huge/Packed have reduced density due to engine
-   limits on the maximum number of stars. The exact cap is not yet confirmed.
+   "Huge/Packed" is Huge/Dense under another name — the UI's top density option
+   is Dense (code 3) regardless of its label in any given game version.
+   "Large/Packed" is identically Large/Dense.
 
 The planet count must always be at least ``num_players`` to guarantee a homeworld
 for each player.
@@ -89,10 +135,11 @@ Planet Names
 ------------
 
 The original game has **999 unique planet names** (``engine/data/planet_names/original.txt``).
-This imposes an effective cap on universe size — each planet must have a distinct
+This imposes a design cap on universe size — each planet must have a distinct
 name drawn from the pool without replacement. The largest supported universe
-(Huge/Packed) generates around 750 planets, so the original list is sufficient
-for all standard configurations.
+(Huge/Packed) generates 931–965 planets in practice, well within the 999-name
+pool. The 999-name limit was set intentionally to accommodate all standard
+configurations with headroom to spare.
 
 For future extension beyond the original universe sizes, a curated supplemental
 pool of ~2 000 additional names is kept in ``engine/data/planet_names/extended/``,
@@ -217,10 +264,9 @@ cross-axis dependency in mineral generation.
 
 .. note::
 
-   "Beginner: Maximum Minerals" game option — effect on concentrations not yet
-   oracle-verified.  Expected: sets all concentrations to 100 or similar cap.
-
-.. todo:: Verify ``beginner_max_minerals`` concentration behaviour (oracle R3.4 pending)
+   **"Beginner: Maximum Minerals"** sets every planet's concentration to exactly
+   100 for all three minerals (oracle-confirmed 2026-04-22: 918 planets ×
+   3 minerals, all = 100, Large/Dense game, seed 43100).  No exceptions.
 
 .. todo:: Reverse-engineer the exact two-pool generation algorithm
 
@@ -242,7 +288,7 @@ When a homeworld is assigned to a player's race:
 Open Questions
 --------------
 
-.. todo:: Exact planet count cap for Large/Packed, Huge/Dense, Huge/Packed combinations
+.. todo:: Packed density factor (cannot measure headlessly; Large/Packed count unknown)
 
 .. todo:: Whether "Galaxy Clumping" uses a spatial Poisson process or simple clustering
 

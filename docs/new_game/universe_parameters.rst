@@ -48,50 +48,83 @@ Controls how many planets exist within the universe.
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 20 60
+   :widths: 20 22 58
 
    * - Value
-     - Density value
+     - Density factor
      - Notes
    * - ``sparse``
-     - 1.5
-     - \
-   * - ``normal``
      - 2.0
-     - Default
-   * - ``dense``
+     - Oracle-confirmed 2026-04-22
+   * - ``normal``
      - 2.5
-     - \
-   * - ``packed``
+     - Oracle-confirmed 2026-04-22; default
+   * - ``dense``
      - 3.75
-     - Large/Packed, Huge/Dense, Huge/Packed are capped by engine limits
+     - Oracle-confirmed 2026-04-22; **maximum effective density** (see note)
 
-Planet count: ``floor((dim / 10)² × density / 100)`` — always at least
+Planet count: ``floor((dim / 10)² × density_factor / 100)`` — always at least
 ``num_players``.
+
+.. note::
+
+   ``dense`` is the highest density selectable through the Stars! game UI and the
+   highest code observed in ``.xy`` files (internal code 3).  A ``packed`` token
+   (internal code 4) exists in the ``game.def`` file format but is invalid — Stars!
+   exits silently with no output when given ``density=4`` in headless mode.  The
+   original game UI's top density option (sometimes labeled "Packed" in community
+   guides) stores as code 3 and is equivalent to ``dense``.
+
+   Combinations where the formula target exceeds ~960 produce stochastic planet
+   counts in the 908–965 range; see :doc:`../mechanics/universe_generation`.
 
 Player Positions
 ----------------
 
-Controls how far homeworlds are spread relative to each other.
+Controls how far homeworlds are spread relative to each other.  There are four
+settings; the two middle values correspond to the Stars! UI options labelled
+"Random" (moderate) and "Farther Apart" (farther).
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 80
+   :widths: 20 25 55
 
    * - Value
+     - Min separation (ly)
      - Behaviour
    * - ``close``
-     - Homeworlds placed near each other; early conflict
-   * - ``random``
-     - No homeworld placement constraint beyond minimum distance
+     - ≈ 60–62 ly
+     - Homeworlds tightly clustered; early conflict
+   * - ``moderate``
+     - ≈ 178–180 ly
+     - Moderate spread; labelled "Random" in Stars! UI
+   * - ``farther``
+     - ≈ 245–250 ly
+     - Larger spread; labelled "Farther Apart" in Stars! UI
    * - ``distant``
+     - ≈ 289–295 ly
      - Homeworlds maximally spread; most common competitive choice
 
-.. todo::
+**Minimum-separation constraint (oracle-confirmed 2026-04-22):**
 
-   Confirm the exact homeworld placement algorithm for each ``player_positions``
-   option (are sectors/quadrants used, or is it a rejection-sampling min-distance
-   from other homeworlds?).
+Each setting enforces a hard minimum Euclidean separation between any two
+homeworlds.  The values above are empirical upper bounds measured on a
+Small / Normal map with 6 players across 10 seeds each.  The placement
+algorithm is consistent with minimum-distance rejection sampling: a candidate
+homeworld position is rejected if it falls within the threshold distance of any
+already-placed homeworld.
+
+Separation thresholds may scale with map size; the values quoted apply to Small
+(800 × 800 ly) maps.  On very small maps with many players and ``distant``
+spacing, Stars! may silently reduce the actual player count if it cannot place
+all homeworlds at the required separation.
+
+.. note::
+
+   Whether thresholds are absolute constants or scale with map dimension is
+   unconfirmed (tested on Small maps only).  The qualitative shape of each
+   setting is faithfully reproduced by the values above; exact scaling is
+   deferred as low-priority (P4).
 
 Game Options
 ------------
@@ -107,7 +140,8 @@ Boolean flags that modify generation or gameplay.
      - Effect
    * - ``beginner_max_minerals``
      - false
-     - All mineral concentrations set to 100.  Removes mineral scarcity.
+     - All mineral concentrations set to exactly 100 (oracle-confirmed 2026-04-22).
+       Removes mineral scarcity entirely.
    * - ``accelerated_bbs``
      - false
      - Starting population = ``25,000 + 5,000 × GR%`` (scales with growth

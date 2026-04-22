@@ -108,41 +108,77 @@ The engine ships with a set of pre-built race definitions used for AI slots
 and as starting points for new players.  These are bundled from
 ``stars-reborn-schemas`` (file: ``builtin_races/``).
 
+**Source:** Decoded from original ``stars.exe`` default ``.r1`` files
+(2026-04-22).  Full details in
+``stars-reborn-research/docs/findings/default_race_values.rst``.
+
+Hab values: 0–100 index (``0xFF`` = immune).  Temperature: ``°C = (idx−50)×4``.
+Radiation: direct mR/yr.  Research cost: ``N``\=Normal, ``E``\=Expensive,
+``C``\=Cheap.  Costs: ``[Ir, Bo, Ge, Resources]``.
+
 .. list-table::
    :header-rows: 1
-   :widths: 25 15 60
+   :widths: 12 7 14 14 14 6 42
 
-   * - Race name
+   * - Race
      - PRT
-     - Notes
+     - Grav (0–100)
+     - Temp (0–100)
+     - Rad (0–100)
+     - Grow
+     - LRTs / Economy notes
    * - Humanoid
      - JOAT
-     - Balanced all-rounder; the original game's default human race
+     - 15–85
+     - 15–85
+     - 15–85
+     - 15%
+     - No LRTs; all research Normal; rp=1000 fp=10 fc=10 mp=10 mc=5
    * - Rabbitoid
-     - HE
-     - Extreme growth, small max pop; aggressive expansion style
+     - HE (inf.)
+     - 10–56
+     - 35–81
+     - 13–53
+     - 20%
+     - IFE+TT+CE+NAS; cheap_germ; En/We Exp, Pr Cheap, Bio Cheap; rp=1000 fc=9 cof=17k mc=9
    * - Insectoid
      - WM
-     - Combat-focused; high weapons start
+     - immune
+     - 0–100
+     - 70–100
+     - 10%
+     - ISB+CE+RS; En/We/Pr/Co Cheap, Bio Exp; rp=1000 mp=9 mc=10 com=6k
    * - Nucleotid
-     - PP
-     - Packet physics specialist
-   * - Antethereal
-     - AR
-     - Alternate Reality; unique growth model
+     - ? (1)
+     - immune
+     - 12–88
+     - immune
+     - 10%
+     - ARM+ISB+BET*; all research Expensive; rp=900 mc=15 com=5k. PRT unconfirmed (likely IT)
+   * - Antetheral
+     - AR (inf.)
+     - 0–30
+     - 0–100
+     - 70–100
+     - 7%
+     - ARM+MA+NRE+CE+NAS; En/Pr/Co/El/Bio Cheap, We Exp; rp=700 fp=11 cof=18k
    * - Silicanoid
      - CA
-     - Claim Adjuster; broad habitability via cheap terraforming
+     - immune
+     - immune
+     - immune
+     - 6%
+     - IFE+UR+OBRM+BET; Pr/Co Cheap, Bio Exp; rp=800 fp=12 fc=12 cof=15k mc=9
+
+``*`` Nucleotid's BET is stored in the flags byte (``0x20``), not in the LRT
+bitmask.  Silicanoid's BET IS in the LRT bitmask (bit 12).  The difference
+requires further investigation.
 
 .. todo::
 
-   Confirm exact pre-built race stat values against original ``stars.exe``
-   default race definitions.
-
-.. todo::
-
-   Define full set of pre-built races and their exact parameters (hab ranges,
-   economy values, LRTs).
+   Oracle-confirm Nucleotid's PRT (byte value 1 — likely IT based on ISB+ARM LRTs).
+   Oracle-confirm Antetheral's PRT (byte value 5 — likely AR from NRE+MA characteristics).
+   Oracle-confirm PRT values 1, 3, 8 (remaining unknown: SS, SD, IT in some order).
 
 AI Difficulty
 -------------

@@ -80,22 +80,27 @@ of planets owned (excess ships beyond that count do not score).
    * - Escort ships
      - 2 pts each (power rating 1–1999); capped at number of planets owned
    * - Capital ships
-     - ``8 × N_cap × N_planets / (N_cap + N_planets)`` pts each; capped at planets
+     - ``8 × N_cap × N_planets / (N_cap + N_planets)`` pts total; capped at planets
    * - Tech levels
      - 1 pt per level for levels 1–3; 2 pt for 4–6; 3 pt for 7–9; 4 pt for 10+
    * - Resources
      - 1 pt per 30 annual resources
 
 Capital ship scoring uses a harmonic-mean formula that rewards balanced
-fleet-to-planet ratios.  Example: 20 capital ships, 30 planets →
-``8 × 20 × 30 / (20 + 30) = 4.8 pts`` per capital ship.
+fleet-to-planet ratios.  The formula gives **total** points for all capital
+ships, not per-ship.  Example: 20 capital ships, 30 planets →
+``8 × 20 × 30 / (20 + 30) = 96 pts`` total (4.8 pts per capital ship).
 
-*Source: Stars! Players Guide (via Stars! FAQ advfaq/guts2.htm §4.13).*
-*Oracle validation of exact multipliers still recommended.*
+Power rating thresholds (confirmed from help file):
 
-.. todo:: Validate capital ship "power rating" threshold (> 1999 = capital).
-   Confirm whether Orbital Forts are truly excluded from starbase scoring.
-   Confirm capping behavior (ship count vs planets owned).
+- Unarmed: power rating = 0
+- Escort: power rating 1–1999
+- Capital: power rating ≥ 2000
+
+*Source: Stars! help file ctx_5f2efbaf (Score sheet topic, 1998).*
+
+.. todo:: Confirm capping behavior — help file says "up to the number of planets
+   you own" for unarmed/escort; confirm same cap applies to capital ships.
 
 Winner Announcement
 -------------------
@@ -106,6 +111,10 @@ When a player meets victory conditions:
 - The game can continue (other players may have more turns)
 - The winning player is shown in the score report (F10)
 
+Meeting **any one** configured victory condition wins the game; conditions are
+OR-combined (confirmed from help file: "more than one player can be declared
+the winner").
+
 Diplomatic Victory (multiplayer)
 ---------------------------------
 
@@ -115,10 +124,6 @@ the game engine does not enforce it.
 
 Open Questions
 --------------
-
-.. todo:: Exact score formula components and multipliers
-
-.. todo:: Whether meeting any condition wins or all conditions must be met
 
 .. todo:: Exact behavior when multiple players meet conditions simultaneously
 

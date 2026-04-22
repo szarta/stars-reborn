@@ -8,7 +8,10 @@ For starbase-mounted orbital items (stargates, mass drivers) see
 :doc:`starbase_components`.  For the GenesisDevice (MT ship component that
 terraforms an entire planet) see :doc:`components`.
 
-**Source:** Python engine ``factory.py``.  All values need oracle verification.
+**Source:** Python engine ``factory.py``; cross-verified against original help file
+images (Stars! Player's Guide, 1998, ctx_6703b121 / bm125.png).  Defense and
+scanner data confirmed.  Full oracle verification against ``stars.exe`` still
+recommended for exact values.
 
 Tech requirements: ``En/We/Pr/Co/El/Bio``.  Costs: ``[Ir, Bo, Ge, Resources]``.
 
