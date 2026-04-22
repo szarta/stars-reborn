@@ -48,7 +48,7 @@
                 "type": "integer"
               },
               "race": {
-                "$ref": "race.json#/definitions/race"
+                "$ref": "race.json#/definitions/predefined-race"
               }
             }
           }
