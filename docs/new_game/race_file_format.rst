@@ -368,52 +368,116 @@ Name Section
 The name section starts at payload offset 112 with a ``0x00`` constant byte,
 followed by two name blocks (singular and plural).  Each block:
 
-- **1-byte marker**: number of data bytes that follow (observed range: 2–7)
-- **marker bytes of data**: opaque preset lookup key
+- **1-byte length**: number of key bytes that follow (typical range: 3–8)
+- **length bytes**: nibble-packed encoded name (see algorithm below)
 
 Blocks are contiguous; plural block immediately follows singular.
-If plural marker is ``0``, no plural is stored and the importer defaults to
+If plural length is ``0``, no plural is stored and the importer defaults to
 ``singular + "s"``.
 
-**All names use preset encoding** — including names typed by the user in the
-Stars! race editor.  Stars! maintains an internal name lookup table and stores
-every name as an opaque key regardless of origin.
+All names — both the 6 race-editor dropdown presets and any user-typed name —
+use the same encoding algorithm (confirmed 2026-04-22 via Ghidra decompilation
+of ``FUN_1070_551c``, ``FUN_1040_45a0``, and ``FUN_1040_4880`` in
+``stars.exe``).
 
-.. note::
+Name Encoding Algorithm
+^^^^^^^^^^^^^^^^^^^^^^^
 
-   A prior hypothesis held that markers ≥ 8 encoded user-typed names via
-   ``char = byte − 111``.  This was **never observed in any authentic Stars!
-   file** and was falsified on 2026-04-18 by oracle-testing a custom race named
-   "Terran / Terrans": Stars! stored it as a 4-byte preset key, not as
-   character-encoded bytes.
+Each character maps to a code, which is then nibble-packed into output bytes.
+Nibbles are packed high-nibble-first; if the total nibble count is odd, the
+last byte is padded with ``0xF`` in the low nibble position.
 
-Key structure (partially decoded, 2026-04-18):
+.. list-table::
+   :header-rows: 1
+   :widths: 25 35 15 25
 
-- **Byte 0** of the key always equals ``first_char + 111`` (confirmed across
-  all known names).
-- **Remaining bytes** are opaque — not a simple character encoding.
-- **Singular/plural pairs**: if the plural is just singular + ``s``, the two
-  blocks share a common prefix and differ only in the last byte (singular last
-  byte = plural last byte + 6; e.g., 111 vs 105).  Plurals with longer suffixes
-  have an extra trailing byte (``159``).
+   * - Character range
+     - Code formula
+     - Nibble count
+     - Notes
+   * - Space (0x20)
+     - 0
+     - 1
+     -
+   * - ``A``–``P`` (0x41–0x50)
+     - ``(c − 'A') × 16 | 0x0B``
+     - 2
+     - First byte = ``c + 111``
+   * - ``Q``–``Z`` (0x51–0x5A)
+     - ``(c − 'Q') × 16 | 0x0C``
+     - 2
+     - First byte = ``c + 111``
+   * - ``0``–``5`` (0x30–0x35)
+     - ``(c − '0' + 10) × 16 | 0x0C``
+     - 2
+     -
+   * - ``6``–``9`` (0x36–0x39)
+     - ``(c − '6') × 16 | 0x0D``
+     - 2
+     -
+   * - ``a``–``z``
+     - Lookup table (below)
+     - 1 or 2
+     -
+   * - Other ASCII
+     - ``(ord(c) × 16) | 0x0F``
+     - 3
+     - Rare; not used in practice
 
-The full name table lives in ``stars.exe``.  Enumeration is a pending research
-task (R1.7 in ``stars-reborn-research/PLAN.md``).  Any key not in the known
-list below decodes as ``<preset:hex>`` until the table is complete.
+Nibble packing: emit ``code & 0xF`` first (→ high nibble of current output
+byte), then ``(code >> 4) & 0xF`` (→ low nibble, advance byte), then
+``(code >> 8) & 0xF`` for 3-nibble codes.
 
-Known preset lookup keys (singular / plural data bytes):
+Lowercase character codes:
 
 .. code-block:: text
 
-   Humanoid:   [183,222,219,22,116,214]     / [183,222,219,22,116,214,159]
-   Antetheral: [176,106,42,50,129,95]       / [176,106,42,50,129,89]
-   Insectoid:  [184,105,45,90,116,214]      / [184,105,45,90,116,214,159]
-   Nucleotid:  [189,222,213,82,122,77,111]  / [189,222,213,82,122,77,105]
-   Rabbitoid:  [193,29,77,68,167,77,111]    / [193,29,77,68,167,77,105]
-   Silicanoid: [194,69,77,81,103,77,111]    / [194,69,77,81,103,77,105]
-   Terran:     [195,40,129,111]             / [195,40,129,105]
+   Code < 0x0B → 1 nibble (most common letters):
+     ' '=0  a=1  e=2  h=3  i=4  l=5  n=6  o=7  r=8  s=9  t=10
 
-   (oracle-confirmed 2026-04-18 via terrans.r1)
+   Code with low nibble 0xD → 2 nibbles:
+     b=0x4D  c=0x5D  d=0x6D  f=0x7D  g=0x8D  j=0x9D
+     k=0xAD  m=0xBD  p=0xCD  q=0xDD  u=0xED  v=0xFD
+
+   Code with low nibble 0xE → 2 nibbles:
+     w=0x0E  x=0x1E  y=0x2E  z=0x3E
+
+**Key byte 0** always equals ``first_char + 111`` for any name starting with
+an ASCII letter or digit (a consequence of the code formula for that range).
+
+**Example** — "Terran":
+
+.. code-block:: text
+
+   T → code=0x3C → nibbles C,3
+   e → code=0x02 → nibble  2
+   r → code=0x08 → nibble  8
+   r → code=0x08 → nibble  8
+   a → code=0x01 → nibble  1
+   n → code=0x06 → nibble  6
+   total 7 nibbles (odd) → pad with F
+   packed: [C3] [28] [81] [6F] = [195, 40, 129, 111]
+
+   Terrans (adds 's' → code=0x09 → nibble 9):
+   total 8 nibbles (even) → no pad
+   packed: [C3] [28] [81] [69] = [195, 40, 129, 105]
+
+The reference implementation is ``encode_name_key`` / ``decode_name_key``
+in ``scripts/analyze_r1.py`` of ``stars-reborn-research``.
+
+.. rubric:: Dropdown preset names (singular / plural key bytes)
+
+The race-editor dropdown contains exactly **6 preset names** (confirmed from
+the ``stars.exe`` dialog resource at 0x347039):
+
+.. code-block:: text
+
+   Humanoid:   [183,222,219,22,116,214]      / (not stored; default Humanoids)
+   Antetheral: [176,106,42,50,129,95]        / [176,106,42,50,129,89]
+   Insectoid:  [184,105,45,90,116,214]       / [184,105,45,90,116,214,159]
+   Nucleotid:  [189,222,213,82,122,77,111]   / [189,222,213,82,122,77,105]
+   Rabbitoid:  [193,29,77,68,167,77,111]     / [193,29,77,68,167,77,105]
+   Silicanoid: [194,69,77,81,103,77,111]     / [194,69,77,81,103,77,105]
 
 LRT Bitmask Bit Order
 ~~~~~~~~~~~~~~~~~~~~~

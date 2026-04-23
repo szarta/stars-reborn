@@ -273,6 +273,30 @@ cross-axis dependency in mineral generation.
 Homeworld Setup
 ---------------
 
+**Selection:** Homeworlds are selected from the existing planet pool after all
+planets have been placed (confirmed oracle 2026-04-22: homeworld planet indices
+span the full range, showing no early-index bias).  Candidate homeworlds are
+placed by rejection sampling: a random planet is chosen; if it falls within the
+``player_positions`` threshold distance of any already-assigned homeworld it is
+rejected and a new candidate is drawn.  Planet indices 0–3 are never assigned
+as homeworlds (possibly reserved for wormholes or other non-planet objects).
+
+**Homeworld separation thresholds** scale proportionally with map dimension for
+``moderate``, ``farther``, and ``distant``; see :doc:`../new_game/universe_parameters`.
+
+**PP / IT second starting planet:** PP (Packet Physics) and IT (Interstellar
+Traveler) races receive a second colonised planet in addition to their main
+homeworld.  This second planet is:
+
+- **Not generated on Tiny maps** — only Small and larger.
+- **PRT-independent in placement:** PP and IT races receive identical second-planet
+  assignments for the same seed, confirming the placement algorithm does not
+  specialise by PRT.
+- **Proportionally distant from the main homeworld:** 0.155–0.228 × map dimension
+  (oracle-confirmed 2026-04-22 across Small/Medium/Large/Huge, 15 seeds each).
+  The upper bound (0.228 × dim) coincides with the ``moderate`` homeworld
+  threshold (0.221 × dim), suggesting the same rejection-sampling mechanism.
+
 When a homeworld is assigned to a player's race:
 
 1. **Hab values** are set to the midpoint of the race's preferred range on each axis.

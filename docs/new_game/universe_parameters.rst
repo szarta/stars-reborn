@@ -93,38 +93,64 @@ settings; the two middle values correspond to the Stars! UI options labelled
      - Min separation (ly)
      - Behaviour
    * - ``close``
-     - ≈ 60–62 ly
-     - Homeworlds tightly clustered; early conflict
+     - ≈ 62 ly (absolute)
+     - Homeworlds tightly clustered; early conflict.
+       Threshold is approximately an absolute constant (not scaling with map
+       size), unlike the other three settings.
    * - ``moderate``
-     - ≈ 178–180 ly
+     - ≈ 0.221 × dim
      - Moderate spread; labelled "Random" in Stars! UI
+       (180 ly on Small, 264 ly on Medium, 435 ly on Huge)
    * - ``farther``
-     - ≈ 245–250 ly
+     - ≈ 0.303 × dim
      - Larger spread; labelled "Farther Apart" in Stars! UI
+       (244 ly on Small, 364 ly on Medium, 604 ly on Huge)
    * - ``distant``
-     - ≈ 289–295 ly
+     - ≈ 0.364 × dim
      - Homeworlds maximally spread; most common competitive choice
+       (293 ly on Small, 437 ly on Medium, 728 ly on Huge)
 
-**Minimum-separation constraint (oracle-confirmed 2026-04-22):**
+**Minimum-separation constraint (oracle-confirmed 2026-04-22; scaling
+confirmed 2026-04-22 via R3.6):**
 
 Each setting enforces a hard minimum Euclidean separation between any two
-homeworlds.  The values above are empirical upper bounds measured on a
-Small / Normal map with 6 players across 10 seeds each.  The placement
-algorithm is consistent with minimum-distance rejection sampling: a candidate
-homeworld position is rejected if it falls within the threshold distance of any
+homeworlds.  The placement algorithm is minimum-distance rejection sampling:
+a candidate homeworld is rejected if it falls within the threshold of any
 already-placed homeworld.
 
-Separation thresholds may scale with map size; the values quoted apply to Small
-(800 × 800 ly) maps.  On very small maps with many players and ``distant``
-spacing, Stars! may silently reduce the actual player count if it cannot place
-all homeworlds at the required separation.
+``moderate``, ``farther``, and ``distant`` thresholds **scale proportionally
+with map dimension** (confirmed across all five map sizes, 15 seeds each):
 
-.. note::
+.. list-table::
+   :header-rows: 1
+   :widths: 15 20 20 45
 
-   Whether thresholds are absolute constants or scale with map dimension is
-   unconfirmed (tested on Small maps only).  The qualitative shape of each
-   setting is faithfully reproduced by the values above; exact scaling is
-   deferred as low-priority (P4).
+   * - Setting
+     - Scaling factor
+     - Tiny (400 ly)
+     - Small/Medium/Large/Huge
+   * - ``moderate``
+     - ≈ 0.221 × dim
+     - ≈ 89 ly
+     - 179 / 264 / 349 / 435 ly
+   * - ``farther``
+     - ≈ 0.303 × dim
+     - ≈ 116 ly
+     - 244 / 364 / 484 / 604 ly
+   * - ``distant``
+     - ≈ 0.364 × dim
+     - ≈ 134 ly
+     - 293 / 437 / 579 / 728 ly
+
+``close`` behaves differently: the observed minimum distance on Small (≈ 62 ly,
+from R3.1) does not appear to scale proportionally — raw values increase only
+sub-linearly across map sizes (37 → 60 → 77 → 92 → 100 ly), consistent with
+an approximately **absolute threshold of ≈ 62 ly**.  Exact confirmation on
+non-Small maps is P4.
+
+On very small maps with many players and large spacing, Stars! may silently
+reduce the actual player count if it cannot fit all homeworlds at the required
+separation.
 
 Game Options
 ------------
