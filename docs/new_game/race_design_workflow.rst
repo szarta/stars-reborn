@@ -191,42 +191,68 @@ AI difficulty controls two independent dimensions:
 
    * - Dimension
      - Effect
+   * - **Race template**
+     - Each difficulty level uses a distinct, hand-tuned race design per PRT.
+       Higher tiers use stronger LRT combinations, wider hab ranges, better
+       economy stats, and more aggressive research-cost picks.  (Six PRTs × four
+       tiers = 24 built-in AI race templates — see :doc:`../reference/ai_races`.)
    * - **Starting advantage**
-     - Higher difficulty grants the AI boosted starting resources, tech levels,
-       or population.  The original game used fixed per-difficulty multipliers.
+     - **Expert only:** +10% starting population on every initial planet
+       (baseline 250k → 275k for 1/1000 races, 175k → 192k for 1/400 races,
+       140k/70k → 153k/76k for PP dual-start).  Starting tech, factories (10),
+       mines (10), defenses (10), and fleet composition are identical across
+       all four difficulty tiers — they are not scaled.
+   * - **Homeworld concentration boost (Tough/Expert)**
+     - Tough and Expert AI homeworlds receive a concentration boost on top of
+       the usual leftover-advantage-point effect.  For races with
+       ``leftover_spend = surface_minerals`` this is the only concentration
+       boost they get (Easy/Standard show natural concentrations; Tough/Expert
+       jump to a boosted value).  Races with
+       ``leftover_spend = mineral_concentrations`` already receive the boost
+       from leftover points at all tiers, so the tier-based boost is not
+       additionally visible in their homeworld concentrations.
+       Surface minerals and homeworld concentrations themselves follow the
+       usual leftover-advantage-point rules and are not otherwise scaled by
+       difficulty.
    * - **Decision quality**
      - Higher difficulty enables more sophisticated order generation (fleet
-       routing, production prioritisation, combat targeting).
+       routing, production prioritisation, combat targeting).  *Mechanism not
+       yet reverse-engineered.*
 
-Difficulty levels (names TBD; matching original game):
+Difficulty levels, in original-game UI order:
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 30 50
+   :widths: 15 20 65
 
    * - Level
-     - Original label
+     - UI label
      - Notes
    * - 1
-     - Expert
-     - Hardest; full starting advantage + best AI logic
+     - Easy
+     - Easiest; no starting advantage.  Uses weakest race template.
    * - 2
-     - Good
-     - \
+     - Standard
+     - Default.  No starting advantage.  (Community sources often call this
+       "Regular".)
    * - 3
-     - Average
-     - Default for new games
+     - Tough
+     - No starting advantage.  Stronger race template than Standard.
    * - 4
-     - Mediocre
-     - \
-   * - 5
-     - Dumb
-     - Easiest; no starting advantage
+     - Expert
+     - Hardest.  +10% starting population + strongest race template.
 
-.. todo::
+A fifth UI option, **Random**, selects one of the four levels per AI slot at
+game-start time; it is not itself a difficulty level.
 
-   Verify original game difficulty names and exact starting-advantage
-   multipliers per level (resources? tech? population?).
+.. note::
+
+   Labels confirmed from ``stars.exe`` string table (slots 2414-2418) and
+   cross-verified against the 24 AI race templates captured in community data
+   (:doc:`../reference/ai_races`).  Each of the 24 extracted
+   m1-per-AI race records matches its corresponding AIs.md template exactly
+   (LRT set, hab ranges, pop efficiency, factory/mine rates, growth %, research
+   costs).  Source: ``ai_games/{1,2}/`` corpus, 2026-04-23.
 
 .. todo::
 
