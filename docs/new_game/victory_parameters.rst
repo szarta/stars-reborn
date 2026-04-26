@@ -1,58 +1,87 @@
 Victory Condition Parameters
 ============================
 
-The host selects which victory conditions are active and sets their thresholds
-when creating a new game.  These become the ``victory_conditions`` block in
-the ``POST /games`` request.
+The host selects which victory conditions are active and sets their
+thresholds when creating a new game.  These become the
+``victory_conditions`` block in the ``POST /games`` request.
 
-For scoring formulae, year-50 minimum, and win-announcement behaviour, see
-:doc:`../mechanics/victory`.
+For scoring formulae, minimum-year behaviour, and win-announcement
+semantics, see :doc:`../mechanics/victory`.
 
 Available Conditions
 --------------------
 
-Multiple conditions may be enabled simultaneously.  Meeting **any one** wins
-the game (subject to the year-50 minimum).
+The host checks any subset of the seven conditions below, and separately
+configures **how many** of the checked conditions a player must meet for
+victory, plus the earliest game year at which victory may be declared.
+
+Condition ranges and field names are drawn from the Step-3 *Winning
+Conditions* page of the Advanced New Game wizard and from the
+``stars!.exe -a game.def`` CLI reference in the help file.
 
 .. list-table::
    :header-rows: 1
-   :widths: 30 20 20 30
+   :widths: 28 22 18 16 16
 
    * - Condition
      - Enabled field
      - Threshold field
-     - Default threshold
-   * - Own N% of planets
+     - Range
+     - CLI name
+   * - Has colonised N% of all planets in the universe
      - ``own_planets``
      - ``own_planets_pct``
-     - 30
-   * - Attain tech level N in X fields
+     - 20–100
+     - ``VC # of planets``
+   * - Attains tech level N in X fields
      - ``tech_levels``
      - ``tech_level`` / ``tech_fields``
-     - level 22 in 6 fields
-   * - Exceed score N
+     - level 8–26 / 2–6 fields
+     - ``VC Tech``
+   * - Exceeds a score of N
      - ``exceed_score``
      - ``score_threshold``
-     - 11 000
-   * - Score above second-place by N%
+     - 1 000–20 000
+     - ``VC Score``
+   * - Exceeds second-place score by N%
      - ``score_lead``
      - ``score_lead_pct``
-     - 100
-   * - Produce N resources per year
-     - ``produce_resources``
-     - ``resources_threshold``
-     - 1 000
-   * - Own N starbases
-     - ``own_starbases``
-     - ``starbases_threshold``
-     - 100
-   * - Highest score after year N
+     - 20–300
+     - ``VC Exceeds nearest``
+   * - Has a production capacity of N thousand
+     - ``production_capacity``
+     - ``production_capacity_k``
+     - 10–500 (thousands of annual resources)
+     - ``VC Production``
+   * - Owns N capital ships
+     - ``own_capital_ships``
+     - ``capital_ships_threshold``
+     - 10–300
+     - ``VC Capital Ships``
+   * - Has the highest score after N years
      - ``highest_score``
      - ``highest_score_year``
-     - 900
+     - 30–900
+     - ``VC Turns``
 
-All ``_pct`` fields are integers in [1, 100].  All other thresholds are
-positive integers.
+Two additional fields control *combination* and *timing*:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 22 18 32
+
+   * - Parameter
+     - Field
+     - Range
+     - CLI name
+   * - Winner must meet N of the selected criteria
+     - ``must_meet_count``
+     - 0–7
+     - ``VC Must Meet``
+   * - Minimum years before a winner may be declared
+     - ``min_years``
+     - 30–500
+     - ``Minimum Years``
 
 Full Parameter Object
 ---------------------
@@ -60,47 +89,58 @@ Full Parameter Object
 .. code-block:: json
 
    {
-     "own_planets":          true,
-     "own_planets_pct":      30,
+     "own_planets":            true,
+     "own_planets_pct":        60,
 
-     "tech_levels":          true,
-     "tech_level":           22,
-     "tech_fields":          6,
+     "tech_levels":            true,
+     "tech_level":             22,
+     "tech_fields":            4,
 
-     "exceed_score":         true,
-     "score_threshold":      11000,
+     "exceed_score":           false,
+     "score_threshold":        11000,
 
-     "score_lead":           true,
-     "score_lead_pct":       100,
+     "score_lead":             true,
+     "score_lead_pct":         100,
 
-     "produce_resources":    true,
-     "resources_threshold":  1000,
+     "production_capacity":    false,
+     "production_capacity_k":  100,
 
-     "own_starbases":        true,
-     "starbases_threshold":  100,
+     "own_capital_ships":      false,
+     "capital_ships_threshold": 100,
 
-     "highest_score":        true,
-     "highest_score_year":   900
+     "highest_score":          false,
+     "highest_score_year":     100,
+
+     "must_meet_count":        1,
+     "min_years":              50
    }
 
-All conditions are enabled by default to match the original game's default
-new-game setup.
+The example above matches the values shown on a freshly-opened *Step 3
+Winning Conditions* page of the Advanced New Game wizard (captured from
+the original game).  The host may toggle any checkbox and adjust any
+spinner before clicking *Finish*.
 
 Validation Rules
 ----------------
 
-- At least one condition must be enabled.
-- ``tech_fields`` must be in [1, 6].
-- ``tech_level`` must be in [1, 26] (the valid range of tech levels).
-- ``own_planets_pct`` must be in [1, 100].
-- ``score_lead_pct`` must be ≥ 1.
+Engine-enforced at game creation:
 
-.. todo::
+- ``must_meet_count`` must be ≤ the number of enabled conditions.
+- ``tech_level`` ∈ [8, 26], ``tech_fields`` ∈ [2, 6].
+- ``own_planets_pct`` ∈ [20, 100].
+- ``score_threshold`` ≥ 1 000.
+- ``score_lead_pct`` ∈ [20, 300].
+- ``production_capacity_k`` ∈ [10, 500].
+- ``capital_ships_threshold`` ∈ [10, 300].
+- ``highest_score_year`` ∈ [30, 900].
+- ``min_years`` ∈ [30, 500].
 
-   Confirm whether the original game enforces any of these validation rules
-   at game creation time or simply behaves oddly if they are violated.
+.. _victory-params-open-questions:
 
-.. todo::
+Open Questions
+--------------
 
-   Determine whether ``own_planets_pct`` is computed against total planets
-   in the universe or total colonised planets.
+.. todo:: Clarify the semantics of ``must_meet_count = 0``.  The Step-3
+   wizard permits selecting 0 even when one or more conditions are
+   checked; does this make victory unreachable, or does 0 have some other
+   meaning (e.g. "ignore the must-meet combinator")?

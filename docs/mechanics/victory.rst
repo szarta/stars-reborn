@@ -12,15 +12,18 @@ Victory Conditions
 Overview
 --------
 
-Victory is determined at the end of each turn after year 50 (minimum). A
-player may win by meeting any of the configured victory conditions. If Public
-Player Scores is enabled, scores are visible after year 20.
+Victory is determined at the end of each turn after the configured
+minimum-years threshold has elapsed.  A player may win by meeting the
+host-configured number of active victory conditions.  If Public Player
+Scores is enabled, scores are visible after year 20.
 
 Victory Condition Options
 --------------------------
 
-The host configures victory conditions when creating the game. Multiple
-conditions can be active simultaneously; meeting **any one** wins the game.
+The host configures victory conditions when creating the game.  Any
+subset of the seven conditions below may be checked, and the host
+separately specifies how many of the checked conditions a player must
+meet for victory to be declared.
 
 .. list-table::
    :header-rows: 1
@@ -28,36 +31,49 @@ conditions can be active simultaneously; meeting **any one** wins the game.
 
    * - Condition
      - Description
-     - Default
-   * - Own X% of planets
-     - Control a percentage of all planets
-     - 30%
-   * - Attain tech level N in X fields
+     - Range
+   * - Owns X% of all planets
+     - Colonise a percentage of every planet in the universe
+       ("owned" = colonised by this player)
+     - 20–100%
+   * - Attains tech level N in X fields
      - Reach level N in X different fields
-     - level 22 in 6 fields
-   * - Exceed score N
-     - Achieve a total score above a threshold
-     - 11,000
-   * - Score above second-place by X%
-     - Lead by a margin
-     - 100%
-   * - Produce N resources
-     - Accumulate total annual resources
-     - 1,000
-   * - Own N starbases
-     - Build a number of starbases
-     - 100
-   * - Highest score after year N
-     - Survive until year N with top score
-     - year 900
+     - L8–26 / 2–6 fields
+   * - Exceeds a score of N
+     - Total score above a threshold
+     - 1 000–20 000
+   * - Exceeds second-place score by X%
+     - Lead the runner-up by a margin
+     - 20–300%
+   * - Has production capacity of X thousand
+     - Annual resources at or above a threshold
+     - 10–500 (thousand)
+   * - Owns N capital ships
+     - Fleet of ships with power rating ≥ 2000
+     - 10–300
+   * - Has highest score after year N
+     - Be top-ranked at the configured year
+     - year 30–900
 
-These can be combined (e.g., own 30% of planets AND score 11,000+).
+For full parameter ranges, field names, and the JSON request shape see
+:doc:`../new_game/victory_parameters`.
+
+Combining Conditions
+~~~~~~~~~~~~~~~~~~~~
+
+In addition to the seven checkboxes, the host sets *Winner must meet N of
+the above selected criteria* (range 0–7).  At N = 1 any one enabled
+condition suffices (the OR semantics documented by the help file); at
+N > 1 the combinator acts as "any N of M".  Thus a host can demand e.g.
+"own 30 % of planets AND score 11 000+" by checking both and setting
+must-meet = 2.
 
 Minimum Years
 -------------
 
-Victory cannot occur before year 50 regardless of score or conditions met.
-This prevents trivially fast wins in small universes.
+Victory cannot occur before ``min_years`` (configurable, 30–500, default
+50) regardless of score or conditions met.  This prevents trivially fast
+wins in small universes.
 
 Score Calculation
 -----------------
@@ -81,7 +97,8 @@ of planets owned (excess ships beyond that count do not score).
    * - Escort ships
      - 2 pts each (power rating 1–1999); capped at number of planets owned
    * - Capital ships
-     - ``8 × N_cap × N_planets / (N_cap + N_planets)`` pts total; capped at planets
+     - ``floor(8 × N_cap × N_planets / (N_cap + N_planets))`` pts total;
+       N_cap capped at planets owned before the formula is applied
    * - Tech levels
      - 1 pt per level for levels 1–3; 2 pt for 4–6; 3 pt for 7–9; 4 pt for 10+
    * - Resources
@@ -89,8 +106,9 @@ of planets owned (excess ships beyond that count do not score).
 
 Capital ship scoring uses a harmonic-mean formula that rewards balanced
 fleet-to-planet ratios.  The formula gives **total** points for all capital
-ships, not per-ship.  Example: 20 capital ships, 30 planets →
-``8 × 20 × 30 / (20 + 30) = 96 pts`` total (4.8 pts per capital ship).
+ships, not per-ship, and the total is truncated to an integer.  Example:
+20 capital ships, 30 planets →
+``floor(8 × 20 × 30 / (20 + 30)) = 96 pts`` total (4.8 pts per capital ship).
 
 Power rating thresholds (confirmed from help file):
 
@@ -169,24 +187,42 @@ Per-class validation scripts:
 player) and ``validate_score.py`` (multi-player, takes an F10 ground-truth
 JSON).
 
-Still open
-~~~~~~~~~~
+Capital-ship harmonic mean (confirmed year 2504)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The validation snapshot had no escort or capital ships and no player above
-tech level 6, so these cells of the table remain unverified empirically:
+A fourth snapshot at year 2504 (``stars-reborn-research/original/try2``,
+6-player game) closed the last open cell.  Two players held capital ships:
 
-.. note:: Escort multiplier (2 pts each, capped at planets) is confirmed
-   year 2448 — verified across multiple players up to 60 escorts.
+* **P1 Timmune (AR)** — 1 capital ship, 5 planets →
+  ``floor(8 × 1 × 5 / (1 + 5)) = floor(6.667) = 6 pts``.
+  Total expected score 318 = F10 ✓
+* **P4 Hicardi (HE)** — 26 capital ships, 212 planets →
+  ``floor(8 × 26 × 212 / (26 + 212)) = floor(185.345) = 185 pts``.
+  Total expected score 5116 = F10 ✓
 
-.. todo:: Verify the capital-ship harmonic-mean total formula
-   ``8 × N_cap × N_planets / (N_cap + N_planets)`` and whether the cap
-   applies before or after the harmonic mean.  No snapshot has any
-   player with capital ships at year 2448 (Crusher's 9 from year 2433
-   are gone).  Need a snapshot once any player builds ≥2000-power ships.
+All 6 players matched F10 exactly at year 2504 once exact resource totals
+(summed from each player's ``.pN`` dump) were used in place of the
+rounded values F10 displays (e.g. F10 shows "12k" for 11509 actual).
 
-.. note:: Tech L10+ = 4 pts confirmed year 2448 via Player 1
-   Construction=10.  Escort = 2 pts confirmed same snapshot via Player 1's
-   4-escort fleet contributing 8 pts to a fully-balanced expected total.
+Confirmed behaviors:
+
+- The harmonic-mean result is **floor-truncated** to an integer, not
+  rounded.  P4's 185.345 scored 185 pts.
+- The cap ``min(N_cap, N_planets)`` is applied to ``N_cap`` *before*
+  substituting into the formula.  (Neither validation case hit the cap:
+  1 ≤ 5 and 26 ≤ 212.)
+- Points are awarded as a single total across the fleet, not per-ship.
+
+At N=1 capital ship the marginal rate is 6 pts per ship; at N=26 against
+212 planets it drops to ~7.1 pts/ship average.  The per-ship rate
+approaches 8 as ``N_cap → N_planets`` and falls toward 0 as capital ships
+pile up without matching planet count.
+
+The full score table is now empirically validated end-to-end with
+**zero residual** across 22 player-snapshots (16 at year 2448 + 6 at
+year 2504), covering PRTs JOAT / HE / SS / PP / IS / AR / CA, planet
+counts 1–212, escort counts up to 1 209, capital ship counts 0–26, and
+tech levels up to 24.
 
 .. note:: The "PRT-conditional" anomalies suspected at year 2433 (P7 PP,
    P9 HE, P10 PP, P12 PP, P13 SS) were all OCR transcription errors in
@@ -205,9 +241,77 @@ When a player meets victory conditions:
 - The game can continue (other players may have more turns)
 - The winning player is shown in the score report (F10)
 
-Meeting **any one** configured victory condition wins the game; conditions are
-OR-combined (confirmed from help file: "more than one player can be declared
-the winner").
+Whether a player has won is determined by the ``must_meet_count``
+combinator: they must satisfy at least ``must_meet_count`` of the
+currently-enabled conditions.  The help file confirms that *multiple
+players may win on the same turn* ("more than one player can be declared
+the winner" / "Multiple players can achieve victory at the same time
+(with the same or different conditions)") — the engine does not pick a
+single winner from simultaneous qualifiers.
+
+Simultaneous winners (confirmed R5.2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Verified with a 2-human-player game
+(``stars-reborn-research/original/long-2p-game``) configured with a
+single condition (Tech L8 in 2 fields), ``min_years = 100``, and both
+players given JOAT + Generalized Research so they would both cross the
+threshold on the same turn.  The two players never met in-game.
+
+When both qualified on the same turn, each player received **one** win
+message naming the other qualifier.  The message is filled from the
+canonical string at ``original-game-strings[183]`` in the extracted
+English string table:
+
+.. code-block:: text
+
+   You, along with {0} have been declared the winners of this game.
+   You may continue to play though, if you wish to attempt to improve
+   your standing among your fellow dictators.
+
+Player 1 saw ``{0}`` = ``Player 2`` and vice versa, because the two had
+never met.  For reference, the three win-announcement templates in the
+table are:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 30 60
+
+   * - ID
+     - Case
+     - Template
+   * - 181
+     - Another empire won (recipient is not a winner)
+     - "The forces of {0} have been declared the winner of this game.
+       You are advised to accept their supremacy, though you may
+       continue the fight."
+   * - 182
+     - Sole winner (recipient is the only one)
+     - "You have been declared the winner of this game.  You may
+       continue to play though, if you wish to really rub everyone's
+       nose in your grand victory."
+   * - 183
+     - Joint winners (recipient is one of multiple)
+     - "You, along with {0} have been declared the winners of this
+       game.  You may continue to play though, if you wish to attempt
+       to improve your standing among your fellow dictators."
+
+Confirmed behaviours:
+
+- Win-announcement is **per-recipient**: each winner receives a single
+  message that enumerates every *other* qualifier for that turn
+  (the reader is always the implicit "You").
+- When the recipient has **not** discovered the other qualifier(s),
+  they are referred to by the generic label "Player N" where N is the
+  player-ID.  (Presumably the race/empire name is used once discovered;
+  not yet confirmed.)
+- The message explicitly invites continued play ("You may continue to
+  play though…"), matching the help-file statement that the game does
+  not force-end at victory.
+
+.. todo:: Confirm the wording when the recipient *has* discovered the
+   other qualifier(s) — expected to substitute the race short name for
+   "Player N" but not yet observed.
 
 Diplomatic Victory (multiplayer)
 ---------------------------------
@@ -216,9 +320,49 @@ In multiplayer, human players may agree to a diplomatic victory — all
 remaining players declare a joint winner. This is purely a social convention;
 the game engine does not enforce it.
 
-Open Questions
---------------
+Year-N condition (confirmed R5.2)
+---------------------------------
 
-.. todo:: Exact behavior when multiple players meet conditions simultaneously
+The "Has highest score after N years" condition was tested in
+``stars-reborn-research/original/900_turns`` (2-human game,
+``highest_score_year = 900``, all other conditions disabled,
+``min_years = 100``).  The host was advanced to turn 898 (year 3298),
+then individual turns were generated via ``stars.exe -gN``.
 
-.. todo:: Year 900 "time limit" behavior in practice
+* **Turn 900 (year 3300)** — Player 1 was declared winner; both players
+  received win-announcement messages on this turn.
+* **Turn 901 (year 3301)** — generated normally with no error; the game
+  did **not** force-end at year-N.
+
+Each player received one of the standard non-joint templates rather than
+template 183:
+
+.. code-block:: text
+
+   [P1, template 182, sole winner]
+   You have been declared the winner of this game. You may continue to
+   play though, if you wish to really rub everyone's nose in your grand
+   victory.
+
+   [P2, template 181, another empire won]
+   The forces of Player 1 have been declared the winner of this game.
+   You are advised to accept their supremacy, though you may continue
+   to fight.
+
+Confirmed:
+
+- The year-N condition is evaluated and the winner declared on the
+  *exact* turn N is reached, not the turn after.
+- Play continues afterwards exactly as for other victory conditions
+  (the help-file invitation "you may continue to play" is honoured).
+- Templates **181 and 182** are used for the single-winner case
+  (recipient is the winner / recipient is anyone else); template **183**
+  is used only for joint winners.  In both 181 and 183 the ``{0}``
+  placeholder falls back to ``Player N`` when the recipient has not
+  discovered the named player.
+
+The turn counter (``.hst`` / ``.mN`` type-8 payload bytes 10–11) is a
+little-endian u16, so the largest representable turn is 65 535 (year
+67 935).  Whether the engine clamps before then, rolls over, or carries
+into another byte is **untested** — but in practice the year-900
+condition triggers long before this matters.

@@ -120,8 +120,21 @@ Race range constraints:
 Planet Value Formula
 --------------------
 
-**Source:** m.a@stars, starsautohost.org forum (reverse-engineered, community-verified).
+**Source:** m.a@stars, starsautohost.org forum (reverse-engineered).
 `Thread #2299 <http://starsautohost.org/sahforum2/index.php?t=msg&th=2299&rid=625&S=ee625fe2bec617564d7c694e9c5379c5&pl_view=&start=0#msg_19643>`_
+
+**Status:** Oracle-confirmed (R3 ``hab_proximity_growth_rate``).  A faithful
+re-implementation of the integer-arithmetic formula below produces a
+**byte-perfect match** on all 241 planets observed by 4 AI races at year 30
+of a Small/Normal/Farther map (seed 42), spanning positive, negative, and
+clamped value cases.  The same formula appears as ``Hab%`` in advfaq §4.11
+(Bill Butler, "Race wizard - Hab studies", 1998-04-10) — algebraically
+equivalent, with the floating-point form
+``Hab% = √[(1−g)² + (1−t)² + (1−r)²] · (1−x)(1−y)(1−z) / √3``
+where ``g, t, r`` are fractional distances from range center and
+``x, y, z = max(0, frac − 0.5)``.  The advfaq presentation gives 100% at
+center exactly: ``√3/√3 · 1·1·1 = 1.0``; an earlier worry that the formula
+was inverted was a hand-calculation slip.
 
 .. note::
 

@@ -346,6 +346,13 @@ number modulo 32 (so icon 32 encodes as 0); bits 0–2 are always ``0b111``.
 
 ``icon_0idx`` is 0-based (0–31); there are 32 unique race icons.
 
+This same byte 6 / decode formula applies to the type-6 PlayerBlock embedded
+in ``.m1``–``.m16`` and ``.hst`` files (confirmed 2026-04-25 via the
+same-icon-different-name oracle).  The engine enforces a per-game
+icon-uniqueness invariant: no two players in the same game share an icon —
+see :ref:`name-collision-resolution` and the icon-collision section in
+:doc:`../reference/ai_races` for the observed reassignment behavior.
+
 Habitat Encoding
 ~~~~~~~~~~~~~~~~
 
@@ -379,6 +386,14 @@ All names — both the 6 race-editor dropdown presets and any user-typed name �
 use the same encoding algorithm (confirmed 2026-04-22 via Ghidra decompilation
 of ``FUN_1070_551c``, ``FUN_1040_45a0``, and ``FUN_1040_4880`` in
 ``stars.exe``).
+
+The same name-section layout (offset 112+) and encoding apply to the type-6
+PlayerBlock embedded in ``.m1``–``.m16`` player turn files and ``.hst`` host
+files, not just standalone ``.r1`` race files (confirmed 2026-04-25 via the
+all-human-players collision oracles — see
+:doc:`../reference/ai_races`).  In the parser, both
+``r1_to_json`` and ``m1_to_json`` use a single shared decoder
+``stars_file_parser::name::decode_names``.
 
 Name Encoding Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^
