@@ -42,7 +42,10 @@ Sequence
   chasing an MT or packet update their waypoints to the new location.
 
   **Sub-step:** Wormhole endpoints jiggle/degrade/shift (after packets, before
-  fleet movement).
+  fleet movement). The new position is visible to a player only if the wormhole
+  is inside that player's basic scanner coverage this turn; otherwise the
+  player retains the last observed position as stale intel until the wormhole
+  is re-acquired. See :doc:`wormholes` for the full visibility model.
 
 **Phase 3 — Fleet movement**
 

@@ -38,6 +38,9 @@ from |original|. These documents are the implementation contracts for the engine
    * - Scanning
      - :doc:`scanning`
      - Partial
+   * - Wormholes
+     - :doc:`wormholes`
+     - Partial
    * - Ship design
      - :doc:`ship_design`
      - Partial
@@ -67,6 +70,7 @@ from |original|. These documents are the implementation contracts for the engine
    fleet_movement
    combat
    scanning
+   wormholes
    ship_design
    starbase_design
    technology_tree

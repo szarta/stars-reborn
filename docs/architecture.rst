@@ -181,10 +181,48 @@ one of these subtypes:
    Player <|-- NPC
    @enduml
 
+.. _architecture-discoverable-data:
+
+Per-Player Visibility (Discoverable Data)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ``DiscoverablePlanetData`` is the per-player fog-of-war record for a planet.
 Each planet carries one such record per player slot; a player's turn file
-includes only the record for their own slot. Fields the player has never
-observed are absent (not zero).
+includes only the record for their own slot.
+
+The record is in one of three states for a given player (see
+:doc:`mechanics/scanning` for the full rules):
+
+1. **Never observed** — every contents field absent. Identity fields (id,
+   name, position) come from the shared .xy data and are always present.
+2. **Observed before, not currently penetrating-scanned** — contents fields
+   hold values **as they were at last observation**; ``years_since_last_scan``
+   tells the client how stale they are. Ground truth may have drifted
+   (terraforming, mining, population growth) — the player will not see the
+   change until they re-scan.
+3. **Currently penetrating-scanned** — contents fields hold current
+   ground-truth values; ``years_since_last_scan = 0``.
+
+Contents fields subject to the three-state rule: ``gravity``, ``temperature``,
+``radiation``, the three mineral concentrations, the three surface mineral
+amounts, ``population``, ``owner``, ``factories``, ``mines``, ``defense``,
+starbase presence/design. **Fields the player has never observed are absent
+(not zero, not null — literally not in the JSON.)** This is critical: a UI
+that reads a "0" for population on an unobserved planet would be wrong.
+
+The same per-player intel pattern applies to other ``SpaceObject`` types that
+are scanner-gated. ``DiscoverableWormholeData`` records last-seen position,
+``seen_this_turn``, and a sticky ``partner_id`` (set only on traversal); see
+:doc:`mechanics/wormholes`. ``DiscoverableFleetData`` and ``DiscoverableMinefieldData``
+follow the same convention — fields never observed are absent, and intel
+about the most recent observation is retained across turns.
+
+Engine ground truth (full planet state for every player slot, full wormhole
+linkages, uncloaked fleet positions, AI internals) lives in the host-side
+``GameState`` and is exposed only via host-token-gated endpoints. The single
+choke point that derives a player's turn file from ``GameState`` is the place
+to enforce — and test — that no host-only field can leak into a per-player
+view.
 
 Each ``Player`` may have at most **20 ship designs** and **20 starbase designs**
 active simultaneously. Scrapping a ship frees its design slot only when no

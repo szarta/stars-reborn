@@ -11,19 +11,49 @@ scanning, the player sees current planet data.
 Scanner Types
 -------------
 
-Basic (non-penetrating)
-~~~~~~~~~~~~~~~~~~~~~~~~
+Every scanner has two ranges: a **normal** range and a **penetrating** range.
+Each range gates different categories of information.
 
-- Reveals planet hab values, minerals, population, and owner at the scanned range
-- Does **not** reveal cloaked fleets
-- Range: varies by scanner tech item
+Normal range
+~~~~~~~~~~~~
 
-Penetrating
-~~~~~~~~~~~
+What is revealed inside normal range:
 
-- Reveals all of the above AND cloaked ships within penetrating range
-- Penetrating range is typically much shorter than basic range
-- Advanced scanners (blocked by No Advanced Scanners LRT)
+- Fleets (subject to cloaking — see below)
+- Wormholes
+- Mineral packets in flight, salvage, mystery traders
+- Minefields (subject to minefield cloak vs. non-penetrating scanners)
+- The **existence** of a planet at a given coordinate (planet identity and
+  position are common knowledge from the start; this is what is visible from
+  the .xy data)
+
+What is **not** revealed inside normal range:
+
+- Planet contents — hab values (gravity/temperature/radiation), mineral
+  concentrations, surface minerals, population, owner, installations.
+  These require penetrating range.
+- Cloaked fleets beyond their effective detection range.
+
+Penetrating range
+~~~~~~~~~~~~~~~~~
+
+Penetrating range is typically much shorter than normal range. Inside it,
+in addition to everything visible at normal range:
+
+- **Planet contents** — hab values, mineral concentrations, surface minerals,
+  population, owner, defense level. This is the only mechanism (apart from
+  physically orbiting the planet) by which a player learns the contents of an
+  enemy or unowned planet.
+- Cloaked fleets within the penetrating-range envelope (subject to cloak
+  reduction — see :ref:`cloaking-section`).
+- Minefields are always detectable to penetrating scanners (0% cloak vs pen).
+
+Penetrating-capable scanners are blocked by the **NAS** (No Advanced
+Scanners) LRT; NAS races can only learn planet contents by visiting the
+planet with one of their own fleets.
+
+*References:* :ref:`planetary-scanners-ref` and :ref:`ship-scanners-ref` give
+per-component normal and penetrating ranges.
 
 Scanner Sources
 ---------------
@@ -123,6 +153,17 @@ Combined scanning
 A player's total scan coverage is the union of all planetary scanner circles
 and fleet scanner circles. Any planet within any scan circle is revealed.
 
+Wormholes
+~~~~~~~~~
+
+Wormhole positions are revealed by **basic** scanner range from any source
+(planetary or fleet); penetrating range is not required. Knowing a wormhole's
+position is not the same as knowing where it leads — endpoint linkage is
+gated on physical traversal. See :doc:`wormholes` for the full visibility
+contract and the per-player intel record shape.
+
+.. _cloaking-section:
+
 Cloaking
 --------
 
@@ -212,11 +253,37 @@ Against non-penetrating scanners: minefields have **82% cloak**.
 Information Staleness
 ---------------------
 
-When a scanner is no longer covering a planet:
+A player's view of a planet is in exactly one of three states:
 
-- The planet data freezes at the last observed state
-- ``years_since`` increments each turn it is not scanned
-- Value of ``NeverSeenPlanet`` (−1) means the planet has never been scanned
+1. **Never observed** — the player has never had a penetrating scanner on
+   the planet and has never visited it. Planet contents are entirely
+   unknown; identity (id, name, position) is still visible from the .xy
+   data, but every contents field on ``DiscoverablePlanetData`` is absent
+   (not zero, not null — literally not present).
+
+2. **Observed before, not currently in penetrating-scan range** — the
+   player has seen the planet at some prior turn. The contents fields
+   hold the values **as they were at last observation**. Ground truth may
+   have drifted since (terraforming changes hab; mining decays
+   concentrations; population grows or declines), but the player's view
+   is frozen until they re-scan. ``years_since_last_scan`` increments
+   each turn the planet is not in penetrating-scan coverage.
+
+3. **Currently in penetrating-scan range** — the contents fields hold
+   the **current** ground-truth values, and ``years_since_last_scan = 0``.
+
+Fields that follow this three-state rule on ``DiscoverablePlanetData``:
+hab values (gravity, temperature, radiation), the three mineral
+concentrations, the three surface mineral amounts, population, owner,
+factories, mines, defense level, starbase presence/design.
+
+Identity fields (id, name, position) are always present — they come from
+the shared .xy data and never need scanning.
+
+The original game uses ``NeverSeenPlanet`` (−1) as a sentinel for
+``years_since_last_scan`` when the planet has never been observed; the
+clone uses field absence instead, consistent with the
+:ref:`architecture-discoverable-data` model.
 
 Open Questions
 --------------
@@ -229,4 +296,6 @@ Open Questions
 
 .. todo:: Pick Pocket Scanner (SS PRT ability) — steal technology mechanic
 
-.. todo:: Exactly what data is revealed at basic vs. penetrating range
+.. todo:: Whether non-penetrating scans of a planet refresh ``years_since_last_scan``
+   at all, or only penetrating-range scans count as "observation". Original-game
+   oracle test needed.
