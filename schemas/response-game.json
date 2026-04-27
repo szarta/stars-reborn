@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-game.json",
+  "description": "Lobby/metadata response for GET /games/{game-id}. The static, shared map data — equivalent to the .xy file from the original Stars!. Identical for every player; safe to expose without fog-of-war filtering. Per-player intel lives in response-turn-file.json.",
+  "version": "0.0.1",
+  "definitions": {
+    "universe-planet": {
+      "description": "A planet's static identity and position. Contents (hab, population, owner, etc.) are not present — those are scanner-gated and live in the per-player turn file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "game-id",
+    "game-name",
+    "year",
+    "universe-width",
+    "universe-height",
+    "planet-count",
+    "planets"
+  ],
+  "properties": {
+    "game-id": {
+      "description": "UUID v4 string identifying the game.",
+      "type": "string",
+      "maxLength": 64
+    },
+    "game-name": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 2400,
+      "maximum": 4400
+    },
+    "universe-width": {
+      "description": "Map width in light years.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "universe-height": {
+      "description": "Map height in light years.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "planet-count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "planets": {
+      "description": "All planets in the universe, sorted by id. Static identity only.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/universe-planet"
+      }
+    }
+  }
+}
