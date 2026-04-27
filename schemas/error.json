@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/error.json",
+  "description": "Canonical error response shape returned by any engine endpoint on failure (4xx, 5xx). Engines MAY add fields; clients MUST ignore unrecognised ones.",
+  "version": "0.0.1",
+  "definitions": {},
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "description": "Human-readable error message. Not a localisation key; not stable across versions.",
+      "type": "string",
+      "maxLength": 1024
+    }
+  }
+}
