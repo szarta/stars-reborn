@@ -630,6 +630,14 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Turn generated — Year {self._game_year}")
 
     def _handle_ship_design(self):
+        try:
+            from .dialogs.ship_designer import ShipDesignerDialog
+
+            dlg = ShipDesignerDialog(self._player, self)
+            dlg.exec()
+            return
+        except (ImportError, Exception):
+            pass
         self.statusBar().showMessage("Ship design — not yet implemented.")
 
     def _handle_research(self):
