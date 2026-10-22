@@ -1,0 +1,6 @@
+# stars-reborn-design — Python dependencies
+# Install with: pip install -r requirements.txt
+
+sphinx>=7.0
+alabaster>=0.7
+sphinxcontrib-plantuml>=0.31
