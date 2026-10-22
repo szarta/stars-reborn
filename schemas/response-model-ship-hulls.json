@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-model-ship-hulls.json",
+  "version": "0.1.0",
+  "description": "Response shape for GET /model/ships/hulls — full ship-hull catalog.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["hulls"],
+  "properties": {
+    "hulls": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/ship-hull"}
+    }
+  },
+  "definitions": {
+    "ship-hull": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slug",
+        "name",
+        "category",
+        "requirement",
+        "mass",
+        "armor",
+        "initiative",
+        "fuel-capacity",
+        "cargo-capacity",
+        "cost",
+        "tech-requirements",
+        "slots"
+      ],
+      "properties": {
+        "id": {"$ref": "tech.json#/definitions/ship-hull-id"},
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Stable machine identifier; safe for URLs, filenames, and asset lookups."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name as shown in the original game (e.g. 'Battle Cruiser', 'B-17 Bomber')."
+        },
+        "category": {"$ref": "#/definitions/hull-category"},
+        "requirement": {"$ref": "#/definitions/hull-requirement"},
+        "mass": {"type": "integer", "minimum": 0},
+        "armor": {"type": "integer", "minimum": 0},
+        "initiative": {"type": "integer", "minimum": 0, "maximum": 255},
+        "fuel-capacity": {"type": "integer", "minimum": 0},
+        "cargo-capacity": {"type": "integer", "minimum": 0},
+        "cost": {"$ref": "tech.json#/definitions/mineral-cost"},
+        "tech-requirements": {"$ref": "tech.json#/definitions/tech-requirements"},
+        "slots": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/hull-slot"}
+        },
+        "fuel-regen-per-year": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Hull-intrinsic fuel regenerated per year. Present only on Fuel Transport hulls."
+        },
+        "fuel-regen-percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Additional fuel regeneration as percent of current fuel. Present only on Fuel Transport hulls."
+        }
+      }
+    },
+    "hull-category": {
+      "description": "Grouping used by the Ship Designer hull picker.",
+      "enum": [
+        "scout",
+        "freighter",
+        "armed-freighter",
+        "colony",
+        "bomber",
+        "miner",
+        "fuel-transport",
+        "mine-layer",
+        "ultra"
+      ]
+    },
+    "hull-requirement": {
+      "description": "Trait gating: null = available to all races. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange.",
+      "oneOf": [
+        {"type": "null"},
+        {"enum": ["AR", "ARM", "MT"]}
+      ]
+    },
+    "hull-slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot-type", "max-count", "position"],
+      "properties": {
+        "slot-type": {"$ref": "tech.json#/definitions/slot-type"},
+        "max-count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Maximum parts this slot can hold."
+        },
+        "position": {"$ref": "#/definitions/slot-position"}
+      }
+    },
+    "slot-position": {
+      "description": "Grid coordinates in the Ship Designer layout. Until task #83 captures original game layouts, these are placeholders (single-row arrangement).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row", "col"],
+      "properties": {
+        "row": {"type": "integer", "minimum": 0},
+        "col": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
