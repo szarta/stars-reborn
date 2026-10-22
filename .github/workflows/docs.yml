@@ -1,0 +1,21 @@
+name: Docs
+
+# Build the Sphinx design docs so a broken reference or malformed directive
+# fails a pull request rather than the published site.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths: ["docs/**"]
+
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r docs/requirements.txt
+      - run: sphinx-build -b html docs docs/_build/html
