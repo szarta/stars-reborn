@@ -14,7 +14,7 @@ Layout (top to bottom):
 from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QCursor, QFont, QPainter, QPen, QPolygonF
+from PySide6.QtGui import QBrush, QColor, QCursor, QFont, QPainter, QPen, QPixmap, QPolygonF
 from PySide6.QtWidgets import (
     QBoxLayout,
     QFrame,
@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..rendering.enumerations import NeverSeenPlanet
+from ..rendering.enumerations import NeverSeenPlanet, ResourcePaths
 
 # ── Hab panel ──────────────────────────────────────────────────────────────
 
@@ -522,6 +522,17 @@ class PlanetSummaryWidget(QWidget):
         # Mineral panel (3 bars + shared 0–20000 kT ruler)
         self._mineral_panel = _MineralPanel()
 
+        # Unknown-planet icon — shown centred (in place of the bars) when
+        # the player has never surveyed this planet.
+        self._unknown_icon = QLabel()
+        self._unknown_icon.setAlignment(Qt.AlignCenter)
+        self._unknown_icon.setVisible(False)
+        pix = QPixmap(ResourcePaths.UnknownPlanetIcon)
+        if not pix.isNull():
+            self._unknown_icon.setPixmap(
+                pix.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            )
+
         # Click-overlay popup + selection state
         self._popup = _ClickPopup(self)
         self._current_planet = None  # secondary target driving this pane
@@ -543,7 +554,17 @@ class PlanetSummaryWidget(QWidget):
         cl.addWidget(self._report_label)
         cl.addWidget(self._hab_panel)
         cl.addWidget(self._mineral_panel)
+        cl.addWidget(self._unknown_icon)
         cl.addStretch(1)
+        # Track widgets that hide together when the planet is never-seen so
+        # the unknown-planet icon can sit alone under the title.
+        self._known_widgets = (
+            self._value_label,
+            self._pop_label,
+            self._report_label,
+            self._hab_panel,
+            self._mineral_panel,
+        )
         content.setLayout(cl)
 
         scroll = QScrollArea()
@@ -604,13 +625,14 @@ class PlanetSummaryWidget(QWidget):
         self._name_label.setText(f"{planet.name} Summary")
 
         if years_since == NeverSeenPlanet:
-            self._value_label.setText("Unknown")
-            self._pop_label.setText("")
-            self._report_label.setText("")
-            for i in range(3):
-                self._hab_panel.set_axis(i, None, None, None, False, True, "?")
-            self._mineral_panel.set_data((0, 0, 0), (None, None, None))
+            for w in self._known_widgets:
+                w.setVisible(False)
+            self._unknown_icon.setVisible(True)
             return
+
+        for w in self._known_widgets:
+            w.setVisible(True)
+        self._unknown_icon.setVisible(False)
 
         value = getattr(planet, "value", None)
         if value is not None:

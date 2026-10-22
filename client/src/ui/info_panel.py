@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..rendering.enumerations import PrimaryRacialTrait, ResourcePaths
+from ..rendering.enumerations import NeverSeenPlanet, PrimaryRacialTrait, ResourcePaths
 
 
 def _getattr_safe(obj, *attrs, default=None):
@@ -139,15 +139,18 @@ class _PlanetHeaderSection(_SectionPane):
 
     def update_planet(self, planet):
         self.set_title(planet.name)
-        if self._planet_files:
+        if getattr(planet, "years_since", 0) == NeverSeenPlanet:
+            path = ResourcePaths.UnknownPlanetIcon
+        elif self._planet_files:
             path = self._planet_files[planet.id % len(self._planet_files)]
-            pix = QPixmap(path)
-            if not pix.isNull():
-                self._picture.setPixmap(
-                    pix.scaled(68, 68, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                )
-                return
-        self._picture.clear()
+        else:
+            self._picture.clear()
+            return
+        pix = QPixmap(path)
+        if not pix.isNull():
+            self._picture.setPixmap(pix.scaled(68, 68, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            self._picture.clear()
 
 
 # ── Column 1: Minerals On Hand ─────────────────────────────────────────────
