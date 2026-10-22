@@ -340,6 +340,13 @@ and know valid parameter ranges. The data model does not change during a game.
     GET /model/ships/hulls              → all hull definitions
     GET /model/schemas                  → JSON schemas for all request/response types
 
+Response shapes for these endpoints live in ``stars-reborn-schemas``:
+
+- ``/model/ships/hulls`` → ``response-model-ship-hulls.json``
+  (id, slug, name, category, trait gating, mass/armor/init,
+  fuel/cargo capacity, cost, tech requirements, and slot list with
+  layout-grid positions).
+
 Game API
 ~~~~~~~~
 

@@ -54,31 +54,37 @@ Custom orders allow:
 Battle Grid
 -----------
 
-Combat takes place on a **10×10 grid** of squares.  Ships are placed at their
-starting positions, which are determined by player number (the lowest-numbered
-player in the battle is assigned position 1, the next lowest position 2, etc.).
-These positions are **deterministic and fixed** — they do not vary by fleet
-composition.
+Combat takes place on a **10×10 grid** of squares. Each square holds zero or
+more **tokens** (a token is a stack of identical ships from a single fleet);
+multiple tokens — including tokens from different players — may share the same
+square. The total number of tokens admitted to a single battle event is
+capped at **256**, distributed equally between participating players (a 4-way
+battle gets 64 token slots per player; unused slots are redistributed).
+Tokens beyond the cap are excluded, with the highest-fleet-numbered tokens
+dropped first.
 
-The exact starting squares for 2–16 players are well-documented in the community
-(SAH Forum, thread on battle board positioning).  Example (2-player battle):
-player 1 starts at row 4 col 1; player 2 at row 5 col 8 (0-indexed).
+Ships are placed at deterministic starting squares based on **player number**
+(the lowest-numbered player in the battle is assigned position 1, the next
+lowest position 2, etc.). Starting positions do not vary by fleet
+composition. Example (2-player battle): player 1 starts at row 4 col 1;
+player 2 at row 5 col 8 (0-indexed). The full 2–16 player starting-square
+table is documented in the SAH Forum battle-board-positioning thread.
 
 Players can attempt to manipulate their effective player number (e.g., by
 transferring a single ship to an ally the turn before a battle) to influence
 starting position.
 
+*Sources: FreeStars* ``Docs/battleboard.txt`` *(James McGuigan); SAH Forum*
+*battle-positioning thread; Stars! in-game help.*
+
 .. note::
 
-   The design doc previously stated "32×32 grid" — this appears to be an
-   implementation artifact.  Community data and FreeStars source consistently
-   describe a 10×10 visible board.  See
-   ``stars-reborn-research/docs/open_questions/battle_board_dimensions.rst``.
-
-.. todo::
-
-   Confirm board dimensions and starting square table via oracle test or Ghidra.
-   Document how many tokens can share one square.
+   Earlier drafts of this doc and the legacy stars-reborn implementation
+   stated "32×32 grid". That was a confusion of two different 32-valued
+   constants in the original game: **token sprite icons are 32×32 pixels**
+   (see ``archive/resources/race/r*.png``), but the **logical board is 10×10
+   squares**. A 10×10 grid of 32×32 px tiles is 320×320 px in total — which
+   matches the original game's battle viewer area.
 
 Battle Rounds
 -------------
@@ -388,8 +394,6 @@ Damaged ships repair a percentage of damage each year based on location:
 Open Questions
 --------------
 
-.. todo:: Starting formation placement rules on the 32×32 grid
-
 .. todo:: Exact beam attenuation formula (confirmed linear from help; verify with oracle)
 
 .. todo:: Exact missile accuracy formula with computers and jammers (BC formula confirmed above; needs oracle verification)
@@ -405,48 +409,6 @@ Open Questions
 .. todo:: SD (Space Demolition) mine explosion mechanics in combat
 
 
-.. _stars-reborn-impl:
-
-Implementation Notes (from stars-reborn)
-----------------------------------------
-
-When fleets from opposing players occupy the same location and at least one fleet is
-armed, a battle is resolved at end of turn (after movement, before messages).
-Battle Setup
-------------
-Ships from all fleets at the location are placed on a 32×32 grid. Placement depends
-on the fleet's battle orders (approach/retreat strategy).
-Battle Sequence
----------------
-Up to 16 rounds are fought. Each round:
-1. **Move** — each ship moves toward or away from targets per its strategy
-2. **Fire beams** — beam weapons fire; damage attenuates with distance
-3. **Fire torpedoes/missiles** — fired at target; miss chance per jammer/computer
-Ships move in speed order (fastest first). Within same speed, order is random.
-Damage Resolution
-**Shields** absorb damage first. Remaining damage hits armor.
-Shields regenerate 10% of max capacity each round (base). RS (Regenerating Shields) LRT
-doubles regeneration. IS PRT gets enhanced shields.
-**Beam weapons** deal damage to the first ship in range. Beams attenuate (lose power)
-with distance:
-    effective_power = power * (1 - distance / (range + 1))
-**Torpedoes** target a single ship. Miss chance:
-.. code-block:: text
-    hit_chance = 0.85 + (computers - jammers) * 0.05
-    # clamped to [0.25, 0.99]
-Miss means torpedo explodes near the target for reduced splash damage.
-**Missiles** are like torpedoes but use different damage/miss formulas.
-Battle Orders
--------------
-Each ship design has:
-* **Primary target** — who to attack first (armed ships, all, starbases, etc.)
-* **Secondary target** — fallback if no primary in range
-* **Move strategy** — maximize damage (close range), minimize losses (hold range),
-  disengage (run away)
-Salvage
--------
-Destroyed ships leave salvage: a percentage of their hull + parts mineral cost.
-Salvage drifts in space and decays each year.
 Bombing
 -------
 

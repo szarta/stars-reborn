@@ -1,17 +1,41 @@
 Engine Reference
 ================
 
-All engine data sourced from the Python engine ``factory.py`` implementation.
-Needs oracle verification against ``stars.exe``.
+All engine data sourced from Posey's spreadsheet (the canonical community
+source, originally hand-extracted from the in-game tech browser), which is
+also what populated the historical Python ``factory.py`` implementation.
 
 Tech requirements format: ``E/W/P/C/El/B`` (Energy, Weapons, Propulsion,
 Construction, Electronics, Biotechnology). Costs: ``[Ir, Bo, Ge, Resources]``.
 
-.. warning::
+FUN unit and validation status
+------------------------------
 
-   Fuel table values (mg/ly) are from the Python engine implementation and
-   require oracle verification. See
-   ``stars-reborn-research/docs/open_questions/`` for research tasks.
+The fuel-table values are **Fuel Usage Numbers (FUN)** in percent units, *not*
+mg/ly. By Cawley's calibration (advfaq §4.5.1), at FUN = 100 one mg of fuel
+moves 200 kT of weight one light-year. The full fuel formula is:
+
+.. code-block:: text
+
+   fuel_per_ly_mg = (mass_kT * FUN[warp] * IFE_factor) / 20000
+
+(``IFE_factor = 0.85`` with the IFE LRT, else ``1.00``.) See
+:doc:`/mechanics/fleet_movement` Fuel Consumption.
+
+The FUN tables below have been validated three ways:
+
+1. **In-game tech-browser graph** — Brandon's original gnuplot reproduction of
+   the per-engine fuel-usage chart matches the in-game graph for every engine
+   (see ``stars-reborn-research/original/screencaps/tech_browser/`` for the
+   canonical screencap of Settler's Delight as a worked example).
+2. **FreeStars rules** (``MyModRules.xml``) — every FUN value matches when
+   FreeStars's fractional notation is multiplied by 100. (FreeStars stores
+   ramscoop free-speed warps as small negatives like ``-10/-6/-3/-1`` purely
+   as graph-zone markers; the actual fuel cost is zero, and fuel
+   *generation* — when applicable — is governed by the separate gain matrix
+   below.)
+3. **advfaq §4.5.1 worked example** — the Cawley formula reproduces the
+   advfaq Privateer/Fuel Mizer range example at warps 8 and 9.
 
 Engine Summary
 --------------
@@ -334,8 +358,14 @@ Ram Scoop Fuel Gain Matrix
 --------------------------
 
 Ram scoop engines generate fuel passively while traveling. The gain is indexed
-by the engine's free warp and the travel warp speed. Values are mg of fuel
-gained per light-year.
+by the engine's free warp (``FS``) and the travel warp speed. Values are **mg
+of fuel gained per full segment** — that is, per turn at warp W, where one
+turn covers ``W²`` light years. For partial segments the gain scales linearly
+with distance traveled (per-ly rate = ``table[FS][W] / W²``), with integer
+rounding applied at each segment boundary.
+
+Generation is **per-engine, not per-ship** — a ship with N ramscoop engines
+generates N× the table value per turn.
 
 .. list-table::
    :header-rows: 1
@@ -353,7 +383,6 @@ gained per light-year.
      - W9
      - W10
    * - 1 (non-ram)
-     - 0
      - 1
      - 0
      - 0
@@ -363,8 +392,8 @@ gained per light-year.
      - 0
      - 0
      - 0
-   * - 4 (Fuel Mizer)
      - 0
+   * - 4 (Fuel Mizer)
      - 10
      - 24
      - 27
@@ -374,8 +403,8 @@ gained per light-year.
      - 0
      - 0
      - 0
-   * - 5
      - 0
+   * - 5 (Sub-Galactic Fuel Scoop)
      - 10
      - 40
      - 54
@@ -385,8 +414,8 @@ gained per light-year.
      - 0
      - 0
      - 0
-   * - 6 (Settlers Delight, RHRP, TGFS)
      - 0
+   * - 6 (Settlers Delight, RHRS, TGFS)
      - 10
      - 40
      - 90
@@ -396,8 +425,8 @@ gained per light-year.
      - 0
      - 0
      - 0
-   * - 7 (SGFS)
      - 0
+   * - 7 (TG Super Scoop)
      - 10
      - 40
      - 90
@@ -407,8 +436,8 @@ gained per light-year.
      - 49
      - 0
      - 0
-   * - 8 (TGSS)
      - 0
+   * - 8 (TG Mizer Scoop)
      - 10
      - 40
      - 90
@@ -418,8 +447,8 @@ gained per light-year.
      - 147
      - 64
      - 0
-   * - 9 (TGMS, Galaxy Scoop, Enigma Pulsar)
      - 0
+   * - 9 (Galaxy Scoop, Enigma Pulsar)
      - 10
      - 40
      - 90
@@ -429,15 +458,17 @@ gained per light-year.
      - 294
      - 192
      - 81
+     - 0
 
-Source: Posey's spreadsheet (starsautohost.org). Needs oracle verification.
+Closed-form note: gain at the FreeSpeed column equals **FS²** for every
+ramscoop row (16, 25, 36, 49, 64, 81 at W = 4..9), and is exactly 1 for the
+non-ramscoop row at W = 1. Gain is identically zero for W > FS.
 
-Net fuel cost = ``fuel_usage_table[warp] - fuel_gain_matrix[free_warp][warp]``
-per light-year (cannot go negative — excess gain is discarded).
-
-.. todo::
-
-   Oracle-verify fuel gain matrix values. Specifically: confirm gain at warp
-   speeds below free warp (should be 0), and the exact formula used for
-   non-tabulated free warp values (e.g., free warp 5 Sub-Galactic uses table
-   row 5, not 6).
+Source: Posey's spreadsheet (starsautohost.org), cross-referenced against
+advfaq §4.5 ("Guts of Fuel Generation", per-engine testbed measurements) and
+oracle-validated against the original Stars! game (see
+:doc:`research:findings/engine_fuel_oracle_validation`). The matrix above is
+the corrected (column-shifted) version of the legacy ``factory.py`` matrix,
+which was off-by-one to the right at every row. The advfaq footnote claiming
+"Galaxy Scoop generates no fuel at its free speed of warp 9" is **incorrect**
+— Galaxy Scoop generates 81 mg/turn at W=9, confirmed empirically.

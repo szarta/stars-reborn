@@ -188,38 +188,88 @@ fall back to "Planet N" for remaining planets.
 Habitat Value Generation
 ------------------------
 
-Each planet rolls three habitat axes independently:
+Each planet rolls three habitat axes independently.  All three axes are stored
+internally as a click index 0–100 (101 discrete values).  Indices 0 and 100 are
+**never produced** by universe generation — both extreme values have zero
+probability of being rolled (verified with 40,614 sample planets across 52
+Huge universes; see :ref:`hab-distribution-finding`).
 
 Gravity
 ~~~~~~~
 
-- 101 discrete values: 0.12g, 0.13g, ..., 8.00g (from the ``Gravity_Map`` table)
-- Distribution: **center-weighted** (not uniform) — values near the middle of the
-  range are more common.
-- See :doc:`habitability` for the normalization table
+- Click index 0–100 maps via the ``Gravity_Map`` table to displayed values
+  0.12g – 8.00g; see :doc:`habitability` for the lookup table.
+- Distribution: **trapezoid centred on click index 50** (see formula below).
 
 Temperature
 ~~~~~~~~~~~
 
-- Range: −200°C to +200°C, step 4 (101 discrete values)
-- Distribution: **center-weighted** (not uniform).
+- Click index 0–100 maps to °C as ``temp_c = (idx − 50) × 4``, giving
+  −200°C to +200°C in 4°C steps.
+- Distribution: **trapezoid centred on click index 50**, identical shape to
+  gravity.
 
 Radiation
 ~~~~~~~~~
 
-- Range: 0 to 100 mR/yr (integer)
-- Distribution: **uniform random** — all values equally likely.
+- Click index 0–100 equals mR/yr directly (0–100 mR/yr).
+- Distribution: **uniform across indices 1–99**; indices 0 and 100 have zero
+  probability.
 
-.. note::
+Trapezoid distribution (gravity and temperature)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   The center-weighted claim for gravity and temperature (vs. uniform for
-   radiation) is from Art Lathrop's *Basic Race Design* article (stars.arglos.net,
-   1999).  The original design doc assumed uniform for all three.  This has
-   practical race-design implications: shifting the radiation window costs nothing
-   statistically but shifting gravity/temperature does.  Needs oracle verification
-   (generate a large universe, plot distributions).
+Letting ``d = |idx − 50|`` be the distance from centre in clicks, the per-click
+probability is:
 
-   See ``stars-reborn-research/docs/open_questions/hab_axis_distribution.rst``.
+.. code-block:: text
+
+   d = 50            : 0%                       (idx 0 and idx 100)
+   d ∈ [41, 49]      : ((50 − d) / 10) × (1/0.9)%      (linear ramp)
+   d ∈ [0, 40]       : (1/0.9)% ≈ 1.1111%        (flat plateau, 81 indices)
+
+Equivalent table form for the ramp:
+
+================  ==================  ==============
+``d`` from centre  Coefficient        Percent per index
+================  ==================  ==============
+41                 0.9                1.0000%
+42                 0.8                0.8889%
+43                 0.7                0.7778%
+44                 0.6                0.6667%
+45                 0.5                0.5556%
+46                 0.4                0.4444%
+47                 0.3                0.3333%
+48                 0.2                0.2222%
+49                 0.1                0.1111%
+50                 0                  0%
+================  ==================  ==============
+
+Total mass: ``81 × (1/0.9) + 2 × (4.5/0.9) = 90 + 10 = 100%``.
+
+Uniform distribution (radiation)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: text
+
+   idx ∈ {0, 100}    : 0%
+   idx ∈ [1, 99]     : (1/0.99)% ≈ 1.0101%      (99 equally-likely values)
+
+Race-design implication
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A race's hab window of width *w* on radiation captures the same expected
+fraction of planets regardless of where the window is placed within 1–99.
+A window of the same width on gravity or temperature captures the most
+planets when centred on the plateau (indices 10–90) and progressively fewer
+as the window slides toward the extremes.  This is why Art Lathrop's
+*Basic Race Design* article recommends sliding only the radiation window for
+free advantage points.
+
+Source: Alan L. Kolaga's per-click distribution table (charts captured at
+``stars-reborn-research/web_captures/arglos/charts/``), confirmed against
+40,614 independently observed planets in
+:ref:`hab-distribution-finding`.
 
 Mineral Generation
 ------------------
