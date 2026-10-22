@@ -35,6 +35,12 @@ JSON Schema definitions live in ``stars-reborn-schemas``.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Player Orders
+
+   orders/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: Schemas
 
    schemas/index
