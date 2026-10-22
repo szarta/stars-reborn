@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
+  "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
+  "version": "0.0.1",
+  "definitions": {
+    "planet-unobserved": {
+      "description": "A planet the player has never observed. Only identity (id, name, position) is known — these come from the shared .xy data. No contents fields appear.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        }
+      }
+    },
+    "planet-observed": {
+      "description": "A planet the player has observed. Contents fields hold values as of the last scan; years-since-last-scan = 0 means current ground truth, anything higher is stale (see Information Staleness in stars-reborn-design/docs/mechanics/scanning.rst).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "x",
+        "y",
+        "years-since-last-scan",
+        "gravity",
+        "temperature",
+        "radiation",
+        "ironium-concentration",
+        "boranium-concentration",
+        "germanium-concentration",
+        "surface-ironium",
+        "surface-boranium",
+        "surface-germanium",
+        "homeworld",
+        "population",
+        "factories",
+        "mines",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "years-since-last-scan": {
+          "description": "0 = currently in penetrating-scan range (or owned). Higher = stale snapshot.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "gravity": {
+          "description": "Gravity in g.",
+          "type": "number"
+        },
+        "temperature": {
+          "description": "Temperature in °C, snapped to 4° steps in [-200, 200].",
+          "type": "integer",
+          "minimum": -200,
+          "maximum": 200
+        },
+        "radiation": {
+          "description": "Radiation in mR/yr.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "ironium-concentration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "boranium-concentration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "germanium-concentration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "surface-ironium": {
+          "description": "kT on surface.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "surface-boranium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surface-germanium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "homeworld": {
+          "type": "boolean"
+        },
+        "owner": {
+          "description": "Player id of the current owner. Absent ⇒ observed but unowned (e.g. abandoned colony).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "population": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "factories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "description": "Planet value computed against the viewing player's race. 0..100 = habitable; negative = red (capped at -45). Different players see different values for the same planet.",
+          "type": "integer",
+          "minimum": -45,
+          "maximum": 100
+        }
+      }
+    },
+    "planet-intel": {
+      "description": "A single planet entry in the player's turn file. Untagged on the wire: clients distinguish observed vs. unobserved by the presence of contents fields.",
+      "oneOf": [
+        { "$ref": "#/definitions/planet-observed" },
+        { "$ref": "#/definitions/planet-unobserved" }
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "year",
+    "game-id",
+    "game-name",
+    "player-id",
+    "planets"
+  ],
+  "properties": {
+    "year": {
+      "type": "integer",
+      "minimum": 2400,
+      "maximum": 4400
+    },
+    "game-id": {
+      "description": "UUID v4 string identifying the game.",
+      "type": "string",
+      "maxLength": 64
+    },
+    "game-name": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "player-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "homeworld-id": {
+      "description": "Planet id of the viewing player's homeworld. Absent if the player has no homeworld (e.g. eliminated).",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "planets": {
+      "description": "Every planet in the universe, sorted by id. Each entry is either observed (full contents) or unobserved (identity only).",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/planet-intel"
+      }
+    }
+  }
+}

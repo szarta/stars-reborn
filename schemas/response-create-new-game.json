@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-create-new-game.json",
+  "description": "The payload response to creating a new game.",
+  "version": "0.0.1",
+  "definitions": {},
+  "additionalProperties": false,
+  "required": [
+    "request-is-valid"
+  ],
+  "properties": {
+    "request-is-valid": {
+      "type": "boolean"
+    },
+    "created-game": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+            }
+        }
+    },
+    "failure-reason": {
+      "type": "string",
+      "maxLength": 1024
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/tech.json",
+  "version": "0.1.0",
+  "definitions": {
+    "tech-level": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 26
+    },
+    "parts-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "ship-hull-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "starbase-hull-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "mineral-cost": {
+      "description": "Mineral and resource cost vector. Used for hull, part, building, and tech-research costs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ironium", "boranium", "germanium", "resources"],
+      "properties": {
+        "ironium":   {"type": "integer", "minimum": 0},
+        "boranium":  {"type": "integer", "minimum": 0},
+        "germanium": {"type": "integer", "minimum": 0},
+        "resources": {"type": "integer", "minimum": 0}
+      }
+    },
+    "tech-requirements": {
+      "description": "Minimum tech levels required to access a technology. All six fields required; 0 means no requirement on that branch.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["energy", "weapons", "propulsion", "construction", "electronics", "biotechnology"],
+      "properties": {
+        "energy":        {"$ref": "#/definitions/tech-level"},
+        "weapons":       {"$ref": "#/definitions/tech-level"},
+        "propulsion":    {"$ref": "#/definitions/tech-level"},
+        "construction":  {"$ref": "#/definitions/tech-level"},
+        "electronics":   {"$ref": "#/definitions/tech-level"},
+        "biotechnology": {"$ref": "#/definitions/tech-level"}
+      }
+    },
+    "slot-type": {
+      "description": "Hull slot type. Composite values accept multiple component categories. See engine/src/game/objects/technology.rs::SlotType for the bitmask definition.",
+      "enum": [
+        "engines",
+        "weapons",
+        "beam-weapons",
+        "torpedoes",
+        "armor",
+        "shields",
+        "protection",
+        "electrical",
+        "mechanical",
+        "elect-mech",
+        "bombs",
+        "mine-layers",
+        "mine-elect-mech",
+        "mining-robots",
+        "scanners",
+        "scanner-elect-mech",
+        "shield-elect-mech",
+        "armor-scanner-elect-mech",
+        "weapon-shield",
+        "orbital",
+        "orbital-elect",
+        "general-purpose"
+      ]
+    }
+  }
+}

@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/universe.json",
+  "version": "0.0.1",
+  "definitions": {
+    "space-object-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "fleet-warp-speed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 13
+    },
+    "mineral-warp-speed": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 30
+    },
+    "space-coordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "space-object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "location",
+        "id"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "#/definitions/space-coordinate"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "id": {
+          "$ref": "#/definitions/space-object-id"
+        }
+      }
+    },
+    "mineral-contents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "boranium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "germanium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "ironium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "wormhole": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/space-object"
+        },
+        {
+          "properties": {
+            "stability": {
+              "enum": [
+                "Volatile"
+              ]
+            },
+            "other-end-id": {
+              "$ref": "#/definitions/space-object-id"
+            }
+          },
+          "required": [
+            "stability"
+          ]
+        }
+      ]
+    },
+    "minefield": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/space-object"
+        },
+        {
+          "properties": {
+            "owner-id": {
+              "$ref": "player.json#/definitions/player-id"
+            }
+          },
+          "required": [
+            "owner-id"
+          ]
+        }
+      ]
+    },
+    "salvage": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/space-object"
+        },
+        {
+          "properties": {
+            "contents": {
+              "$ref": "#/definitions/mineral-contents"
+            }
+          },
+          "required": [
+            "contents"
+          ]
+        }
+      ]
+    },
+    "mineral-packet": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/space-object"
+        },
+        {
+          "properties": {
+            "contents": {
+              "$ref": "#/definitions/mineral-contents"
+            },
+            "owner-id": {
+              "$ref": "player.json#/definitions/player-id"
+            },
+            "warp-speed": {
+              "$ref": "#/definitions/warp-speed"
+            },
+            "destination": {
+              "description": "TBD: this might end up being a planet id",
+              "$ref": "#/definitions/space-coordinate"
+            }
+          },
+          "required": [
+            "contents",
+            "owner-id",
+            "warp-speed",
+            "destination"
+          ]
+        }
+      ]
+    },
+    "universe": {
+      "type": "object",
+      "required": [
+        "boundary",
+        "planets"
+      ],
+      "properties": {
+        "boundary": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "$ref": "#/definitions/space-coordinate"
+          }
+        },
+        "wormholes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/wormhole"
+          }
+        },
+        "minefields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/minefield"
+          }
+        },
+        "salvage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/salvage"
+          }
+        },
+        "mineral-packets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/mineral-packet"
+          }
+        },
+        "planets": {
+          "type": "array",
+          "items": {
+            "$ref": "planets.json#/definitions/planet"
+          }
+        }
+      }
+    }
+  }
+}

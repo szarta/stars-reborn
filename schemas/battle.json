@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/turn.json",
+  "version": "0.0.1",
+  "definitions": {
+    "battle-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "battle-object": {
+      "type": "object"
+    },
+    "battle-location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        }
+      }
+    },
+    "battle-turn": {
+      "type": "object",
+      "required": [
+        "related-object"
+      ],
+      "properties": {
+        "related-object": {
+          "$ref": "#/definitions/battle-object"
+        },
+        "move-to": {
+          "$ref": "#/definitions/battle-location"
+        },
+        "attack": {
+          "type": "object",
+          "properties": {
+            "target-objects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/battle-object"
+              }
+            },
+            "attack-type": {
+              "enum": [
+                "beam",
+                "missile"
+              ]
+            },
+            "damage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "destroyed-units": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        }
+      }
+    },
+    "battle": {
+      "type": "object",
+      "required": [
+        "id",
+        "involved-players",
+        "survivors",
+        "sequence"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/battle-id"
+        },
+        "involved-players": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "player.json#/definitions/player-id"
+          }
+        },
+        "survivors": {
+          "type": "array",
+          "items": {
+            "$ref": "player.json#/definitions/player-id"
+          }
+        },
+        "initial-field": {},
+        "sequence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/battle-turn"
+          }
+        }
+      }
+    }
+  }
+}

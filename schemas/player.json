@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/player.json",
+  "version": "0.0.2",
+  "definitions": {
+    "player-id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "player": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/player-id"
+        },
+        "race": {
+          "$ref": "race.json#/definitions/race"
+        },
+        "homeworld": {
+          "$ref": "universe.json#/definitions/space-object-id"
+        },
+        "annual-planet-resources": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "is-ai": {
+          "type": "boolean"
+        },
+        "parts-available": {
+          "type": "array",
+          "items": {
+            "$ref": "tech.json#/definitions/parts-id"
+          }
+        },
+        "starbase-hulls-available": {
+          "type": "array",
+          "items": {
+            "$ref": "tech.json#/definitions/starbase-hull-id"
+          }
+        },
+        "ship-hulls-available": {
+          "type": "array",
+          "items": {
+            "$ref": "tech.json#/definitions/ship-hull-id"
+          }
+        },
+        "research": {
+          "type": "object",
+          "properties": {
+            "budget": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+            },
+            "weapons": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "$ref": "tech.json#/definitions/tech-level"
+                },
+                "resources-to-next-level": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "energy": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "$ref": "tech.json#/definitions/tech-level"
+                },
+                "resources-to-next-level": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "biotechnology": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "$ref": "tech.json#/definitions/tech-level"
+                },
+                "resources-to-next-level": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "electronics": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "$ref": "tech.json#/definitions/tech-level"
+                },
+                "resources-to-next-level": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "construction": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "$ref": "tech.json#/definitions/tech-level"
+                },
+                "resources-to-next-level": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "propulsion": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "$ref": "tech.json#/definitions/tech-level"
+                },
+                "resources-to-next-level": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

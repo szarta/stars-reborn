@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/turn.json",
+  "version": "0.0.1",
+  "definitions": {
+    "turn-message-type": {
+      "enum": [
+        "MinesCreated",
+        "PlanetProductionQueueEmpty",
+        "MysteryTrader"
+      ]
+    },
+    "turn-message": {
+      "type": "object",
+      "required": [
+        "id",
+        "message",
+        "message-type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "related-object": {
+          "$ref": "universe.json#/definitions/space-object-id"
+        },
+        "related-battle": {
+          "$ref": "battle.json#/definitions/battle-id"
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "message-type": {
+          "$ref": "#/definitions/turn-message-type"
+        }
+      }
+    },
+    "turn": {
+      "type": "object",
+      "properties": {
+        "year": {
+            "type": "integer",
+            "minimum": 2400,
+            "maximum": 65535
+        },
+        "related-player": {
+          "$ref": "player.json#/definitions/player"
+        },
+        "universe": {
+          "$ref": "universe.json#/definitions/universe"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/turn-message"
+          }
+        }
+      }
+    }
+  }
+}

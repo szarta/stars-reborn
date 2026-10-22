@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/planet.json",
+  "version": "0.0.1",
+  "definitions": {
+    "build-item": {
+      "type": "object",
+      "properties": {
+        "build-object-id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "build-quantity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "build-progress": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "estimated-years-to-complete": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "build-object-id",
+        "build-quantity"
+      ]
+    },
+    "planet": {
+      "allOf": [
+        {
+          "$ref": "universe.json#/definitions/space-object"
+        },
+        {
+          "properties": {
+            "build-queue": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/build-item"
+              }
+            },
+            "related-starbase": {
+              "$ref": "universe.json#/definitions/space-object-id"
+            },
+            "related-fleets": {
+              "type": "array",
+              "items": {
+                "$ref": "universe.json#/definitions/space-object-id"
+              }
+            },
+            "population": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "owner-id": {
+              "$ref": "player.json#/definitions/player-id"
+            },
+            "years-since-last-scan": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "is-homeworld": {
+              "type": "boolean"
+            },
+            "fleet-waypoint": {
+              "$ref": "universe.json#/definitions/space-coordinate"
+            },
+            "packet-waypoint": {
+              "$ref": "universe.json#/definitions/space-coordinate"
+            },
+            "packet-warpspeed": {
+              "$ref": "universe.json#/definitions/warp-speed"
+            },
+            "mines": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "factories": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "defenses": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "max-mines": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max-factories": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max-defenses": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "has-been-colonized-before": {
+              "type": "boolean"
+            },
+            "defense-quality": {
+              "enum": [
+                "SDI",
+                "Missile",
+                "Laser",
+                "Planet",
+                "Neutron"
+              ]
+            },
+            "radiation-level": {
+              "type": "integer"
+            },
+            "temperature-level": {
+              "type": "integer"
+            },
+            "gravity-level": {
+              "type": "integer"
+            },
+            "on-surface": {
+              "$ref": "universe.json#/definitions/mineral-contents"
+            },
+            "ironium-concentration": {
+              "type": "integer"
+            },
+            "boranium-concentration": {
+              "type": "integer"
+            },
+            "germanium-concentration": {
+              "type": "integer"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
