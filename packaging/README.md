@@ -10,7 +10,7 @@ authors or publishers in any way.
 1. **Open game** — freely distributable, modifiable, and playable across platforms.
 2. **Faithful reproduction** — all original mechanics reverse-engineered and implemented. A veteran
    Stars! player should feel immediately at home.
-3. **Respectful enhancement** — a *Legacy* mode preserves original behavior exactly; optional fixes
+3. **Respectful enhancement** — a _Legacy_ mode preserves original behavior exactly; optional fixes
    address known bugs and micromanagement pain points.
 4. **Stand on the shoulders of giants** — acknowledge prior clone efforts, community research, and
    every contributor who helps reach the finish line.
@@ -23,13 +23,13 @@ Stars Reborn is split across multiple focused repositories. **This repo (`stars-
 the primary release and issue-tracking repository.** It packages the component repos into
 distributable game images and is where bugs and feature requests should be filed.
 
-| Repository | Purpose |
-|------------|---------|
-| `stars-reborn-game` *(this repo)* | Primary release repo — packaging, releases, issue tracker |
-| [`stars-reborn-engine`](https://github.com/szarta/stars-reborn-engine) | Rust game engine — HTTP API, turn processing, authoritative data model |
-| [`stars-reborn-ui`](https://github.com/szarta/stars-reborn-ui) | Python/PySide6 game client — rendering, player input, local game management |
-| [`stars-reborn-schemas`](https://github.com/szarta/stars-reborn-schemas) | JSON schemas defining the engine/UI HTTP contract |
-| [`stars-reborn-design`](https://github.com/szarta/stars-reborn-design) | Game mechanics documentation, research notes, open questions |
+| Repository                                                               | Purpose                                                                     |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `stars-reborn-game` _(this repo)_                                        | Primary release repo — packaging, releases, issue tracker                   |
+| [`stars-reborn-engine`](https://github.com/szarta/stars-reborn-engine)   | Rust game engine — HTTP API, turn processing, authoritative data model      |
+| [`stars-reborn-ui`](https://github.com/szarta/stars-reborn-ui)           | Python/PySide6 game client — rendering, player input, local game management |
+| [`stars-reborn-schemas`](https://github.com/szarta/stars-reborn-schemas) | JSON schemas defining the engine/UI HTTP contract                           |
+| [`stars-reborn-design`](https://github.com/szarta/stars-reborn-design)   | Game mechanics documentation, research notes, open questions                |
 
 ### Component Architecture
 
@@ -116,11 +116,11 @@ invoke build
 
 This runs three steps in order:
 
-| Step | Command | What it does |
-|------|---------|--------------|
-| 1 | `invoke build-engine` | `cargo build --release` in `engine/` |
-| 2 | `invoke build-appdir` | Assembles `build/AppDir/` — Python venv, UI source, engine binary, launcher |
-| 3 | `invoke build-appimage` | Writes `build/AppImageBuilder.yml` and runs `appimage-builder` |
+| Step | Command                 | What it does                                                                |
+| ---- | ----------------------- | --------------------------------------------------------------------------- |
+| 1    | `invoke build-engine`   | `cargo build --release` in `engine/`                                        |
+| 2    | `invoke build-appdir`   | Assembles `build/AppDir/` — Python venv, UI source, engine binary, launcher |
+| 3    | `invoke build-appimage` | Writes `build/AppImageBuilder.yml` and runs `appimage-builder`              |
 
 The finished image is written to `build/Stars_Reborn-<version>-x86_64.AppImage`.
 

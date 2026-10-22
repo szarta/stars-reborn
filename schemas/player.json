@@ -21,8 +21,8 @@
           "$ref": "universe.json#/definitions/space-object-id"
         },
         "annual-planet-resources": {
-            "type": "integer",
-            "minimum": 0
+          "type": "integer",
+          "minimum": 0
         },
         "is-ai": {
           "type": "boolean"
@@ -49,9 +49,9 @@
           "type": "object",
           "properties": {
             "budget": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
             },
             "weapons": {
               "type": "object",

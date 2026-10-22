@@ -5,9 +5,9 @@ a faithful open-source reimplementation of Stars! (1995).
 
 ## Overview
 
-This is the view layer only.  All game logic lives in
+This is the view layer only. All game logic lives in
 [stars-reborn-engine](https://github.com/szarta/stars-reborn-engine), a Rust HTTP
-server.  The UI communicates with the engine exclusively over HTTP — no shared
+server. The UI communicates with the engine exclusively over HTTP — no shared
 libraries, no PyO3 bindings.
 
 **Single-player:** a thin launcher starts the engine on localhost, opens the client,
@@ -75,7 +75,7 @@ xenon (complexity — blocks on rank D or worse).
 
 ## Image assets
 
-Original Stars! bitmap assets are not used.  All art is created from scratch to allow
+Original Stars! bitmap assets are not used. All art is created from scratch to allow
 free use, modification, and repackaging by the community.
 
 - `.xcf` files are the authoritative editing sources (GIMP, with layers and history).

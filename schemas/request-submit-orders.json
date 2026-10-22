@@ -5,7 +5,12 @@
   "version": "0.0.1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "player_id", "turn_year", "orders"],
+  "required": [
+    "schema_version",
+    "player_id",
+    "turn_year",
+    "orders"
+  ],
   "properties": {
     "schema_version": {
       "description": "Order-schema major version.  Bump on breaking changes; clients should send the highest version they understand.",
@@ -26,45 +31,69 @@
     "orders": {
       "description": "Ordered list of orders to apply at turn resolution.  Empty list is valid (submit-no-changes).",
       "type": "array",
-      "items": { "$ref": "#/definitions/order" }
+      "items": {
+        "$ref": "#/definitions/order"
+      }
     }
   },
 
   "definitions": {
-
     "fleet_id": {
       "description": "0-based fleet id (max 511; original game's 9-bit field).",
-      "type": "integer", "minimum": 0, "maximum": 511
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 511
     },
     "planet_id": {
       "description": "0-based planet id.",
-      "type": "integer", "minimum": 0, "maximum": 2047
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2047
     },
     "design_slot": {
       "description": "0-based custom design slot.",
-      "type": "integer", "minimum": 0, "maximum": 15
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
     },
     "battle_plan_index": {
       "description": "Battle plan slot id; 0–4 are built-in (default, kill_starbase, max_def, sniper, chicken), 5+ user-defined.",
-      "type": "integer", "minimum": 0, "maximum": 15
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
     },
     "warp_speed": {
       "description": "Warp speed for a waypoint (0 = stop, 10 = warp 10).",
-      "type": "integer", "minimum": 0, "maximum": 10
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
     },
     "stars_name": {
       "description": "User-facing name string.  Engine accepts up to 31 characters; legacy export to .xN truncates to 15.",
-      "type": "string", "minLength": 1, "maxLength": 31
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 31
     },
 
     "coord": {
       "description": "Universe coordinate.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "integer", "minimum": 0, "maximum": 5000 },
-        "y": { "type": "integer", "minimum": 0, "maximum": 5000 }
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5000
+        }
       }
     },
 
@@ -72,167 +101,476 @@
       "description": "Optional named target for a waypoint.  Absent => deep-space coordinate move.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "id"],
+      "required": [
+        "kind",
+        "id"
+      ],
       "properties": {
-        "kind": { "enum": ["planet", "fleet", "salvage", "wormhole", "minefield", "mineral_packet"] },
-        "id":   { "type": "integer", "minimum": 0 }
+        "kind": {
+          "enum": [
+            "planet",
+            "fleet",
+            "salvage",
+            "wormhole",
+            "minefield",
+            "mineral_packet"
+          ]
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
 
     "research_field": {
-      "enum": ["energy", "weapons", "propulsion", "construction", "electronics", "biology", "same_field"]
+      "enum": [
+        "energy",
+        "weapons",
+        "propulsion",
+        "construction",
+        "electronics",
+        "biology",
+        "same_field"
+      ]
     },
 
     "production_item": {
       "description": "One entry of a planet's production queue.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["item", "count"],
+      "required": [
+        "item",
+        "count"
+      ],
       "properties": {
         "item": {
           "oneOf": [
-            { "type": "object", "additionalProperties": false, "required": ["kind"],
-              "properties": { "kind": { "enum": ["factory", "mine", "defenses", "alchemy", "auto_factory", "auto_mine", "auto_defenses", "auto_alchemy", "auto_min_terraform", "auto_max_terraform", "auto_max_factories", "auto_max_mines"] } } },
-            { "type": "object", "additionalProperties": false, "required": ["kind", "design_slot"],
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
               "properties": {
-                "kind": { "enum": ["design"] },
-                "design_slot": { "$ref": "#/definitions/design_slot" }
-              } }
+                "kind": {
+                  "enum": [
+                    "factory",
+                    "mine",
+                    "defenses",
+                    "alchemy",
+                    "auto_factory",
+                    "auto_mine",
+                    "auto_defenses",
+                    "auto_alchemy",
+                    "auto_min_terraform",
+                    "auto_max_terraform",
+                    "auto_max_factories",
+                    "auto_max_mines"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "design_slot"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "design"
+                  ]
+                },
+                "design_slot": {
+                  "$ref": "#/definitions/design_slot"
+                }
+              }
+            }
           ]
         },
-        "count": { "type": "integer", "minimum": 1, "maximum": 1023 }
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1023
+        }
       }
     },
 
     "transport_action": {
       "description": "A single resource's behaviour for the Transport waypoint task.",
       "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["action"],
-          "properties": { "action": { "enum": ["none", "load_all", "unload_all"] } } },
-        { "type": "object", "additionalProperties": false, "required": ["action", "amount"],
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action"
+          ],
           "properties": {
-            "action": { "enum": ["load_exact", "unload_exact", "fill_up_to"] },
-            "amount": { "type": "integer", "minimum": 0, "maximum": 4095 }
-          } }
+            "action": {
+              "enum": [
+                "none",
+                "load_all",
+                "unload_all"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action",
+            "amount"
+          ],
+          "properties": {
+            "action": {
+              "enum": [
+                "load_exact",
+                "unload_exact",
+                "fill_up_to"
+              ]
+            },
+            "amount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4095
+            }
+          }
+        }
       ]
     },
 
     "waypoint_task": {
       "description": "Task to perform when a fleet arrives at the waypoint.  Mirrors the original type-5 task codes.",
       "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["kind"],
-          "properties": { "kind": { "enum": ["none", "colonize", "remote_mining", "scrap_fleet", "lay_minefield", "patrol", "route"] } } },
-        { "type": "object", "additionalProperties": false, "required": ["kind"],
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": { "enum": ["transport"] },
-            "ironium":   { "$ref": "#/definitions/transport_action" },
-            "boranium":  { "$ref": "#/definitions/transport_action" },
-            "germanium": { "$ref": "#/definitions/transport_action" },
-            "colonists": { "$ref": "#/definitions/transport_action" },
-            "fuel":      { "$ref": "#/definitions/transport_action" }
-          } },
-        { "type": "object", "additionalProperties": false, "required": ["kind", "fleet_id"],
+            "kind": {
+              "enum": [
+                "none",
+                "colonize",
+                "remote_mining",
+                "scrap_fleet",
+                "lay_minefield",
+                "patrol",
+                "route"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": { "enum": ["merge_with_fleet"] },
-            "fleet_id": { "$ref": "#/definitions/fleet_id" }
-          } },
-        { "type": "object", "additionalProperties": false, "required": ["kind", "player_id"],
+            "kind": {
+              "enum": [
+                "transport"
+              ]
+            },
+            "ironium": {
+              "$ref": "#/definitions/transport_action"
+            },
+            "boranium": {
+              "$ref": "#/definitions/transport_action"
+            },
+            "germanium": {
+              "$ref": "#/definitions/transport_action"
+            },
+            "colonists": {
+              "$ref": "#/definitions/transport_action"
+            },
+            "fuel": {
+              "$ref": "#/definitions/transport_action"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "fleet_id"
+          ],
           "properties": {
-            "kind": { "enum": ["transfer_fleet"] },
-            "player_id": { "type": "integer", "minimum": 0, "maximum": 15 }
-          } }
+            "kind": {
+              "enum": [
+                "merge_with_fleet"
+              ]
+            },
+            "fleet_id": {
+              "$ref": "#/definitions/fleet_id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "player_id"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "transfer_fleet"
+              ]
+            },
+            "player_id": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 15
+            }
+          }
+        }
       ]
     },
 
     "order": {
       "description": "One order in a player's submission.  Tagged union discriminated by 'kind'.",
       "oneOf": [
-        { "$ref": "#/definitions/order_waypoint_add" },
-        { "$ref": "#/definitions/order_waypoint_update" },
-        { "$ref": "#/definitions/order_waypoint_delete" },
-        { "$ref": "#/definitions/order_waypoint_repeat" },
-        { "$ref": "#/definitions/order_fleet_split" },
-        { "$ref": "#/definitions/order_fleet_merge" },
-        { "$ref": "#/definitions/order_fleet_rename" },
-        { "$ref": "#/definitions/order_fleet_set_battle_plan" },
-        { "$ref": "#/definitions/order_cargo_transfer" },
-        { "$ref": "#/definitions/order_planet_set_production_queue" },
-        { "$ref": "#/definitions/order_planet_set_packet_target" },
-        { "$ref": "#/definitions/order_planet_set_route_target" },
-        { "$ref": "#/definitions/order_research_set_allocation" },
-        { "$ref": "#/definitions/order_battle_plan_upsert" },
-        { "$ref": "#/definitions/order_design_upsert" },
-        { "$ref": "#/definitions/order_design_delete" }
+        {
+          "$ref": "#/definitions/order_waypoint_add"
+        },
+        {
+          "$ref": "#/definitions/order_waypoint_update"
+        },
+        {
+          "$ref": "#/definitions/order_waypoint_delete"
+        },
+        {
+          "$ref": "#/definitions/order_waypoint_repeat"
+        },
+        {
+          "$ref": "#/definitions/order_fleet_split"
+        },
+        {
+          "$ref": "#/definitions/order_fleet_merge"
+        },
+        {
+          "$ref": "#/definitions/order_fleet_rename"
+        },
+        {
+          "$ref": "#/definitions/order_fleet_set_battle_plan"
+        },
+        {
+          "$ref": "#/definitions/order_cargo_transfer"
+        },
+        {
+          "$ref": "#/definitions/order_planet_set_production_queue"
+        },
+        {
+          "$ref": "#/definitions/order_planet_set_packet_target"
+        },
+        {
+          "$ref": "#/definitions/order_planet_set_route_target"
+        },
+        {
+          "$ref": "#/definitions/order_research_set_allocation"
+        },
+        {
+          "$ref": "#/definitions/order_battle_plan_upsert"
+        },
+        {
+          "$ref": "#/definitions/order_design_upsert"
+        },
+        {
+          "$ref": "#/definitions/order_design_delete"
+        }
       ]
     },
 
     "order_waypoint_add": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "after_index", "destination", "warp", "task"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "after_index",
+        "destination",
+        "warp",
+        "task"
+      ],
       "properties": {
-        "kind": { "enum": ["waypoint.add"] },
-        "fleet_id":     { "$ref": "#/definitions/fleet_id" },
-        "after_index":  { "description": "0-based waypoint index to insert after.  0 => after waypoint-0 (current position).", "type": "integer", "minimum": 0, "maximum": 31 },
-        "destination":  { "$ref": "#/definitions/coord" },
-        "target":       { "$ref": "#/definitions/waypoint_target" },
-        "warp":         { "$ref": "#/definitions/warp_speed" },
-        "task":         { "$ref": "#/definitions/waypoint_task" }
+        "kind": {
+          "enum": [
+            "waypoint.add"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "after_index": {
+          "description": "0-based waypoint index to insert after.  0 => after waypoint-0 (current position).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "destination": {
+          "$ref": "#/definitions/coord"
+        },
+        "target": {
+          "$ref": "#/definitions/waypoint_target"
+        },
+        "warp": {
+          "$ref": "#/definitions/warp_speed"
+        },
+        "task": {
+          "$ref": "#/definitions/waypoint_task"
+        }
       }
     },
 
     "order_waypoint_update": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "waypoint_index", "task"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "waypoint_index",
+        "task"
+      ],
       "properties": {
-        "kind": { "enum": ["waypoint.update"] },
-        "fleet_id":       { "$ref": "#/definitions/fleet_id" },
-        "waypoint_index": { "type": "integer", "minimum": 0, "maximum": 31 },
-        "destination":    { "$ref": "#/definitions/coord" },
-        "target":         { "$ref": "#/definitions/waypoint_target" },
-        "warp":            { "$ref": "#/definitions/warp_speed" },
-        "task":           { "$ref": "#/definitions/waypoint_task" }
+        "kind": {
+          "enum": [
+            "waypoint.update"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "waypoint_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "destination": {
+          "$ref": "#/definitions/coord"
+        },
+        "target": {
+          "$ref": "#/definitions/waypoint_target"
+        },
+        "warp": {
+          "$ref": "#/definitions/warp_speed"
+        },
+        "task": {
+          "$ref": "#/definitions/waypoint_task"
+        }
       }
     },
 
     "order_waypoint_delete": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "waypoint_index"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "waypoint_index"
+      ],
       "properties": {
-        "kind": { "enum": ["waypoint.delete"] },
-        "fleet_id":       { "$ref": "#/definitions/fleet_id" },
-        "waypoint_index": { "type": "integer", "minimum": 1, "maximum": 31 }
+        "kind": {
+          "enum": [
+            "waypoint.delete"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "waypoint_index": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31
+        }
       }
     },
 
     "order_waypoint_repeat": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "enabled"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "enabled"
+      ],
       "properties": {
-        "kind": { "enum": ["waypoint.repeat"] },
-        "fleet_id": { "$ref": "#/definitions/fleet_id" },
-        "enabled":  { "type": "boolean" }
+        "kind": {
+          "enum": [
+            "waypoint.repeat"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
       }
     },
 
     "order_fleet_split": {
       "description": "Move ships out of source_fleet_id into a destination fleet (created if destination_fleet_id is null).",
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "source_fleet_id", "ship_groups"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source_fleet_id",
+        "ship_groups"
+      ],
       "properties": {
-        "kind": { "enum": ["fleet.split"] },
-        "source_fleet_id":      { "$ref": "#/definitions/fleet_id" },
-        "destination_fleet_id": { "anyOf": [ { "$ref": "#/definitions/fleet_id" }, { "type": "null" } ] },
+        "kind": {
+          "enum": [
+            "fleet.split"
+          ]
+        },
+        "source_fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "destination_fleet_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/fleet_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "ship_groups": {
-          "type": "array", "minItems": 1,
+          "type": "array",
+          "minItems": 1,
           "items": {
-            "type": "object", "additionalProperties": false,
-            "required": ["design_slot", "count"],
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "design_slot",
+              "count"
+            ],
             "properties": {
-              "design_slot": { "$ref": "#/definitions/design_slot" },
+              "design_slot": {
+                "$ref": "#/definitions/design_slot"
+              },
               "count": {
                 "oneOf": [
-                  { "type": "integer", "minimum": 1, "maximum": 65535 },
-                  { "enum": ["all"] }
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  {
+                    "enum": [
+                      "all"
+                    ]
+                  }
                 ]
               }
             }
@@ -242,132 +580,347 @@
     },
 
     "order_fleet_merge": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "destination_fleet_id", "source_fleet_ids"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "destination_fleet_id",
+        "source_fleet_ids"
+      ],
       "properties": {
-        "kind": { "enum": ["fleet.merge"] },
-        "destination_fleet_id": { "$ref": "#/definitions/fleet_id" },
-        "source_fleet_ids":     { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/fleet_id" } }
+        "kind": {
+          "enum": [
+            "fleet.merge"
+          ]
+        },
+        "destination_fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "source_fleet_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/fleet_id"
+          }
+        }
       }
     },
 
     "order_fleet_rename": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "name"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "name"
+      ],
       "properties": {
-        "kind": { "enum": ["fleet.rename"] },
-        "fleet_id": { "$ref": "#/definitions/fleet_id" },
-        "name":     { "$ref": "#/definitions/stars_name" }
+        "kind": {
+          "enum": [
+            "fleet.rename"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "name": {
+          "$ref": "#/definitions/stars_name"
+        }
       }
     },
 
     "order_fleet_set_battle_plan": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "plan_index"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "plan_index"
+      ],
       "properties": {
-        "kind": { "enum": ["fleet.set_battle_plan"] },
-        "fleet_id":   { "$ref": "#/definitions/fleet_id" },
-        "plan_index": { "$ref": "#/definitions/battle_plan_index" }
+        "kind": {
+          "enum": [
+            "fleet.set_battle_plan"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "plan_index": {
+          "$ref": "#/definitions/battle_plan_index"
+        }
       }
     },
 
     "order_cargo_transfer": {
       "description": "Manual immediate cargo load/unload at the fleet's current planet (waypoint-0).",
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "fleet_id", "planet_id", "direction", "resources"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fleet_id",
+        "planet_id",
+        "direction",
+        "resources"
+      ],
       "properties": {
-        "kind": { "enum": ["cargo.transfer"] },
-        "fleet_id":  { "$ref": "#/definitions/fleet_id" },
-        "planet_id": { "$ref": "#/definitions/planet_id" },
-        "direction": { "enum": ["load", "unload"] },
+        "kind": {
+          "enum": [
+            "cargo.transfer"
+          ]
+        },
+        "fleet_id": {
+          "$ref": "#/definitions/fleet_id"
+        },
+        "planet_id": {
+          "$ref": "#/definitions/planet_id"
+        },
+        "direction": {
+          "enum": [
+            "load",
+            "unload"
+          ]
+        },
         "resources": {
-          "type": "object", "additionalProperties": false,
+          "type": "object",
+          "additionalProperties": false,
           "minProperties": 1,
           "properties": {
-            "ironium":   { "type": "integer", "minimum": 1, "maximum": 255 },
-            "boranium":  { "type": "integer", "minimum": 1, "maximum": 255 },
-            "germanium": { "type": "integer", "minimum": 1, "maximum": 255 },
-            "colonists": { "type": "integer", "minimum": 1, "maximum": 255 }
+            "ironium": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            },
+            "boranium": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            },
+            "germanium": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            },
+            "colonists": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            }
           }
         }
       }
     },
 
     "order_planet_set_production_queue": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "planet_id", "items"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "planet_id",
+        "items"
+      ],
       "properties": {
-        "kind": { "enum": ["planet.set_production_queue"] },
-        "planet_id": { "$ref": "#/definitions/planet_id" },
-        "items":     { "type": "array", "items": { "$ref": "#/definitions/production_item" } }
+        "kind": {
+          "enum": [
+            "planet.set_production_queue"
+          ]
+        },
+        "planet_id": {
+          "$ref": "#/definitions/planet_id"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/production_item"
+          }
+        }
       }
     },
 
     "order_planet_set_packet_target": {
       "description": "Provisional — pending oracle for binary type-35.  Sets a planet's mineral-packet destination.",
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "planet_id", "target_planet_id"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "planet_id",
+        "target_planet_id"
+      ],
       "properties": {
-        "kind": { "enum": ["planet.set_packet_target"] },
-        "planet_id":        { "$ref": "#/definitions/planet_id" },
-        "target_planet_id": { "$ref": "#/definitions/planet_id" }
+        "kind": {
+          "enum": [
+            "planet.set_packet_target"
+          ]
+        },
+        "planet_id": {
+          "$ref": "#/definitions/planet_id"
+        },
+        "target_planet_id": {
+          "$ref": "#/definitions/planet_id"
+        }
       }
     },
 
     "order_planet_set_route_target": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "planet_id", "target_planet_id"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "planet_id",
+        "target_planet_id"
+      ],
       "properties": {
-        "kind": { "enum": ["planet.set_route_target"] },
-        "planet_id":        { "$ref": "#/definitions/planet_id" },
-        "target_planet_id": { "$ref": "#/definitions/planet_id" }
+        "kind": {
+          "enum": [
+            "planet.set_route_target"
+          ]
+        },
+        "planet_id": {
+          "$ref": "#/definitions/planet_id"
+        },
+        "target_planet_id": {
+          "$ref": "#/definitions/planet_id"
+        }
       }
     },
 
     "order_research_set_allocation": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "research_percent", "current_field", "next_field"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "research_percent",
+        "current_field",
+        "next_field"
+      ],
       "properties": {
-        "kind": { "enum": ["research.set_allocation"] },
-        "research_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "current_field":    { "$ref": "#/definitions/research_field" },
-        "next_field":       { "$ref": "#/definitions/research_field" }
+        "kind": {
+          "enum": [
+            "research.set_allocation"
+          ]
+        },
+        "research_percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "current_field": {
+          "$ref": "#/definitions/research_field"
+        },
+        "next_field": {
+          "$ref": "#/definitions/research_field"
+        }
       }
     },
 
     "order_battle_plan_upsert": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "plan_index", "name", "tactic", "primary_target", "secondary_target", "attack_who"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "plan_index",
+        "name",
+        "tactic",
+        "primary_target",
+        "secondary_target",
+        "attack_who"
+      ],
       "properties": {
-        "kind": { "enum": ["battle_plan.upsert"] },
-        "plan_index":       { "$ref": "#/definitions/battle_plan_index" },
-        "name":             { "$ref": "#/definitions/stars_name" },
-        "tactic":           { "enum": ["disengage", "disengage_if_challenged", "max_net_damage", "max_damage_ratio"] },
-        "primary_target":   { "enum": ["none", "any", "starbase", "armed", "bombers", "unarmed", "fuel_transports", "freighters"] },
-        "secondary_target": { "enum": ["none", "any", "starbase", "armed", "bombers", "unarmed", "fuel_transports", "freighters"] },
-        "attack_who":       { "enum": ["nobody", "enemies", "enemies_and_neutrals", "everybody_but_self"] }
+        "kind": {
+          "enum": [
+            "battle_plan.upsert"
+          ]
+        },
+        "plan_index": {
+          "$ref": "#/definitions/battle_plan_index"
+        },
+        "name": {
+          "$ref": "#/definitions/stars_name"
+        },
+        "tactic": {
+          "enum": [
+            "disengage",
+            "disengage_if_challenged",
+            "max_net_damage",
+            "max_damage_ratio"
+          ]
+        },
+        "primary_target": {
+          "enum": [
+            "none",
+            "any",
+            "starbase",
+            "armed",
+            "bombers",
+            "unarmed",
+            "fuel_transports",
+            "freighters"
+          ]
+        },
+        "secondary_target": {
+          "enum": [
+            "none",
+            "any",
+            "starbase",
+            "armed",
+            "bombers",
+            "unarmed",
+            "fuel_transports",
+            "freighters"
+          ]
+        },
+        "attack_who": {
+          "enum": [
+            "nobody",
+            "enemies",
+            "enemies_and_neutrals",
+            "everybody_but_self"
+          ]
+        }
       }
     },
 
     "order_design_upsert": {
       "description": "Provisional — pending oracle for binary type-27.  Saves a ship or starbase design into a numbered slot.  The 'design' field is reserved for the full design payload once decoded.",
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "design_slot", "design"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "design_slot",
+        "design"
+      ],
       "properties": {
-        "kind": { "enum": ["design.upsert"] },
-        "design_slot": { "$ref": "#/definitions/design_slot" },
-        "design":      { "type": "object" }
+        "kind": {
+          "enum": [
+            "design.upsert"
+          ]
+        },
+        "design_slot": {
+          "$ref": "#/definitions/design_slot"
+        },
+        "design": {
+          "type": "object"
+        }
       }
     },
 
     "order_design_delete": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "design_slot"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "design_slot"
+      ],
       "properties": {
-        "kind": { "enum": ["design.delete"] },
-        "design_slot": { "$ref": "#/definitions/design_slot" }
+        "kind": {
+          "enum": [
+            "design.delete"
+          ]
+        },
+        "design_slot": {
+          "$ref": "#/definitions/design_slot"
+        }
       }
     }
-
   }
 }

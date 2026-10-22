@@ -42,9 +42,9 @@
       "type": "object",
       "properties": {
         "year": {
-            "type": "integer",
-            "minimum": 2400,
-            "maximum": 65535
+          "type": "integer",
+          "minimum": 2400,
+          "maximum": 65535
         },
         "related-player": {
           "$ref": "player.json#/definitions/player"

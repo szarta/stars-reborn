@@ -9,7 +9,6 @@ Usage:
     invoke clean             # remove build artefacts
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -47,6 +46,7 @@ APP_EXEC_ARGS = "$APPDIR/usr/lib/stars-reborn/launcher.py $@"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _app_version() -> str:
     """Read version from ui/src/_version.py without importing the full package."""
     version_file = UI_DIR / "src" / "_version.py"
@@ -63,6 +63,7 @@ def _python_version() -> str:
 # Tasks
 # ---------------------------------------------------------------------------
 
+
 @task(help={"release": "Build in release mode (default: True)"})
 def build_engine(c, release=True):
     """Compile the stars-server Rust binary."""
@@ -70,7 +71,9 @@ def build_engine(c, release=True):
     with c.cd(str(ENGINE_DIR)):
         c.run(f"cargo build {mode}".strip(), pty=True)
     if release and not ENGINE_BIN_SRC.exists():
-        sys.exit(f"ERROR: expected binary at {ENGINE_BIN_SRC} — cargo build may have failed")
+        sys.exit(
+            f"ERROR: expected binary at {ENGINE_BIN_SRC} — cargo build may have failed"
+        )
     print(f"Engine binary: {ENGINE_BIN_SRC}")
 
 
@@ -78,12 +81,9 @@ def build_engine(c, release=True):
 def build_appdir(c):
     """Assemble the AppDir tree (Python venv, UI source, engine binary, launchers)."""
     if not ENGINE_BIN_SRC.exists():
-        sys.exit(
-            f"ERROR: {ENGINE_BIN_SRC} not found — run `invoke build-engine` first"
-        )
+        sys.exit(f"ERROR: {ENGINE_BIN_SRC} not found — run `invoke build-engine` first")
 
     version = _app_version()
-    pyver = _python_version()
 
     # --- directory skeleton ------------------------------------------------
     for d in [
@@ -156,7 +156,7 @@ Version={version}
         "\n"
         "\n"
         "def _free_port() -> int:\n"
-        '    with socket.socket() as s:\n'
+        "    with socket.socket() as s:\n"
         '        s.bind(("", 0))\n'
         "        return s.getsockname()[1]\n"
         "\n"
@@ -246,6 +246,7 @@ def clean(c):
 # ---------------------------------------------------------------------------
 # AppImageBuilder recipe (generated into build/)
 # ---------------------------------------------------------------------------
+
 
 def _write_recipe():
     """Write (or overwrite) the AppImageBuilder.yml recipe into build/."""

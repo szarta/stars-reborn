@@ -27,26 +27,62 @@
       "description": "Mineral and resource cost vector. Used for hull, part, building, and tech-research costs.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["ironium", "boranium", "germanium", "resources"],
+      "required": [
+        "ironium",
+        "boranium",
+        "germanium",
+        "resources"
+      ],
       "properties": {
-        "ironium":   {"type": "integer", "minimum": 0},
-        "boranium":  {"type": "integer", "minimum": 0},
-        "germanium": {"type": "integer", "minimum": 0},
-        "resources": {"type": "integer", "minimum": 0}
+        "ironium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boranium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "germanium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resources": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "tech-requirements": {
       "description": "Minimum tech levels required to access a technology. All six fields required; 0 means no requirement on that branch.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["energy", "weapons", "propulsion", "construction", "electronics", "biotechnology"],
+      "required": [
+        "energy",
+        "weapons",
+        "propulsion",
+        "construction",
+        "electronics",
+        "biotechnology"
+      ],
       "properties": {
-        "energy":        {"$ref": "#/definitions/tech-level"},
-        "weapons":       {"$ref": "#/definitions/tech-level"},
-        "propulsion":    {"$ref": "#/definitions/tech-level"},
-        "construction":  {"$ref": "#/definitions/tech-level"},
-        "electronics":   {"$ref": "#/definitions/tech-level"},
-        "biotechnology": {"$ref": "#/definitions/tech-level"}
+        "energy": {
+          "$ref": "#/definitions/tech-level"
+        },
+        "weapons": {
+          "$ref": "#/definitions/tech-level"
+        },
+        "propulsion": {
+          "$ref": "#/definitions/tech-level"
+        },
+        "construction": {
+          "$ref": "#/definitions/tech-level"
+        },
+        "electronics": {
+          "$ref": "#/definitions/tech-level"
+        },
+        "biotechnology": {
+          "$ref": "#/definitions/tech-level"
+        }
       }
     },
     "slot-type": {

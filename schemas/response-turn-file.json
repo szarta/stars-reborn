@@ -155,8 +155,12 @@
     "planet-intel": {
       "description": "A single planet entry in the player's turn file. Untagged on the wire: clients distinguish observed vs. unobserved by the presence of contents fields.",
       "oneOf": [
-        { "$ref": "#/definitions/planet-observed" },
-        { "$ref": "#/definitions/planet-unobserved" }
+        {
+          "$ref": "#/definitions/planet-observed"
+        },
+        {
+          "$ref": "#/definitions/planet-unobserved"
+        }
       ]
     }
   },

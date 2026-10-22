@@ -13,14 +13,14 @@
       "type": "boolean"
     },
     "created-game": {
-        "type": "object",
-        "properties": {
-            "id": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 4294967295
-            }
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
+      }
     },
     "failure-reason": {
       "type": "string",
