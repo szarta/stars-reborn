@@ -29,6 +29,7 @@ def _asset(rel_path: str) -> str:
 class ResourcePaths:
     IntroLogo = _asset("assets/png/entry.png")
     PlanetsPath = _asset("assets/png/planets/final")
+    UnknownPlanetIcon = _asset("assets/png/planets/unknown.png")
     RaceIconsPath = _asset("assets/png/race_icons")
     HideArrowPath = _asset("assets/png/ui/hide_arrow.png")
     SaveGamePath = _asset("saved-games")
