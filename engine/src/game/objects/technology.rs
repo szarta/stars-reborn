@@ -84,11 +84,22 @@ bitflags::bitflags! {
     }
 }
 
-/// One slot on a hull: what it accepts and how many parts it holds.
+/// Grid coordinates for a slot in the Ship Designer layout.
+/// Until task #83 captures real per-hull layouts, all ship hulls use a
+/// placeholder single-row arrangement (row=0, col=slot index).
+#[derive(Debug, Clone, Copy)]
+pub struct SlotPosition {
+    pub row: u8,
+    pub col: u8,
+}
+
+/// One slot on a hull: what it accepts, how many parts it holds, and where it
+/// sits in the Ship Designer layout grid.
 #[derive(Debug, Clone)]
 pub struct TechSlot {
     pub slot_type: SlotType,
     pub max_count: u8,
+    pub position: SlotPosition,
 }
 
 // ---------------------------------------------------------------------------
@@ -114,8 +125,40 @@ pub struct TechBase {
 // Ship and starbase hulls
 // ---------------------------------------------------------------------------
 
+/// Grouping for the Ship Designer hull picker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HullCategory {
+    Scout,
+    Freighter,
+    ArmedFreighter,
+    Colony,
+    Bomber,
+    Miner,
+    FuelTransport,
+    MineLayer,
+    Ultra,
+}
+
+/// Trait gate that restricts which races may build a hull.
+/// `None` = available to all races.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HullRequirement {
+    /// Alternate Reality PRT only (MetaMorph, MiniMorph).
+    AR,
+    /// Advanced Remote Mining LRT only (Midget Miner).
+    ARM,
+    /// Available only after a Mystery Trader exchange.
+    MT,
+}
+
 #[derive(Debug, Clone)]
 pub struct ShipHull {
+    pub id: u8,
+    pub slug: &'static str,
+    pub name: &'static str,
+    pub category: HullCategory,
+    /// `None` = no trait gate; available to all races.
+    pub requirement: Option<HullRequirement>,
     pub requirements: TechRequirements,
     pub cost: TechCost,
     pub slots: Vec<TechSlot>,
@@ -124,10 +167,10 @@ pub struct ShipHull {
     pub mass: u32,
     pub fuel_capacity: u32,
     pub cargo_capacity: u32,
-    /// Hull-intrinsic fuel regeneration per year (fuel transport hulls only).
-    pub fuel_regen_per_year: u32,
-    /// Additional fuel regeneration as % of current fuel (fuel transport hulls only).
-    pub fuel_regen_percent: u8,
+    /// Hull-intrinsic fuel regeneration per year. `Some` only on Fuel Transport hulls.
+    pub fuel_regen_per_year: Option<u32>,
+    /// Additional fuel regeneration as % of current fuel. `Some` only on Fuel Transport hulls.
+    pub fuel_regen_percent: Option<u8>,
 }
 
 #[derive(Debug, Clone)]

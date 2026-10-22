@@ -41,6 +41,9 @@ use crate::game::objects::{
     player::{Player, TechLevels},
     race::Race,
     race_defaults::default_race_by_name,
+    ship_hull_catalog::{
+        hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
+    },
 };
 use crate::game::state::GameState;
 use crate::game::universe::generate_universe;
@@ -143,11 +146,61 @@ async fn model_race_traits() -> impl IntoResponse {
     )
 }
 
+/// GET /model/ships/hulls — full ship-hull catalog.
+///
+/// Response shape: stars-reborn-schemas/response-model-ship-hulls.json.
 async fn model_ship_hulls() -> impl IntoResponse {
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({"error": "not yet implemented"})),
-    )
+    let hulls: Vec<Value> = ship_hull_catalog()
+        .into_iter()
+        .map(|h| {
+            let slots: Vec<Value> = h
+                .slots
+                .iter()
+                .map(|s| {
+                    json!({
+                        "slot-type": slot_type_slug(s.slot_type)
+                            .expect("catalog slots use only canonical slot types"),
+                        "max-count": s.max_count,
+                        "position": {"row": s.position.row, "col": s.position.col},
+                    })
+                })
+                .collect();
+            let mut obj = json!({
+                "id": h.id,
+                "slug": h.slug,
+                "name": h.name,
+                "category": hull_category_slug(h.category),
+                "requirement": h.requirement.map(hull_requirement_slug),
+                "mass": h.mass,
+                "armor": h.armor,
+                "initiative": h.initiative,
+                "fuel-capacity": h.fuel_capacity,
+                "cargo-capacity": h.cargo_capacity,
+                "cost": {
+                    "ironium": h.cost.ironium,
+                    "boranium": h.cost.boranium,
+                    "germanium": h.cost.germanium,
+                    "resources": h.cost.resources,
+                },
+                "tech-requirements": {
+                    "energy": h.requirements.energy,
+                    "weapons": h.requirements.weapons,
+                    "propulsion": h.requirements.propulsion,
+                    "construction": h.requirements.construction,
+                    "electronics": h.requirements.electronics,
+                    "biotechnology": h.requirements.bio,
+                },
+                "slots": slots,
+            });
+            if let (Some(rpy), Some(pct)) = (h.fuel_regen_per_year, h.fuel_regen_percent) {
+                let m = obj.as_object_mut().unwrap();
+                m.insert("fuel-regen-per-year".to_string(), json!(rpy));
+                m.insert("fuel-regen-percent".to_string(), json!(pct));
+            }
+            obj
+        })
+        .collect();
+    Json(json!({ "hulls": hulls }))
 }
 
 async fn model_schemas() -> impl IntoResponse {
