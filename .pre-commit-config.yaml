@@ -44,6 +44,19 @@ repos:
         types: [rust]
         pass_filenames: false
 
+  # Wire types are generated from the JSON Schema source of truth (ADR-0003).
+  # The engine's Rust types regenerate at build time (engine/build.rs); this
+  # hook regenerates the client's pydantic types and fails if the committed
+  # output is stale, so schema and code cannot drift.
+  - repo: local
+    hooks:
+      - id: generate-python-types
+        name: regenerate client types from schemas (fails if stale)
+        entry: python3 scripts/generate_types.py
+        language: system
+        pass_filenames: false
+        files: ^(schemas/.*\.json|scripts/generate_types\.py|client/src/data/generated/.*\.py)$
+
   # Python: lint + format the client. The scripts/ commit-policy guards are
   # kept byte-identical with the maintainer's other repos, so ruff skips them.
   - repo: https://github.com/astral-sh/ruff-pre-commit

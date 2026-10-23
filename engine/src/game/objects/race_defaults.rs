@@ -8,7 +8,16 @@
 // engine/tests/data/default_races/ and against the in-game race wizard
 // (advantage_points totals match — see ../advantage_points.rs tests).
 
-use super::race::{Economy, HabAxis, HabPreferences, Lrt, Prt, Race, ResearchCosts, TechCost};
+use super::race::{
+    Economy, HabAxis, HabPreferences, LeftoverSpend, Lrt, Prt, Race, ResearchCosts, TechCost,
+};
+use std::num::NonZeroU32;
+
+/// Growth rate as the schema-generated `NonZeroU32` (growth rate is 1..=20 and
+/// never zero). Panics only on a zero literal, which would be a programmer bug.
+fn gr(rate: u32) -> NonZeroU32 {
+    NonZeroU32::new(rate).expect("growth rate must be non-zero")
+}
 
 // ── Public lookup ─────────────────────────────────────────────────────────────
 
@@ -75,7 +84,7 @@ pub fn humanoid() -> Race {
             mine_production: 10,
             mine_cost: 5,
             colonists_operate_mines: 10,
-            growth_rate: 15,
+            growth_rate: gr(15),
         },
         research_costs: ResearchCosts {
             energy: TechCost::Normal,
@@ -86,7 +95,7 @@ pub fn humanoid() -> Race {
             biotechnology: TechCost::Normal,
             expensive_tech_boost: false,
         },
-        leftover_spend: Default::default(),
+        leftover_spend: LeftoverSpend::SurfaceMinerals,
         icon_index: 0,
     }
 }
@@ -98,7 +107,7 @@ pub fn insectoid() -> Race {
         name: "Insectoid".into(),
         plural_name: "Insectoids".into(),
         prt: Prt::Wm,
-        lrts: vec![Lrt::ISB, Lrt::CE, Lrt::RS],
+        lrts: vec![Lrt::Isb, Lrt::Ce, Lrt::Rs],
         hab: HabPreferences {
             gravity: HabAxis {
                 immune: true,
@@ -131,7 +140,7 @@ pub fn insectoid() -> Race {
             mine_production: 9,
             mine_cost: 10,
             colonists_operate_mines: 6,
-            growth_rate: 10,
+            growth_rate: gr(10),
         },
         research_costs: ResearchCosts {
             energy: TechCost::Cheap,
@@ -142,7 +151,7 @@ pub fn insectoid() -> Race {
             biotechnology: TechCost::Expensive,
             expensive_tech_boost: false,
         },
-        leftover_spend: Default::default(),
+        leftover_spend: LeftoverSpend::SurfaceMinerals,
         icon_index: 3,
     }
 }
@@ -154,7 +163,7 @@ pub fn antetheral() -> Race {
         name: "Antetheral".into(),
         plural_name: "Antheherals".into(),
         prt: Prt::Sd,
-        lrts: vec![Lrt::ARM, Lrt::MA, Lrt::NRE, Lrt::CE, Lrt::NAS],
+        lrts: vec![Lrt::Arm, Lrt::Ma, Lrt::Nre, Lrt::Ce, Lrt::Nas],
         hab: HabPreferences {
             gravity: hab_ranged(0, 30),
             temperature: hab_ranged(0, 100),
@@ -169,7 +178,7 @@ pub fn antetheral() -> Race {
             mine_production: 10,
             mine_cost: 10,
             colonists_operate_mines: 10,
-            growth_rate: 7,
+            growth_rate: gr(7),
         },
         research_costs: ResearchCosts {
             energy: TechCost::Cheap,
@@ -180,7 +189,7 @@ pub fn antetheral() -> Race {
             biotechnology: TechCost::Cheap,
             expensive_tech_boost: false,
         },
-        leftover_spend: Default::default(),
+        leftover_spend: LeftoverSpend::SurfaceMinerals,
         icon_index: 17,
     }
 }
@@ -197,7 +206,7 @@ pub fn rabbitoid() -> Race {
         name: "Rabbitoid".into(),
         plural_name: "Rabbitoids".into(),
         prt: Prt::It,
-        lrts: vec![Lrt::IFE, Lrt::TT, Lrt::CE, Lrt::NAS],
+        lrts: vec![Lrt::Ife, Lrt::Tt, Lrt::Ce, Lrt::Nas],
         hab: HabPreferences {
             gravity: HabAxis {
                 immune: false,
@@ -230,7 +239,7 @@ pub fn rabbitoid() -> Race {
             mine_production: 10,
             mine_cost: 9,
             colonists_operate_mines: 10,
-            growth_rate: 20,
+            growth_rate: gr(20),
         },
         research_costs: ResearchCosts {
             energy: TechCost::Expensive,
@@ -241,7 +250,7 @@ pub fn rabbitoid() -> Race {
             biotechnology: TechCost::Cheap,
             expensive_tech_boost: false,
         },
-        leftover_spend: Default::default(),
+        leftover_spend: LeftoverSpend::SurfaceMinerals,
         icon_index: 0,
     }
 }
@@ -253,7 +262,7 @@ pub fn nucleotid() -> Race {
         name: "Nucleotid".into(),
         plural_name: "Nucleotids".into(),
         prt: Prt::Ss,
-        lrts: vec![Lrt::ARM, Lrt::ISB],
+        lrts: vec![Lrt::Arm, Lrt::Isb],
         hab: HabPreferences {
             gravity: hab_immune(),
             temperature: hab_ranged(12, 88),
@@ -268,7 +277,7 @@ pub fn nucleotid() -> Race {
             mine_production: 10,
             mine_cost: 15,
             colonists_operate_mines: 5,
-            growth_rate: 10,
+            growth_rate: gr(10),
         },
         research_costs: ResearchCosts {
             energy: TechCost::Expensive,
@@ -279,7 +288,7 @@ pub fn nucleotid() -> Race {
             biotechnology: TechCost::Expensive,
             expensive_tech_boost: true,
         },
-        leftover_spend: Default::default(),
+        leftover_spend: LeftoverSpend::SurfaceMinerals,
         icon_index: 24,
     }
 }
@@ -291,7 +300,7 @@ pub fn silicanoid() -> Race {
         name: "Silicanoid".into(),
         plural_name: "Silicanoids".into(),
         prt: Prt::He,
-        lrts: vec![Lrt::IFE, Lrt::UR, Lrt::OBRM, Lrt::BET],
+        lrts: vec![Lrt::Ife, Lrt::Ur, Lrt::Obrm, Lrt::Bet],
         hab: HabPreferences {
             gravity: hab_immune(),
             temperature: hab_immune(),
@@ -306,7 +315,7 @@ pub fn silicanoid() -> Race {
             mine_production: 10,
             mine_cost: 9,
             colonists_operate_mines: 10,
-            growth_rate: 6,
+            growth_rate: gr(6),
         },
         research_costs: ResearchCosts {
             energy: TechCost::Normal,
@@ -317,7 +326,7 @@ pub fn silicanoid() -> Race {
             biotechnology: TechCost::Expensive,
             expensive_tech_boost: false,
         },
-        leftover_spend: Default::default(),
+        leftover_spend: LeftoverSpend::SurfaceMinerals,
         icon_index: 4,
     }
 }

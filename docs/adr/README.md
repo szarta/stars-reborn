@@ -34,3 +34,5 @@ file has:
   interop](0001-engine-and-client-communicate-only-over-http.md)
 - [0002: Develop in one monorepo; publish separate
   artifacts](0002-develop-in-a-monorepo-publish-separate-artifacts.md)
+- [0003: Generate the wire types from the JSON Schema source of
+  truth](0003-generate-wire-types-from-json-schema.md)

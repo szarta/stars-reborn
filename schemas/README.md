@@ -2,13 +2,31 @@
 
 JSON Schema definitions for all Stars Reborn game objects and API contracts.
 
-This is a standalone artifact. Both `stars-reborn-engine` and `stars-reborn-ui`
-depend on these schemas directly. The `stars-reborn-game` integration repo
-bundles them into the final application so no online connectivity is required
-at runtime.
+These schemas are the **single source of truth** for the engine↔client wire
+contract. The language types are generated from them, never hand-written (see
+`docs/adr/0003`):
 
-For the meaning and design rationale behind each schema, see
-`stars-reborn-design`.
+- **Engine (Rust):** `engine/build.rs` runs `typify` over each schema at build
+  time into `OUT_DIR`; the types are never committed and regenerate every
+  compile.
+- **Client (Python):** `scripts/generate_types.py` runs
+  `datamodel-code-generator` into `client/src/data/generated/` as pydantic v2
+  models. That output is committed and the `generate-python-types` pre-commit
+  hook / CI fail if it is stale.
+
+To change the contract, edit the schema — then rebuild (Rust) and run
+`python3 scripts/generate_types.py` (Python). Never edit generated code. A
+schema must describe the shape the engine actually serializes; contract tests
+(`engine/tests/race_schema_contract.rs`, `client/tests/test_race_contract.py`)
+fail if a schema and the real wire output disagree.
+
+Schemas are authored in **JSON Schema draft-07**. For the meaning and design
+rationale behind each one, see `docs/` (the Sphinx design guide).
+
+> Migration status: `race.json` is the pilot — reconciled to the real wire
+> format and wired into both generators (task #110). The others are still the
+> older hand-kept definitions and are converted the same way as they gain typed
+> producers/consumers.
 
 ## Contents
 

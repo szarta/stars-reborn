@@ -218,7 +218,7 @@ fn get_hab_range_points(race: &Race) -> i64 {
         if is_immune[2] { 1 } else { 11 },
     ];
 
-    let has_tt = race.lrts.contains(&Lrt::TT);
+    let has_tt = race.lrts.contains(&Lrt::Tt);
     let mut total: f64 = 0.0;
 
     for loop_idx in 0..3usize {
@@ -380,20 +380,20 @@ fn lrt_raw_points(lrt: &Lrt) -> i64 {
     // Negative = good for race (costs advantage points).
     // Positive = bad for race (earns advantage points).
     match lrt {
-        Lrt::IFE => -235,
-        Lrt::TT => -25,
-        Lrt::ARM => -159,
-        Lrt::ISB => -201,
-        Lrt::GR => 40,
-        Lrt::UR => -240,
-        Lrt::MA => -155,
-        Lrt::NRE => 160,
-        Lrt::CE => 240,
-        Lrt::OBRM => 255,
-        Lrt::NAS => 325,
-        Lrt::LSP => 180,
-        Lrt::BET => 70,
-        Lrt::RS => 30,
+        Lrt::Ife => -235,
+        Lrt::Tt => -25,
+        Lrt::Arm => -159,
+        Lrt::Isb => -201,
+        Lrt::Gr => 40,
+        Lrt::Ur => -240,
+        Lrt::Ma => -155,
+        Lrt::Nre => 160,
+        Lrt::Ce => 240,
+        Lrt::Obrm => 255,
+        Lrt::Nas => 325,
+        Lrt::Lsp => 180,
+        Lrt::Bet => 70,
+        Lrt::Rs => 30,
     }
 }
 
@@ -413,7 +413,7 @@ pub fn advantage_points(race: &Race) -> i32 {
     // ── Growth rate ───────────────────────────────────────────────────────────
     // gr_raw: original GR% integer (1-20), saved for use in the factory penalty.
     // gr:     transformed value used in the hab×growth penalty below.
-    let gr_raw = race.economy.growth_rate as i64;
+    let gr_raw = race.economy.growth_rate.get() as i64;
     let mut gr = gr_raw;
 
     if gr <= 5 {
@@ -601,7 +601,7 @@ pub fn advantage_points(race: &Race) -> i32 {
     }
 
     // NAS has PRT-specific additional penalties.
-    if race.lrts.contains(&Lrt::NAS) {
+    if race.lrts.contains(&Lrt::Nas) {
         points -= match race.prt {
             Prt::Pp => 280,
             Prt::Ss => 200,

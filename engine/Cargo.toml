@@ -26,5 +26,18 @@ env_logger = "0.11"
 uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
-# nothing yet
+# Contract tests validate engine-serialized objects against schemas/*.json,
+# proving the generated types and the schema agree on the wire shape.
+jsonschema = "0.26"
 # [profile.*] sections belong in the workspace root Cargo.toml
+
+# Build-time codegen: the wire types in src/game/objects/generated/ are produced
+# from ../schemas/*.json by build.rs (typify) on every compile, so the Rust
+# contract cannot drift from the JSON Schema single source of truth. See
+# docs/adr/0003 and schemas/README.md.
+[build-dependencies]
+typify = "0.8"
+schemars = "0.8"
+serde_json = "1"
+syn = { version = "2", features = ["full", "parsing"] }
+prettyplease = "0.2"

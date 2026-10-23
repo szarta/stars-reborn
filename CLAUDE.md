@@ -53,9 +53,15 @@ for a preference.
 - **Clients read the data model from `/model/` endpoints; never hardcode the
   tech tree, hulls, traits, or formulae** — a duplicated copy desyncs from the
   engine, the single authority.
-- **`schemas/` is the single source of truth for shared shapes** — hand-keeping
-  the contract in both Rust and Python lets them drift (ADR-0002 records the
-  planned generation of types from the schema).
+- **`schemas/` is the single source of truth for shared shapes, and the wire
+  types are generated from it — never hand-written** (ADR-0003). Rust types
+  come from `engine/build.rs` (typify, regenerated every build); Python types
+  from `scripts/generate_types.py` (pydantic, committed under
+  `client/src/data/generated/` and diff-guarded). Editing generated code is
+  overwritten on the next build/regen; change the schema instead, then rebuild
+  and run the script. A schema must match what the engine actually serializes —
+  the contract tests fail otherwise. `race.json` is converted; other schemas
+  follow as they gain typed producers/consumers.
 
 ## Validation layers (engine)
 

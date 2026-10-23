@@ -25,7 +25,7 @@ jobs:
         run: pip install pre-commit
       - name: Run non-compiled hooks
         env:
-          SKIP: cargo-fmt,cargo-clippy,cargo-test,moldy
+          SKIP: cargo-fmt,cargo-clippy,cargo-test,moldy,generate-python-types
         run: pre-commit run --all-files
       - name: Guard regression tests
         run: python3 -W error::ResourceWarning -m unittest discover -s scripts -p 'test_check_*.py' -v

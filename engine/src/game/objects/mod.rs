@@ -2,6 +2,7 @@
 
 pub mod advantage_points;
 pub mod fleet;
+pub mod generated;
 pub mod planet;
 pub mod player;
 pub mod race;

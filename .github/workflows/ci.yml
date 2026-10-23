@@ -35,6 +35,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff==0.15.11
+      - run: pip install ruff==0.15.11 'datamodel-code-generator[ruff]' pydantic jsonschema pytest
       - run: ruff check client
       - run: ruff format --check client
+      # Generated types must match the schema source of truth (ADR-0003):
+      # regenerate and fail if the committed client types are stale.
+      - name: Client types are up to date with schemas/
+        run: |
+          python3 scripts/generate_types.py
+          git diff --exit-code -- client/src/data/generated
+      - name: Schema contract tests
+        run: python3 -m pytest client/tests -q

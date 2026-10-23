@@ -10,3 +10,8 @@ radon>=6.0      # pulled in by xenon; listed explicitly for version visibility
 
 # Pre-commit hook runner
 pre-commit>=4.5
+
+# Wire-type generation + contract tests (see ADR-0003, scripts/generate_types.py)
+datamodel-code-generator[ruff]>=0.86
+jsonschema>=4.0
+pytest>=8.0

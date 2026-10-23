@@ -1,9 +1,12 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/race.json",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "definitions": {
     "predefined-race": {
+      "title": "PredefinedRace",
+      "description": "The six races shipped with the original game.",
+      "type": "string",
       "enum": [
         "Humanoid",
         "Rabbitoid",
@@ -13,174 +16,289 @@
         "Antetheral"
       ]
     },
-    "primary-racial-trait": {
+    "leftover-spend": {
+      "title": "LeftoverSpend",
+      "description": "How the race designer spent leftover advantage points.",
+      "type": "string",
       "enum": [
-        "Claim Adjuster",
-        "Jack of All Trades",
-        "Interstellar Traveler",
-        "Inner Strength",
-        "Space Demolition",
-        "War Monger",
-        "Packet Physics",
-        "Super Stealth",
-        "Hyper Expansion",
-        "Alternate Reality"
+        "surface_minerals",
+        "mineral_concentrations",
+        "mines",
+        "factories",
+        "defenses"
       ]
     },
-    "lesser-racial-trait": {
-      "enum": [
-        "No Ramscoop Engines",
-        "Cheap Engines",
-        "Only Basic Remote Mining",
-        "No Advanced Scanners",
-        "Low Starting Population",
-        "Bleeding Edge Technology",
-        "Regenerating Shields",
-        "Improved Fuel Efficiency",
-        "Total Terraforming",
-        "Advanced Remote Mining",
-        "Improved Starbases",
-        "Generalized Research",
-        "Ultimate Recycling",
-        "Mineral Alchemy"
-      ]
-    },
-    "technology-cost": {
-      "enum": [
-        "Cheap",
-        "Normal",
-        "Expensive"
-      ]
-    },
-    "race": {
+    "hab-axis": {
+      "title": "HabAxis",
+      "description": "One habitat axis (gravity, temperature, or radiation). When immune, min/max are absent. min_idx/max_idx carry the raw 0-100 index from the original .r1 file and are authoritative when present.",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "singular-name",
-        "plural-name",
-        "primary-racial-trait",
-        "growth-rate",
-        "resource-production",
-        "factory-cost",
-        "factory-production",
-        "colonists-operate-factories",
-        "mine-cost",
-        "mine-production",
-        "colonists-operate-mines",
-        "factory-cheap-germanium",
-        "expensive-tech-boost",
-        "weapons-cost",
-        "construction-cost",
-        "electronics-cost",
-        "propulsion-cost",
-        "energy-cost",
-        "biotechnology-cost",
-        "leftover-points-spend"
+        "immune"
       ],
       "properties": {
-        "advantage-points-left": {
-          "type": "integer"
-        },
-        "singular-name": {
-          "type": "string",
-          "maxLength": 100
-        },
-        "plural-name": {
-          "type": "string",
-          "maxLength": 100
-        },
-        "primary-racial-trait": {
-          "$ref": "#/definitions/primary-racial-trait"
-        },
-        "lesser-racial-traits": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/lesser-racial-trait"
-          }
-        },
-        "radiation-immune": {
+        "immune": {
           "type": "boolean"
         },
-        "temperature-immune": {
-          "type": "boolean"
+        "min": {
+          "type": "number",
+          "description": "Physical lower bound (gravity in g, temperature in degC, radiation in mR/yr)."
         },
-        "gravity-immune": {
-          "type": "boolean"
+        "max": {
+          "type": "number",
+          "description": "Physical upper bound."
         },
-        "growth-rate": {
+        "min_idx": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 20
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Raw Stars! internal index (0-100). Authoritative when present.",
+          "format": "uint32"
         },
-        "resource-production": {
+        "max_idx": {
           "type": "integer",
-          "minimum": 700,
-          "maximum": 2500
-        },
-        "factory-production": {
-          "type": "integer",
-          "minimum": 5,
-          "maximum": 15
-        },
-        "factory-cost": {
-          "type": "integer",
-          "minimum": 5,
-          "maximum": 25
-        },
-        "mine-cost": {
-          "type": "integer",
-          "minimum": 2,
-          "maximum": 15
-        },
-        "mine-production": {
-          "type": "integer",
-          "minimum": 5,
-          "maximum": 25
-        },
-        "colonists-operate-mines": {
-          "type": "integer",
-          "minimum": 5,
-          "maximum": 25
-        },
-        "colonists-operate-factories": {
-          "type": "integer",
-          "minimum": 5,
-          "maximum": 25
-        },
-        "factory-cheap-germanium": {
-          "type": "boolean"
-        },
-        "energy-cost": {
-          "$ref": "#/definitions/technology-cost"
-        },
-        "propulsion-cost": {
-          "$ref": "#/definitions/technology-cost"
-        },
-        "biotechnology-cost": {
-          "$ref": "#/definitions/technology-cost"
-        },
-        "electronics-cost": {
-          "$ref": "#/definitions/technology-cost"
-        },
-        "weapons-cost": {
-          "$ref": "#/definitions/technology-cost"
-        },
-        "construction-cost": {
-          "$ref": "#/definitions/technology-cost"
-        },
-        "expensive-tech-boost": {
-          "type": "boolean"
-        },
-        "leftover-points-spend": {
-          "enum": [
-            "Surface Minerals",
-            "Mines",
-            "Factories",
-            "Defenses",
-            "Mineral Concentration"
-          ]
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Raw Stars! internal index (0-100). Authoritative when present.",
+          "format": "uint32"
         }
       }
+    },
+    "hab-preferences": {
+      "title": "HabPreferences",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gravity",
+        "temperature",
+        "radiation"
+      ],
+      "properties": {
+        "gravity": {
+          "$ref": "#/definitions/hab-axis"
+        },
+        "temperature": {
+          "$ref": "#/definitions/hab-axis"
+        },
+        "radiation": {
+          "$ref": "#/definitions/hab-axis"
+        }
+      }
+    },
+    "economy": {
+      "title": "Economy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_production",
+        "factory_production",
+        "factory_cost",
+        "factory_cheap_germanium",
+        "colonists_operate_factories",
+        "mine_production",
+        "mine_cost",
+        "colonists_operate_mines",
+        "growth_rate"
+      ],
+      "properties": {
+        "resource_production": {
+          "type": "integer",
+          "minimum": 700,
+          "maximum": 2500,
+          "format": "uint32"
+        },
+        "factory_production": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 15,
+          "format": "uint32"
+        },
+        "factory_cost": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25,
+          "format": "uint32"
+        },
+        "factory_cheap_germanium": {
+          "type": "boolean"
+        },
+        "colonists_operate_factories": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25,
+          "format": "uint32"
+        },
+        "mine_production": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25,
+          "format": "uint32"
+        },
+        "mine_cost": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 15,
+          "format": "uint32"
+        },
+        "colonists_operate_mines": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 25,
+          "format": "uint32"
+        },
+        "growth_rate": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "format": "uint32"
+        }
+      }
+    },
+    "research-costs": {
+      "title": "ResearchCosts",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "energy",
+        "weapons",
+        "propulsion",
+        "construction",
+        "electronics",
+        "biotechnology"
+      ],
+      "properties": {
+        "energy": {
+          "$ref": "#/definitions/tech-cost"
+        },
+        "weapons": {
+          "$ref": "#/definitions/tech-cost"
+        },
+        "propulsion": {
+          "$ref": "#/definitions/tech-cost"
+        },
+        "construction": {
+          "$ref": "#/definitions/tech-cost"
+        },
+        "electronics": {
+          "$ref": "#/definitions/tech-cost"
+        },
+        "biotechnology": {
+          "$ref": "#/definitions/tech-cost"
+        },
+        "expensive_tech_boost": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fields set to expensive start at a higher tech level. Byte 81 bit 5 in the .r1 payload; costs 180 advantage points regardless of PRT."
+        }
+      }
+    },
+    "race": {
+      "title": "Race",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format_version",
+        "name",
+        "plural_name",
+        "prt",
+        "lrts",
+        "hab",
+        "economy",
+        "research_costs",
+        "icon_index"
+      ],
+      "properties": {
+        "format_version": {
+          "type": "integer",
+          "minimum": 0,
+          "format": "uint32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "plural_name": {
+          "type": "string"
+        },
+        "prt": {
+          "$ref": "#/definitions/prt"
+        },
+        "lrts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/lrt"
+          }
+        },
+        "hab": {
+          "$ref": "#/definitions/hab-preferences"
+        },
+        "economy": {
+          "$ref": "#/definitions/economy"
+        },
+        "research_costs": {
+          "$ref": "#/definitions/research-costs"
+        },
+        "leftover_spend": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/leftover-spend"
+            }
+          ],
+          "default": "surface_minerals"
+        },
+        "icon_index": {
+          "type": "integer",
+          "minimum": 0,
+          "format": "uint32"
+        }
+      }
+    },
+    "prt": {
+      "title": "Prt",
+      "description": "Primary Racial Trait. Exactly one per race. Wire value is the two-to-four-letter abbreviation.",
+      "type": "string",
+      "enum": [
+        "HE",
+        "SS",
+        "WM",
+        "CA",
+        "IS",
+        "SD",
+        "PP",
+        "IT",
+        "AR",
+        "JOAT"
+      ]
+    },
+    "lrt": {
+      "title": "Lrt",
+      "description": "Lesser Racial Trait. Zero or more per race. Wire value is the abbreviation.",
+      "type": "string",
+      "enum": [
+        "NRE",
+        "IFE",
+        "CE",
+        "TT",
+        "OBRM",
+        "ARM",
+        "NAS",
+        "ISB",
+        "LSP",
+        "GR",
+        "BET",
+        "UR",
+        "RS",
+        "MA"
+      ]
+    },
+    "tech-cost": {
+      "title": "TechCost",
+      "description": "Per-field research cost multiplier: expensive=175%, normal=100%, cheap=50% of base.",
+      "type": "string",
+      "enum": [
+        "expensive",
+        "normal",
+        "cheap"
+      ]
     }
   }
 }
