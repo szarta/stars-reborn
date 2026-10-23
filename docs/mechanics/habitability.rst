@@ -306,11 +306,15 @@ Implementation Notes (from stars-reborn)
 
 Planet Value Formula
 --------------------
+
 Each planet has three habitat readings: gravity (g), temperature (t), and radiation (r),
 each on a 0–100 integer scale. Your race has a range [min, max] on each axis (or "immune").
 Planet value is the product of three per-axis values, normalized to [-45, 100]:
+
 For each axis:
+
 .. code-block:: text
+
     If immune:
         axis_value = 100
     Else:
@@ -322,34 +326,54 @@ For each axis:
         Else (out of range):
             out_of_range = min(abs(planet_val - min), abs(planet_val - max))
             axis_value = -45 * out_of_range / 15   (capped at -45)
+
 Overall planet_value = product formula combining three axis values.
+
 **Reference:** ``sr-old/reference/research/`` — ``planet_hab.c`` (community C implementation),
 validated against live Stars! game data in ``stars-research/planet_data/``.
+
 Gravity Map
 -----------
+
 Gravity values are non-linear. The 0–100 integer scale maps to g values:
+
 .. code-block:: text
+
     0  → 0.12g       25 → 0.50g       50 → 1.00g
     10 → 0.20g       30 → 0.55g       55 → 1.12g
     20 → 0.36g       40 → 0.71g       75 → 2.24g
                                        100 → 8.00g
+
 Full mapping in ``stars_reborn/engine/space.py`` ``Gravity_Map``.
+
 Temperature Map
 ---------------
+
 Temperature maps linearly: ``temperature = (scale_value - 50) * 4``
 Range: scale 0 = -200°C, scale 50 = 0°C, scale 100 = +200°C.
+
 Radiation Map
 -------------
+
 Radiation maps linearly (1:1 with mR/yr): scale 0 = 0 mR/yr, scale 100 = 100 mR/yr.
+
 Homeworld Initialization
 ------------------------
+
 A player's homeworld is always set to a planet value of exactly 100% for that race:
+
 * Gravity set to the midpoint of the race's gravity range (or 50 if immune)
 * Temperature set to the midpoint of the race's temperature range (or 50 if immune)
 * Radiation set to the midpoint of the race's radiation range (or 50 if immune)
+
 Population Capacity
 -------------------
+
 Maximum population per planet is determined by planet size (set at universe generation):
+
+.. list-table::
+   :header-rows: 1
+
    * - Planet Size
      - Max Population
    * - Tiny
@@ -362,4 +386,5 @@ Maximum population per planet is determined by planet size (set at universe gene
      - 1,000,000
    * - Huge
      - 2,000,000
+
 (These are approximate; exact values TBD from original game research.)

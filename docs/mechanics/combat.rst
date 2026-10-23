@@ -416,7 +416,7 @@ Bombing occurs after fleet battles in the turn order.  A fleet with bomb weapons
 at a planet that has no defending fleet executes its bombing orders.
 
 Defense Coverage
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 Each planetary defense installation provides a base coverage value.  Multiple
 defenses stack with diminishing returns:
@@ -448,7 +448,7 @@ Coverage of n defenses of base value d:
    Def(smart) = 1 - (1 - d/2)^n        # vs. smart bombs (base coverage halved)
 
 Normal Bombs
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 Each bomb type has a kill percentage, building-kill count, and minimum kill:
 
@@ -509,7 +509,7 @@ Normal bombs stack linearly.  Pop killed = max(percentage × pop, min_kill), all
 modified by ``(1 - Def(pop))``.  Buildings killed similarly using ``Def(build)``.
 
 Smart Bombs
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 Smart bombs kill only colonists, not defenses or buildings.  Defense coverage
 against smart bombs uses ``Def(smart)`` (halved base coverage).

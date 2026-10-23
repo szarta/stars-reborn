@@ -187,35 +187,48 @@ Implementation Notes (from stars-reborn)
 ----------------------------------------
 
 Six independent research fields:
+
 * **Energy** — shields, stargates, scanners, capacitors
 * **Weapons** — beam weapons, torpedoes, missiles, bombs
 * **Propulsion** — engines, fuel efficiency
 * **Construction** — hulls, armor, mass drivers
 * **Electronics** — scanners, computers, jammers
 * **Biotechnology** — terraforming, genetic tech
+
 Annual Research Budget
 ----------------------
+
 The player sets a research budget as a percentage of annual resources (0–100%).
 Remaining resources go to production queues.
 Budget is divided among tech fields per allocation weights (the player sets which
-fields receive focus).
+fields receive focus)::
+
     research_resources_for_field = total_research_budget * field_weight / total_weight
+
 Tech Level Costs
 ----------------
-Base cost to advance from level N to level N+1:
+
+Base cost to advance from level N to level N+1::
+
     base_cost = TechnologyLevelBaseCosts[field][level]
 
 Adjusted for race modifier:
+
 * **Cheap**: ``adjusted = floor(base_cost * 0.5)``
 * **Normal**: ``adjusted = base_cost``
 * **Expensive**: ``adjusted = floor(base_cost * 1.75)``
+
 GR (Generalized Research) LRT averages costs across all fields.
+
 As tech levels advance, the cost to build technologies that require that tech
-decreases (miniaturization):
+decreases (miniaturization)::
+
     For a technology requiring level N in field F:
     current_level = player's tech level in F
     miniaturization = max(0, current_level - N) * 4%
     effective_cost = floor(base_cost * (1 - miniaturization))
+
 Maximum miniaturization: 75% reduction.
+
 BET (Bleeding Edge Technology) LRT allows using technologies one level before
 they're normally available, but at 4× the normal cost.

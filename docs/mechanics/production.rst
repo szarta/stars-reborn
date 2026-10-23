@@ -194,37 +194,53 @@ Implementation Notes (from stars-reborn)
 
 Resource Generation
 -------------------
-Annual resources per planet:
+
+Annual resources per planet::
+
     resources = floor(population / (10000 / resources_per_10k))
               + floor(factories * factory_output)
+
 Where:
+
 * ``population`` — current colonist count on the planet
 * ``resources_per_10k`` — race parameter (5–25 resources per 10,000 colonists per year)
 * ``factories`` — number of operational factories (capped by colonists: max = pop / colonists_per_factory)
 * ``factory_output`` — race parameter (5–15 resources per factory per year)
+
 The production queue is an ordered list of items. Each turn, resources are applied
 from top to bottom. Partial completion banks resources toward the next turn.
+
 Queue item types:
+
 * **Factory** — costs (factory_cost) resources + 4 germanium; limited by colonists_per_factory
 * **Mine** — costs (mine_cost) resources; limited by colonists_per_mine
 * **Defense** — costs 5 resources; up to 100 defenses per planet
 * **Ship** — costs vary by hull + installed parts (hull cost + sum of part costs)
 * **Starbase** — same as ship but immobile; upgrades existing starbase
 * **Mineral Alchemy** — converts resources to minerals:
+
   - With MA trait: **25 resources → 1 kT each** of Ironium, Boranium, Germanium
   - Without MA trait: **100 resources → 1 kT each** (much less efficient)
+
   *Source: Stars! in-game help.*
+
 * **Terraforming** — 100 resources → 1 unit shift on one hab axis
+
 Auto-items (infinite quantity):
+
 * **Auto-factory** — keep building factories until max reached
 * **Auto-mine** — keep building mines until max reached
 * **Auto-defense** — keep building defenses until max reached
+
 Mineral Consumption
 -------------------
+
 Minerals are consumed when building ships:
+
 * Hull cost provides ironium/boranium/germanium base amounts
 * Each installed part adds its own mineral costs
 * Factories: 1 germanium each
 * Mines: no minerals
 * Defenses: no minerals
+
 See ``docs/mechanics/technology_tree.rst`` for per-item mineral costs.
