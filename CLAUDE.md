@@ -60,8 +60,10 @@ for a preference.
   `client/src/data/generated/` and diff-guarded). Editing generated code is
   overwritten on the next build/regen; change the schema instead, then rebuild
   and run the script. A schema must match what the engine actually serializes —
-  the contract tests fail otherwise. `race.json` is converted; other schemas
-  follow as they gain typed producers/consumers.
+  the contract tests fail otherwise. `race.json` and `response-turn-file.json`
+  are converted; other schemas follow as they gain typed producers/consumers
+  (some, like the hull catalog, are hand-built `json!` today and need a typed
+  producer first).
 
 ## Validation layers (engine)
 

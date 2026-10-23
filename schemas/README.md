@@ -23,10 +23,13 @@ fail if a schema and the real wire output disagree.
 Schemas are authored in **JSON Schema draft-07**. For the meaning and design
 rationale behind each one, see `docs/` (the Sphinx design guide).
 
-> Migration status: `race.json` is the pilot — reconciled to the real wire
-> format and wired into both generators (task #110). The others are still the
-> older hand-kept definitions and are converted the same way as they gain typed
-> producers/consumers.
+> Migration status: `race.json` (task #110) and `response-turn-file.json` (the
+> per-player turn file, task #115) are reconciled to the real wire format and
+> wired into both generators. The rest are still the older hand-kept
+> definitions and are converted the same way as they gain typed
+> producers/consumers. Note `tech.json` and the hull catalog are not serde-
+> serialized yet (the engine hand-builds those responses), so they need a typed
+> producer first.
 
 ## Contents
 

@@ -30,7 +30,7 @@ SCHEMA_DIR = REPO / "schemas"
 OUT_DIR = REPO / "client" / "src" / "data" / "generated"
 
 # (schema stem, output module). Grows as more schemas gain client types.
-SCHEMAS = [("race", "race.py")]
+SCHEMAS = [("race", "race.py"), ("response-turn-file", "turn_file.py")]
 
 # datamodel-codegen warns that it does not understand the `uint32` integer
 # format (added for the Rust generator); the Python fallback to `int` is

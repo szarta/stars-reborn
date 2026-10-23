@@ -13,3 +13,8 @@ pub mod race {
     #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
     include!(concat!(env!("OUT_DIR"), "/race_types.rs"));
 }
+
+pub mod turn_file {
+    #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
+    include!(concat!(env!("OUT_DIR"), "/turn_file_types.rs"));
+}

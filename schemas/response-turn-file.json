@@ -1,11 +1,11 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "definitions": {
     "planet-unobserved": {
-      "description": "A planet the player has never observed. Only identity (id, name, position) is known — these come from the shared .xy data. No contents fields appear.",
+      "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -17,20 +17,22 @@
       "properties": {
         "id": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "format": "uint32"
         },
         "name": {
-          "type": "string",
-          "maxLength": 64
+          "type": "string"
         },
         "x": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "y": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         }
-      }
+      },
+      "title": "PlanetUnobserved"
     },
     "planet-observed": {
       "description": "A planet the player has observed. Contents fields hold values as of the last scan; years-since-last-scan = 0 means current ground truth, anything higher is stale (see Information Staleness in stars-reborn-design/docs/mechanics/scanning.rst).",
@@ -60,97 +62,111 @@
       "properties": {
         "id": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "format": "uint32"
         },
         "name": {
-          "type": "string",
-          "maxLength": 64
+          "type": "string"
         },
         "x": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "y": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "years-since-last-scan": {
           "description": "0 = currently in penetrating-scan range (or owned). Higher = stale snapshot.",
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "format": "uint32"
         },
         "gravity": {
           "description": "Gravity in g.",
-          "type": "number"
+          "type": "number",
+          "format": "float"
         },
         "temperature": {
-          "description": "Temperature in °C, snapped to 4° steps in [-200, 200].",
+          "description": "Temperature in \u00b0C, snapped to 4\u00b0 steps in [-200, 200].",
           "type": "integer",
           "minimum": -200,
-          "maximum": 200
+          "maximum": 200,
+          "format": "int32"
         },
         "radiation": {
           "description": "Radiation in mR/yr.",
           "type": "integer",
           "minimum": 0,
-          "maximum": 100
+          "maximum": 100,
+          "format": "uint32"
         },
         "ironium-concentration": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 200
+          "maximum": 200,
+          "format": "uint32"
         },
         "boranium-concentration": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 200
+          "maximum": 200,
+          "format": "uint32"
         },
         "germanium-concentration": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 200
+          "maximum": 200,
+          "format": "uint32"
         },
         "surface-ironium": {
           "description": "kT on surface.",
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "format": "uint32"
         },
         "surface-boranium": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "format": "uint32"
         },
         "surface-germanium": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "format": "uint32"
         },
         "homeworld": {
           "type": "boolean"
         },
         "owner": {
-          "description": "Player id of the current owner. Absent ⇒ observed but unowned (e.g. abandoned colony).",
+          "description": "Player id of the current owner. Absent \u21d2 observed but unowned (e.g. abandoned colony).",
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "format": "uint32"
         },
         "population": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "format": "uint32"
         },
         "factories": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "format": "uint32"
         },
         "mines": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "format": "uint32"
         },
         "value": {
           "description": "Planet value computed against the viewing player's race. 0..100 = habitable; negative = red (capped at -45). Different players see different values for the same planet.",
           "type": "integer",
           "minimum": -45,
-          "maximum": 100
+          "maximum": 100,
+          "format": "int32"
         }
-      }
+      },
+      "title": "PlanetObserved"
     },
     "planet-intel": {
       "description": "A single planet entry in the player's turn file. Untagged on the wire: clients distinguish observed vs. unobserved by the presence of contents fields.",
@@ -161,7 +177,8 @@
         {
           "$ref": "#/definitions/planet-unobserved"
         }
-      ]
+      ],
+      "title": "PlanetIntel"
     }
   },
   "type": "object",
@@ -177,27 +194,27 @@
     "year": {
       "type": "integer",
       "minimum": 2400,
-      "maximum": 4400
+      "maximum": 4400,
+      "format": "uint32"
     },
     "game-id": {
       "description": "UUID v4 string identifying the game.",
-      "type": "string",
-      "maxLength": 64
+      "type": "string"
     },
     "game-name": {
-      "type": "string",
-      "maxLength": 256
+      "type": "string"
     },
     "player-id": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "format": "uint32"
     },
     "homeworld-id": {
       "description": "Planet id of the viewing player's homeworld. Absent if the player has no homeworld (e.g. eliminated).",
       "type": "integer",
-      "minimum": 1,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "format": "uint32"
     },
     "planets": {
       "description": "Every planet in the universe, sorted by id. Each entry is either observed (full contents) or unobserved (identity only).",
@@ -206,5 +223,6 @@
         "$ref": "#/definitions/planet-intel"
       }
     }
-  }
+  },
+  "title": "PlayerView"
 }

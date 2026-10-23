@@ -11,7 +11,10 @@ use typify::{TypeSpace, TypeSpaceSettings};
 
 // (schema file stem, output file) pairs. Grows as more schemas gain generated
 // engine types; today the race contract is the pilot (task #110).
-const SCHEMAS: &[(&str, &str)] = &[("race", "race_types.rs")];
+const SCHEMAS: &[(&str, &str)] = &[
+    ("race", "race_types.rs"),
+    ("response-turn-file", "turn_file_types.rs"),
+];
 
 fn main() {
     let schema_dir = Path::new("../schemas");

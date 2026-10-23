@@ -21,8 +21,6 @@
 // As scanner mechanics land, the only place that needs updating is the
 // `is_observable` predicate inside `player_view()`.
 
-use serde::{Deserialize, Serialize};
-
 use crate::game::objects::advantage_points::{
     axis_to_idx, grav_to_idx, planet_habitability, rad_to_idx, temp_to_idx,
 };
@@ -30,83 +28,16 @@ use crate::game::objects::planet::{PlanetState, PlanetStatic};
 use crate::game::objects::race::Race;
 use crate::game::state::GameState;
 
-/// A player's view of one planet.
-///
-/// `Unobserved` carries only identity (always known from .xy data).
-/// `Observed` carries the full snapshot at last scan; `years_since_last_scan = 0`
-/// indicates current ground-truth values, anything higher is stale.
-///
-/// Untagged on the wire: clients distinguish by whether contents fields are
-/// present. Field names are kebab-case to match the project schema convention
-/// — see stars-reborn-schemas/response-turn-file.json.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum PlanetIntel {
-    Observed(PlanetObserved),
-    Unobserved(PlanetUnobserved),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct PlanetUnobserved {
-    pub id: u32,
-    pub name: String,
-    pub x: i32,
-    pub y: i32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct PlanetObserved {
-    pub id: u32,
-    pub name: String,
-    pub x: i32,
-    pub y: i32,
-
-    /// 0 = currently in penetrating-scan range (or owned).
-    pub years_since_last_scan: u32,
-
-    pub gravity: f32,
-    pub temperature: i32,
-    pub radiation: u32,
-
-    pub ironium_concentration: u32,
-    pub boranium_concentration: u32,
-    pub germanium_concentration: u32,
-
-    pub surface_ironium: u32,
-    pub surface_boranium: u32,
-    pub surface_germanium: u32,
-
-    pub homeworld: bool,
-    /// `None` = observed but no current owner (e.g. abandoned colony).
-    /// `Some(id)` = observed and owned by player `id`.
-    pub owner: Option<u32>,
-    pub population: u32,
-    pub factories: u32,
-    pub mines: u32,
-
-    /// Planet value as a percent (0..100 = habitable; negative = red, capped
-    /// at -45). Computed against the **viewing player's** race. Different
-    /// players see different values for the same planet.
-    pub value: i32,
-}
-
-/// A player's complete turn-file view.
-///
-/// Everything in this struct is safe to serialise to player `player_id`.
-/// Field names are kebab-case to match the project schema convention.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct PlayerView {
-    pub year: u32,
-    pub game_id: String,
-    pub game_name: String,
-    pub player_id: u32,
-    pub homeworld_id: Option<u32>,
-    /// Planets sorted by id for client determinism.
-    pub planets: Vec<PlanetIntel>,
-}
+// The turn-file wire types (`PlayerView`, `PlanetIntel`, `PlanetObserved`,
+// `PlanetUnobserved`) are GENERATED from `schemas/response-turn-file.json` at
+// build time (see `build.rs`) and re-exported here so existing
+// `game::view::*` paths keep resolving. To change the turn-file shape — field
+// names, ranges, which fields are observed-only — edit the schema, not this
+// file. `PlanetIntel` is untagged: a client tells observed from unobserved by
+// whether the contents fields are present. See `docs/adr/0003`.
+pub use crate::game::objects::generated::turn_file::{
+    PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView,
+};
 
 /// Project a `PlayerView` for `player_id` from the host-side `GameState`.
 ///
