@@ -18,3 +18,13 @@ pub mod turn_file {
     #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
     include!(concat!(env!("OUT_DIR"), "/turn_file_types.rs"));
 }
+
+pub mod universe_file {
+    #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
+    include!(concat!(env!("OUT_DIR"), "/universe_file_types.rs"));
+}
+
+pub mod create_game {
+    #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
+    include!(concat!(env!("OUT_DIR"), "/create_game_types.rs"));
+}

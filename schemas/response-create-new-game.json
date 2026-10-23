@@ -1,9 +1,26 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-create-new-game.json",
   "description": "The payload response to creating a new game.",
-  "version": "0.0.1",
-  "definitions": {},
+  "version": "0.1.0",
+  "title": "CreateGameResponse",
+  "definitions": {
+    "created-game": {
+      "title": "CreatedGame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "UUID v4 string identifying the created game.",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "type": "object",
   "additionalProperties": false,
   "required": [
     "request-is-valid"
@@ -13,18 +30,10 @@
       "type": "boolean"
     },
     "created-game": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        }
-      }
+      "$ref": "#/definitions/created-game"
     },
     "failure-reason": {
-      "type": "string",
-      "maxLength": 1024
+      "type": "string"
     }
   }
 }

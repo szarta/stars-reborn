@@ -1,11 +1,11 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-game.json",
-  "description": "Lobby/metadata response for GET /games/{game-id}. The static, shared map data — equivalent to the .xy file from the original Stars!. Identical for every player; safe to expose without fog-of-war filtering. Per-player intel lives in response-turn-file.json.",
-  "version": "0.0.1",
+  "description": "Lobby/metadata response for GET /games/{game-id}. The static, shared map data \u2014 equivalent to the .xy file from the original Stars!. Identical for every player; safe to expose without fog-of-war filtering. Per-player intel lives in response-turn-file.json.",
+  "version": "0.1.0",
   "definitions": {
     "universe-planet": {
-      "description": "A planet's static identity and position. Contents (hab, population, owner, etc.) are not present — those are scanner-gated and live in the per-player turn file.",
+      "description": "A planet's static identity and position. Contents (hab, population, owner, etc.) are not present \u2014 those are scanner-gated and live in the per-player turn file.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -17,20 +17,22 @@
       "properties": {
         "id": {
           "type": "integer",
-          "minimum": 1,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "format": "uint32"
         },
         "name": {
-          "type": "string",
-          "maxLength": 64
+          "type": "string"
         },
         "x": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "y": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         }
-      }
+      },
+      "title": "UniversePlanet"
     }
   },
   "type": "object",
@@ -47,31 +49,31 @@
   "properties": {
     "game-id": {
       "description": "UUID v4 string identifying the game.",
-      "type": "string",
-      "maxLength": 64
+      "type": "string"
     },
     "game-name": {
-      "type": "string",
-      "maxLength": 256
+      "type": "string"
     },
     "year": {
       "type": "integer",
       "minimum": 2400,
-      "maximum": 4400
+      "maximum": 4400,
+      "format": "uint32"
     },
     "universe-width": {
       "description": "Map width in light years.",
       "type": "integer",
-      "minimum": 1
+      "format": "uint32"
     },
     "universe-height": {
       "description": "Map height in light years.",
       "type": "integer",
-      "minimum": 1
+      "format": "uint32"
     },
     "planet-count": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "format": "uint32"
     },
     "planets": {
       "description": "All planets in the universe, sorted by id. Static identity only.",
@@ -80,5 +82,6 @@
         "$ref": "#/definitions/universe-planet"
       }
     }
-  }
+  },
+  "title": "UniverseResponse"
 }

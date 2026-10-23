@@ -269,49 +269,18 @@ struct CreateGameRequest {
     game: GameParams,
 }
 
-#[derive(Serialize)]
-struct CreatedGame {
-    id: String,
-}
-
-#[derive(Serialize)]
-struct CreateGameResponse {
-    #[serde(rename = "request-is-valid")]
-    request_is_valid: bool,
-    #[serde(rename = "created-game", skip_serializing_if = "Option::is_none")]
-    created_game: Option<CreatedGame>,
-    #[serde(rename = "failure-reason", skip_serializing_if = "Option::is_none")]
-    failure_reason: Option<String>,
-}
+// `CreateGameResponse` / `CreatedGame` are GENERATED from
+// `schemas/response-create-new-game.json` at build time (see `build.rs`).
+use crate::game::objects::generated::create_game::{CreateGameResponse, CreatedGame};
 
 // ---------------------------------------------------------------------------
 // Universe file response types  (.xy equivalent — public, same for all players)
 // ---------------------------------------------------------------------------
 
-/// A planet entry in the universe file: position and name only.
-/// No owner, population, or player-specific state — those belong in the turn file.
-///
-/// Field names are kebab-case to match the project schema convention — see
-/// stars-reborn-schemas/response-game.json.
-#[derive(Serialize)]
-struct UniversePlanet {
-    id: u32,
-    name: String,
-    x: i32,
-    y: i32,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "kebab-case")]
-struct UniverseResponse {
-    game_id: String,
-    game_name: String,
-    year: u32,
-    universe_width: u32,
-    universe_height: u32,
-    planet_count: usize,
-    planets: Vec<UniversePlanet>,
-}
+// `UniverseResponse` / `UniversePlanet` are GENERATED from
+// `schemas/response-game.json` at build time (see `build.rs`); change the shape
+// by editing that schema. See `docs/adr/0003`.
+use crate::game::objects::generated::universe_file::{UniversePlanet, UniverseResponse};
 
 // ---------------------------------------------------------------------------
 // Turn file response types  (.m equivalent — private, per-player)
@@ -516,7 +485,7 @@ async fn get_game(State(state): State<AppState>, Path(game_id): Path<String>) ->
                 year: g.year,
                 universe_width: g.universe.width,
                 universe_height: g.universe.height,
-                planet_count: g.universe.planet_count(),
+                planet_count: g.universe.planet_count() as u32,
                 planets,
             };
             Json(response).into_response()

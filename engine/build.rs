@@ -14,6 +14,8 @@ use typify::{TypeSpace, TypeSpaceSettings};
 const SCHEMAS: &[(&str, &str)] = &[
     ("race", "race_types.rs"),
     ("response-turn-file", "turn_file_types.rs"),
+    ("response-game", "universe_file_types.rs"),
+    ("response-create-new-game", "create_game_types.rs"),
 ];
 
 fn main() {

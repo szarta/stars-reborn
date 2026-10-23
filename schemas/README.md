@@ -23,13 +23,25 @@ fail if a schema and the real wire output disagree.
 Schemas are authored in **JSON Schema draft-07**. For the meaning and design
 rationale behind each one, see `docs/` (the Sphinx design guide).
 
-> Migration status: `race.json` (task #110) and `response-turn-file.json` (the
-> per-player turn file, task #115) are reconciled to the real wire format and
-> wired into both generators. The rest are still the older hand-kept
-> definitions and are converted the same way as they gain typed
-> producers/consumers. Note `tech.json` and the hull catalog are not serde-
-> serialized yet (the engine hand-builds those responses), so they need a typed
-> producer first.
+> Migration status (task #110, #115). Converted — reconciled to the real wire
+> format and wired into both generators: `race.json`, `response-turn-file.json`
+> (per-player turn file), `response-game.json` (public universe/.xy file),
+> `response-create-new-game.json`.
+>
+> Not yet converted:
+>
+> - `tech.json` and `response-model-ship-hulls.json` — the engine hand-builds
+>   the hull catalog with `json!` and the types don't derive `Serialize`, so
+>   they need a typed producer first.
+> - `request-validate-race.json`, `response-validate-race.json`,
+>   `request-create-new-game.json` — these describe a richer intended API than
+>   the engine currently implements (e.g. structured validation failures, full
+>   game-setup options), so converting them is an API-design decision, not a
+>   mechanical reconciliation.
+> - `universe.json`, `player.json`, `planet.json`, `battle.json`, `turn.json`,
+>   `request-submit-orders.json`, `request-create-tutorial-game.json`,
+>   `response-create-tutorial-game.json`, `error.json` — convert as they gain
+>   stable typed producers/consumers.
 
 ## Contents
 

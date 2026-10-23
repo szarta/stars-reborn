@@ -60,10 +60,13 @@ for a preference.
   `client/src/data/generated/` and diff-guarded). Editing generated code is
   overwritten on the next build/regen; change the schema instead, then rebuild
   and run the script. A schema must match what the engine actually serializes —
-  the contract tests fail otherwise. `race.json` and `response-turn-file.json`
-  are converted; other schemas follow as they gain typed producers/consumers
-  (some, like the hull catalog, are hand-built `json!` today and need a typed
-  producer first).
+  the contract tests fail otherwise. Converted so far: `race`,
+  `response-turn-file`, `response-game`, `response-create-new-game` (see
+  `schemas/README.md` for the full migration status). The rest follow as they
+  gain typed producers/consumers; some (the hull catalog) are hand-built
+  `json!` today, and the create-game/validate _request_ schemas encode a richer
+  intended API than the engine implements, so those are design decisions, not
+  mechanical conversions.
 
 ## Validation layers (engine)
 
