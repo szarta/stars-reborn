@@ -64,5 +64,8 @@ archived read-only with a pointer here.
   the authored conventions preserved (underline headings, bullet style, two-
   space sentence gaps); its settings live in `moldy-rst.toml` and it runs on a
   separate `moldy-rst` pre-commit hook because RST support is still an
-  unreleased moldy branch build. Moving Rust and Python onto `moldy` as well is
-  a deliberate, separately A/B-tested change still to come, not part of this.
+  unreleased moldy branch build. Moving Rust and Python onto `moldy` was
+  evaluated with the same A/B method and **not adopted**: on the current build
+  moldy produces correctness regressions on both languages' sources, so rustfmt
+  and ruff are retained for now. This will be revisited once those are resolved
+  upstream.
