@@ -9,11 +9,11 @@ All data from the Python engine ``factory.py``. Needs oracle verification.
 - **Ultra Station**: ISB (Improved Starbases) LRT required
 - **Death Star**: AR (Alternate Reality) PRT required
 
-**Cost discount:** all components installed on starbases (weapons, shields, etc.)
-cost **50% less** than the same parts on a ship hull.
+**Cost discount:** all components installed on starbases (weapons, shields,
+etc.) cost **50% less** than the same parts on a ship hull.
 
-**Scoring:** the Orbital Fort does **not** count toward a player's score.
-All other starbase types count as 3 points each in the default scoring formula.
+**Scoring:** the Orbital Fort does **not** count toward a player's score.  All
+other starbase types count as 3 points each in the default scoring formula.
 
 Costs: ``[Ir, Bo, Ge, R]``. ``Dock`` = max ship mass (kT) buildable/repairable;
 ``∞`` = unlimited. See :doc:`../mechanics/starbase_design` for design rules.
@@ -43,35 +43,40 @@ Slot types: ``Weapons`` = BeamWeapons|Torpedoes; ``Shields`` = shields only;
      - 10
      - 0
      - [12,0,17,40]
-     - Weapons(12), Weapons(12), Protection(12), Protection(12), OrbitalElect(1)
+     - Weapons(12), Weapons(12), Protection(12), Protection(12),
+       OrbitalElect(1)
    * - Space Dock
      - C4
      - 250
      - 12
      - 200
      - [20,5,25,100]
-     - Weapons(16), Weapons(16), Weapons(16), Electrical(2), Electrical(2), Shields(24), Protection(24), OrbitalElect(1)
+     - Weapons(16), Weapons(16), Weapons(16), Electrical(2), Electrical(2),
+       Shields(24), Protection(24), OrbitalElect(1)
    * - Space Station
      - —
      - 500
      - 14
      - ∞
      - [120,80,250,600]
-     - Weapons(16)×4, Shields(16)×2, Protection(16)×2, Electrical(3)×2, OrbitalElect(1)×2
+     - Weapons(16)×4, Shields(16)×2, Protection(16)×2, Electrical(3)×2,
+       OrbitalElect(1)×2
    * - Ultra Station
      - C12
      - 1000
      - 16
      - ∞
      - [120,80,300,600]
-     - Weapons(16)×6, Electrical(3)×4, Shields(20)×2, Protection(20)×2, OrbitalElect(1)×2
+     - Weapons(16)×6, Electrical(3)×4, Shields(20)×2, Protection(20)×2,
+       OrbitalElect(1)×2
    * - Death Star
      - C17
      - 1500
      - 18
      - ∞
      - [120,80,350,750]
-     - Weapons(32)×4, Electrical(4)×6, Shields(30)×2, Protection(20)×2, OrbitalElect(1)×2
+     - Weapons(32)×4, Electrical(4)×6, Shields(30)×2, Protection(20)×2,
+       OrbitalElect(1)×2
 
 Slot counts use ``×N`` notation for multiple identical slots.
 

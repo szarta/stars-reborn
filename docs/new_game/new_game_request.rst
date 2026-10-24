@@ -22,8 +22,8 @@ Top-level fields:
      - Description
    * - ``format_version``
      - integer
-     - Schema version.  Clients must match the version reported by
-       ``GET /model/version``.
+     - Schema version.  Clients must match the version reported by ``GET
+       /model/version``.
    * - ``game_name``
      - string
      - Optional display name for the game.
@@ -87,9 +87,9 @@ On success (``201 Created``) the engine returns a body conforming to
        if that was provided; otherwise the engine-generated value.
    * - ``player_tokens``
      - array of objects
-     - One entry per human slot.  Each has ``slot_index`` and ``token``
-       (opaque string).  Used as ``Authorization: Bearer <token>`` for all
-       requests against this game.  Never issued for AI slots.
+     - One entry per human slot.  Each has ``slot_index`` and ``token`` (opaque
+       string).  Used as ``Authorization: Bearer <token>`` for all requests
+       against this game.  Never issued for AI slots.
    * - ``planet_count``
      - integer
      - How many planets were generated (after applying any density caps).
@@ -108,14 +108,14 @@ Error Responses
      - When
    * - ``400 Bad Request``
      - JSON is malformed, schema validation fails, or a race is invalid
-       (illegal PRT/LRT combination, advantage points out of budget, bad
-       hab ranges).
+       (illegal PRT/LRT combination, advantage points out of budget, bad hab
+       ranges).
    * - ``409 Conflict``
-     - A game with the same ``game_name`` already exists (if names are
-       enforced as unique — TBD).
+     - A game with the same ``game_name`` already exists (if names are enforced
+       as unique — TBD).
    * - ``422 Unprocessable Entity``
-     - Request is structurally valid but logically invalid (e.g., fewer
-       than 2 player slots, ``tech_fields`` out of range).
+     - Request is structurally valid but logically invalid (e.g., fewer than 2
+       player slots, ``tech_fields`` out of range).
 
 The error body follows a standard envelope:
 

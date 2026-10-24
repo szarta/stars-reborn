@@ -1,25 +1,25 @@
 Starbase Components
 ===================
 
-Components that fill the ``OrbitalElect`` slot on starbases.  They cannot
-be installed on ships.
+Components that fill the ``OrbitalElect`` slot on starbases.  They cannot be
+installed on ships.
 
 **Source:** Python engine ``factory.py``.  All values need oracle verification.
 
 Tech requirements: ``En/We/Pr/Co/El/Bio``.  Costs: ``[Ir, Bo, Ge, Resources]``.
 
-Access: see :doc:`technology_access` for per-PRT availability.
-See :doc:`starbase_hulls` for hull slot counts.
+Access: see :doc:`technology_access` for per-PRT availability.  See
+:doc:`starbase_hulls` for hull slot counts.
 
 .. _stargates-ref:
 
 Stargates
 ---------
 
-Stargates allow instantaneous fleet teleportation between two connected
-gates.  Fleets that exceed ``safe_mass`` or transit farther than
-``safe_range`` take proportional damage; far-exceeding either limit can
-destroy the fleet.  ``any`` indicates no limit.
+Stargates allow instantaneous fleet teleportation between two connected gates.
+Fleets that exceed ``safe_mass`` or transit farther than ``safe_range`` take
+proportional damage; far-exceeding either limit can destroy the fleet.  ``any``
+indicates no limit.
 
 Cost for all stargates: ``[50, 20, 20, N]`` (resources vary by type).
 
@@ -77,9 +77,10 @@ Cost for all stargates: ``[50, 20, 20, N]`` (resources vary by type).
      - IT only
 
 .. note::
+
    HE has **no stargate access** — Stargate100/250 is absent from the HE
-   ``PRT_Technologies`` list.  HE races expand via mass drivers and high
-   growth rate rather than gate networks.
+   ``PRT_Technologies`` list.  HE races expand via mass drivers and high growth
+   rate rather than gate networks.
 
 .. _mass-drivers-ref:
 
@@ -91,10 +92,11 @@ Mass drivers accelerate mineral packets toward a target planet at
 warp ≤ N; packets arriving faster lose minerals; packets arriving at an
 undefended planet cause proportional damage.
 
-MassDriver7 and UltraDriver10 are in the base research pool (all races).
-The odd-tier drivers (5, 6, 8, 9, 11, 12, 13) are PP-exclusive.
+MassDriver7 and UltraDriver10 are in the base research pool (all races).  The
+odd-tier drivers (5, 6, 8, 9, 11, 12, 13) are PP-exclusive.
 
 .. note::
+
    MassDriver7 and UltraDriver10 carry disproportionately high resource costs
    compared to the PP-exclusive adjacent tiers — likely a deliberate balance
    penalty for non-PP races.

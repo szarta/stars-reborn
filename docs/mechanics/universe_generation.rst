@@ -44,7 +44,8 @@ Planet Count Formula
 
    planet_count = floor((dim / 10)² × density_factor / 100)
 
-Where ``dim`` is the universe dimension in light years and ``density_factor`` is:
+Where ``dim`` is the universe dimension in light years and ``density_factor``
+is:
 
 .. list-table::
    :header-rows: 1
@@ -62,19 +63,22 @@ Where ``dim`` is the universe dimension in light years and ``density_factor`` is
    * - Dense
      - 3.75
      - Oracle-confirmed (Tiny/Dense=60, Small/Dense=240, Medium/Dense=540)
+
 .. note::
 
    ``Packed`` is **not a distinct density** in Stars!.  The Stars! game UI's
    highest density option stores internally as code 3 (Dense), confirmed by
-   reading the ``.xy`` type-7 record across 10 manually-created games.
-   A ``packed`` token (internal code 4) exists in the ``game.def`` format but
-   is invalid — Stars! exits silently with no output when given code 4 headlessly.
+   reading the ``.xy`` type-7 record across 10 manually-created games.  A
+   ``packed`` token (internal code 4) exists in the ``game.def`` format but is
+   invalid — Stars! exits silently with no output when given code 4 headlessly.
 
 Examples (oracle-confirmed 2026-04-21/22):
 
-- Tiny / Normal:  ``floor((400/10)² × 2.5 / 100) = floor(1600 × 0.025) = 40``
-- Medium / Normal: ``floor((1200/10)² × 2.5 / 100) = floor(14400 × 0.025) = 360``
-- Large / Dense:  ``floor((1600/10)² × 3.75 / 100) = floor(25600 × 0.0375) = 960``
+- Tiny / Normal: ``floor((400/10)² × 2.5 / 100) = floor(1600 × 0.025) = 40``
+- Medium / Normal: ``floor((1200/10)² × 2.5 / 100) = floor(14400 × 0.025) =
+  360``
+- Large / Dense: ``floor((1600/10)² × 3.75 / 100) = floor(25600 × 0.0375) =
+  960``
 
 Planet Count Cap
 ~~~~~~~~~~~~~~~~
@@ -109,7 +113,8 @@ iteration budget before placing every planet:
      - Oracle-confirmed (2026-04-21, 10 seeds)
 
 All other combinations produce **exact, deterministic** planet counts matching
-the formula.  Examples: Large/Normal = 640, Huge/Sparse = 800, Medium/Dense = 540.
+the formula.  Examples: Large/Normal = 640, Huge/Sparse = 800, Medium/Dense =
+540.
 
 .. note::
 
@@ -117,34 +122,36 @@ the formula.  Examples: Large/Normal = 640, Huge/Sparse = 800, Medium/Dense = 54
    is Dense (code 3) regardless of its label in any given game version.
    "Large/Packed" is identically Large/Dense.
 
-The planet count must always be at least ``num_players`` to guarantee a homeworld
-for each player.
+The planet count must always be at least ``num_players`` to guarantee a
+homeworld for each player.
 
 Planet Placement
 ----------------
 
 - Planets are placed within a rectangular region of ``dim × dim`` light years.
 - **Minimum inter-planet distance: 20 light years.**
-- Placement algorithm: rejection sampling (attempt random position; retry if too close
-  to any existing planet). After a fixed number of failed attempts, the constraint is
-  relaxed and the planet is placed unconstrained (prevents infinite loops at high density).
+- Placement algorithm: rejection sampling (attempt random position; retry if
+  too close to any existing planet). After a fixed number of failed attempts,
+  the constraint is relaxed and the planet is placed unconstrained (prevents
+  infinite loops at high density).
 
 .. todo:: Verify whether original |original| uses any clustering ("Galaxy Clumping" option).
 
 Planet Names
 ------------
 
-The original game has **999 unique planet names** (``engine/data/planet_names/original.txt``).
-This imposes a design cap on universe size — each planet must have a distinct
-name drawn from the pool without replacement. The largest supported universe
-(Huge/Packed) generates 931–965 planets in practice, well within the 999-name
-pool. The 999-name limit was set intentionally to accommodate all standard
-configurations with headroom to spare.
+The original game has **999 unique planet names**
+(``engine/data/planet_names/original.txt``).  This imposes a design cap on
+universe size — each planet must have a distinct name drawn from the pool
+without replacement. The largest supported universe (Huge/Packed) generates
+931–965 planets in practice, well within the 999-name pool. The 999-name limit
+was set intentionally to accommodate all standard configurations with headroom
+to spare.
 
 For future extension beyond the original universe sizes, a curated supplemental
-pool of ~2 000 additional names is kept in ``engine/data/planet_names/extended/``,
-organized by thematic category (see below). The combined pool supports up to
-~3 000 uniquely named planets.
+pool of ~2 000 additional names is kept in
+``engine/data/planet_names/extended/``, organized by thematic category (see
+below). The combined pool supports up to ~3 000 uniquely named planets.
 
 **Naming rules observed in the original game:**
 
@@ -152,8 +159,8 @@ organized by thematic category (see below). The combined pool supports up to
 - Up to 3 words per name (e.g. "Le Petit Jean", "Double Tall Skinny")
 - Characters: A–Z, a–z, 0–9, hyphen, apostrophe
 - Some names are pure numbers (007)
-- Every name starting with a letter begins with a capital; secondary words
-  also capitalized
+- Every name starting with a letter begins with a capital; secondary words also
+  capitalized
 - Predominantly English / Latin alphabet
 - No overt profanity or obscenity
 
@@ -191,8 +198,8 @@ Habitat Value Generation
 Each planet rolls three habitat axes independently.  All three axes are stored
 internally as a click index 0–100 (101 discrete values).  Indices 0 and 100 are
 **never produced** by universe generation — both extreme values have zero
-probability of being rolled (verified with 40,614 sample planets across 52
-Huge universes; see :ref:`hab-distribution-finding`).
+probability of being rolled (verified with 40,614 sample planets across 52 Huge
+universes; see :ref:`hab-distribution-finding`).
 
 Gravity
 ~~~~~~~
@@ -204,8 +211,8 @@ Gravity
 Temperature
 ~~~~~~~~~~~
 
-- Click index 0–100 maps to °C as ``temp_c = (idx − 50) × 4``, giving
-  −200°C to +200°C in 4°C steps.
+- Click index 0–100 maps to °C as ``temp_c = (idx − 50) × 4``, giving −200°C to
+  +200°C in 4°C steps.
 - Distribution: **trapezoid centred on click index 50**, identical shape to
   gravity.
 
@@ -217,7 +224,7 @@ Radiation
   probability.
 
 Trapezoid distribution (gravity and temperature)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Letting ``d = |idx − 50|`` be the distance from centre in clicks, the per-click
 probability is:
@@ -259,17 +266,16 @@ Race-design implication
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 A race's hab window of width *w* on radiation captures the same expected
-fraction of planets regardless of where the window is placed within 1–99.
-A window of the same width on gravity or temperature captures the most
-planets when centred on the plateau (indices 10–90) and progressively fewer
-as the window slides toward the extremes.  This is why Art Lathrop's
-*Basic Race Design* article recommends sliding only the radiation window for
-free advantage points.
+fraction of planets regardless of where the window is placed within 1–99.  A
+window of the same width on gravity or temperature captures the most planets
+when centred on the plateau (indices 10–90) and progressively fewer as the
+window slides toward the extremes.  This is why Art Lathrop's *Basic Race
+Design* article recommends sliding only the radiation window for free advantage
+points.
 
 Source: Alan L. Kolaga's per-click distribution table (charts captured at
 ``stars-reborn-research/web_captures/arglos/charts/``), confirmed against
-40,614 independently observed planets in
-:ref:`hab-distribution-finding`.
+40,614 independently observed planets in :ref:`hab-distribution-finding`.
 
 Mineral Generation
 ------------------
@@ -277,10 +283,11 @@ Mineral Generation
 Each planet independently rolls three mineral concentrations.  All three
 minerals use the same algorithm and the same distribution shape.
 
-**Range:** 1–119 (oracle-confirmed; the common community assumption of 1–100 is wrong).
+**Range:** 1–119 (oracle-confirmed; the common community assumption of 1–100 is
+wrong).
 
-**Distribution** (oracle-confirmed, 9,204 planets × 3 minerals = 27,612 readings
-across 10 large/dense games; see research R3.4):
+**Distribution** (oracle-confirmed, 9,204 planets × 3 minerals = 27,612
+readings across 10 large/dense games; see research R3.4):
 
 .. list-table::
    :header-rows: 1
@@ -299,8 +306,8 @@ across 10 large/dense games; see research R3.4):
      - ~70%
      - Bell-shaped; peak at ~74–79; tails off to zero by 119
 
-The bimodal structure (two clearly distinct pools) suggests that the game
-uses two separate generation paths rather than a single continuous distribution.
+The bimodal structure (two clearly distinct pools) suggests that the game uses
+two separate generation paths rather than a single continuous distribution.
 The exact algorithm is not yet reverse-engineered.
 
 **Radiation dependency:** When a planet's radiation value is ≥ 90 mR/yr, the
@@ -309,14 +316,14 @@ high-concentration pool (33+) is shifted upward by approximately 5–6 points
 pool (1–30) is unaffected by radiation.  This correlation is the only confirmed
 cross-axis dependency in mineral generation.
 
-**Surface mineral amounts** are initialized to a function of concentration
-(see :doc:`/new_game/initial_state`).
+**Surface mineral amounts** are initialized to a function of concentration (see
+:doc:`/new_game/initial_state`).
 
 .. note::
 
-   **"Beginner: Maximum Minerals"** sets every planet's concentration to exactly
-   100 for all three minerals (oracle-confirmed 2026-04-22: 918 planets ×
-   3 minerals, all = 100, Large/Dense game, seed 43100).  No exceptions.
+   **"Beginner: Maximum Minerals"** sets every planet's concentration to
+   exactly 100 for all three minerals (oracle-confirmed 2026-04-22: 918 planets
+   × 3 minerals, all = 100, Large/Dense game, seed 43100).  No exceptions.
 
 .. todo:: Reverse-engineer the exact two-pool generation algorithm
 
@@ -332,24 +339,27 @@ rejected and a new candidate is drawn.  Planet indices 0–3 are never assigned
 as homeworlds (possibly reserved for wormholes or other non-planet objects).
 
 **Homeworld separation thresholds** scale proportionally with map dimension for
-``moderate``, ``farther``, and ``distant``; see :doc:`../new_game/universe_parameters`.
+``moderate``, ``farther``, and ``distant``; see
+:doc:`../new_game/universe_parameters`.
 
 **PP / IT second starting planet:** PP (Packet Physics) and IT (Interstellar
 Traveler) races receive a second colonised planet in addition to their main
 homeworld.  This second planet is:
 
 - **Not generated on Tiny maps** — only Small and larger.
-- **PRT-independent in placement:** PP and IT races receive identical second-planet
-  assignments for the same seed, confirming the placement algorithm does not
-  specialise by PRT.
-- **Proportionally distant from the main homeworld:** 0.155–0.228 × map dimension
-  (oracle-confirmed 2026-04-22 across Small/Medium/Large/Huge, 15 seeds each).
-  The upper bound (0.228 × dim) coincides with the ``moderate`` homeworld
-  threshold (0.221 × dim), suggesting the same rejection-sampling mechanism.
+- **PRT-independent in placement:** PP and IT races receive identical
+  second-planet assignments for the same seed, confirming the placement
+  algorithm does not specialise by PRT.
+- **Proportionally distant from the main homeworld:** 0.155–0.228 × map
+  dimension (oracle-confirmed 2026-04-22 across Small/Medium/Large/Huge, 15
+  seeds each).  The upper bound (0.228 × dim) coincides with the ``moderate``
+  homeworld threshold (0.221 × dim), suggesting the same rejection-sampling
+  mechanism.
 
 When a homeworld is assigned to a player's race:
 
-1. **Hab values** are set to the midpoint of the race's preferred range on each axis.
+1. **Hab values** are set to the midpoint of the race's preferred range on each
+   axis.
 
    - Immune axis: gravity=1.0g, temperature=0°C, radiation=50 mR/yr
    - Gravity snapped to nearest ``Gravity_Map`` key

@@ -1,12 +1,12 @@
 Ship Hull Reference
 ===================
 
-All hull data sourced from the Python engine ``factory.py``.
-Needs oracle verification against ``stars.exe``.
+All hull data sourced from the Python engine ``factory.py``.  Needs oracle
+verification against ``stars.exe``.
 
-Tech requirements: ``C`` = Construction. Costs: ``[Ir, Bo, Ge, R]``.
-Slot notation: ``Engines(n)`` = up to *n* engine parts per slot.
-See :doc:`../mechanics/ship_design` for slot type definitions.
+Tech requirements: ``C`` = Construction. Costs: ``[Ir, Bo, Ge, R]``.  Slot
+notation: ``Engines(n)`` = up to *n* engine parts per slot.  See
+:doc:`../mechanics/ship_design` for slot type definitions.
 
 .. note::
 
@@ -52,7 +52,8 @@ Scouts and Light Combat
      - 3
      - 280
      - 0
-     - Engines(1), Weapons(1), Weapons(1), Armor(2), GeneralPurpose(1), Electrical(1), Mechanical(1)
+     - Engines(1), Weapons(1), Weapons(1), Armor(2), GeneralPurpose(1),
+       Electrical(1), Mechanical(1)
    * - Cruiser
      - C9
      - 90
@@ -60,7 +61,8 @@ Scouts and Light Combat
      - 5
      - 600
      - 0
-     - Engines(2), Weapons(2), Weapons(2), Protection(2), GeneralPurpose(2), ShieldElectMech(1), ShieldElectMech(1)
+     - Engines(2), Weapons(2), Weapons(2), Protection(2), GeneralPurpose(2),
+       ShieldElectMech(1), ShieldElectMech(1)
    * - BattleCruiser
      - C10
      - 120
@@ -68,7 +70,8 @@ Scouts and Light Combat
      - 5
      - 1400
      - 0
-     - Engines(2), Weapons(3), Weapons(3), Protection(4), GeneralPurpose(3), ShieldElectMech(2), ShieldElectMech(2)
+     - Engines(2), Weapons(3), Weapons(3), Protection(4), GeneralPurpose(3),
+       ShieldElectMech(2), ShieldElectMech(2)
    * - Battleship
      - C13
      - 222
@@ -76,7 +79,8 @@ Scouts and Light Combat
      - 10
      - 2800
      - 0
-     - Engines(4), Weapons(2), Weapons(2), Weapons(6), Weapons(6), Weapons(4), Armor(6), Electrical(3), Electrical(3), Shields(8), ScannerElectMech(1)
+     - Engines(4), Weapons(2), Weapons(2), Weapons(6), Weapons(6), Weapons(4),
+       Armor(6), Electrical(3), Electrical(3), Shields(8), ScannerElectMech(1)
    * - Dreadnought
      - C16
      - 250
@@ -84,7 +88,9 @@ Scouts and Light Combat
      - 10
      - 4500
      - 0
-     - Engines(5), Weapons(6), Weapons(6), Weapons(8), Weapons(8), Armor(8), Electrical(4), Electrical(4), Protection(4), Protection(4), GeneralPurpose(1), WeaponShield(5), WeaponShield(5)
+     - Engines(5), Weapons(6), Weapons(6), Weapons(8), Weapons(8), Armor(8),
+       Electrical(4), Electrical(4), Protection(4), Protection(4),
+       GeneralPurpose(1), WeaponShield(5), WeaponShield(5)
 
 Freighters
 ----------
@@ -135,7 +141,7 @@ Freighters
      - Engines(3), Protection(5), ScannerElectMech(3), Electrical(2)
 
 Multi-Purpose / Armed Freighters
----------------------------------
+--------------------------------
 
 .. list-table::
    :header-rows: 1
@@ -156,7 +162,8 @@ Multi-Purpose / Armed Freighters
      - 3
      - 650
      - 250
-     - Engines(1), Protection(2), GeneralPurpose(1), GeneralPurpose(1), ScannerElectMech(1)
+     - Engines(1), Protection(2), GeneralPurpose(1), GeneralPurpose(1),
+       ScannerElectMech(1)
    * - Rogue
      - C8
      - 75
@@ -164,7 +171,9 @@ Multi-Purpose / Armed Freighters
      - 4
      - 2250
      - 500
-     - Engines(2), Electrical(1), Electrical(1), GeneralPurpose(2), GeneralPurpose(2), Protection(3), MineElectMech(2), MineElectMech(2), Scanners(1)
+     - Engines(2), Electrical(1), Electrical(1), GeneralPurpose(2),
+       GeneralPurpose(2), Protection(3), MineElectMech(2), MineElectMech(2),
+       Scanners(1)
    * - Galleon
      - C11
      - 125
@@ -172,7 +181,9 @@ Multi-Purpose / Armed Freighters
      - 4
      - 2500
      - 1000
-     - Engines(4), Protection(2), Protection(2), GeneralPurpose(3), GeneralPurpose(3), Electrical(1), MineElectMech(2), ElectMech(2), Scanners(2)
+     - Engines(4), Protection(2), Protection(2), GeneralPurpose(3),
+       GeneralPurpose(3), Electrical(1), MineElectMech(2), ElectMech(2),
+       Scanners(2)
 
 Colony Ships
 ------------
@@ -255,15 +266,16 @@ Bombers
      - 0
      - 750
      - 0
-     - Engines(3), Bombs(4), Bombs(4), Bombs(4), Bombs(4), Shields(2), ScannerElectMech(2)
+     - Engines(3), Bombs(4), Bombs(4), Bombs(4), Bombs(4), Shields(2),
+       ScannerElectMech(2)
 
 Remote Miners
 -------------
 
 The Midget Miner (no tech required) is exclusive to races with **Advanced
 Remote Mining (ARM)**.  The OBRM LRT limits any hull to one mining robot per
-ship design regardless of available slots.  See
-:doc:`../mechanics/ship_design` for recommended designs by LRT combination.
+ship design regardless of available slots.  See :doc:`../mechanics/ship_design`
+for recommended designs by LRT combination.
 
 .. list-table::
    :header-rows: 1
@@ -300,7 +312,8 @@ ship design regardless of available slots.  See
      - 0
      - 500
      - 0
-     - Engines(2), MiningRobots(2), MiningRobots(2), MiningRobots(1), MiningRobots(1), ArmorScannerElectMech(2)
+     - Engines(2), MiningRobots(2), MiningRobots(2), MiningRobots(1),
+       MiningRobots(1), ArmorScannerElectMech(2)
    * - Maxi Miner
      - C11
      - 110
@@ -308,7 +321,8 @@ ship design regardless of available slots.  See
      - 0
      - 850
      - 0
-     - Engines(1), MiningRobots(4), MiningRobots(4), MiningRobots(1), MiningRobots(1), ArmorScannerElectMech(2)
+     - Engines(1), MiningRobots(4), MiningRobots(4), MiningRobots(1),
+       MiningRobots(1), ArmorScannerElectMech(2)
    * - Ultra Miner
      - C14
      - 100
@@ -316,7 +330,8 @@ ship design regardless of available slots.  See
      - 0
      - 1300
      - 0
-     - Engines(2), MiningRobots(4), MiningRobots(4), MiningRobots(2), MiningRobots(2), ArmorScannerElectMech(3)
+     - Engines(2), MiningRobots(4), MiningRobots(4), MiningRobots(2),
+       MiningRobots(2), ArmorScannerElectMech(3)
 
 Fuel Transports
 ---------------
@@ -362,9 +377,9 @@ carried fuel capacity.
 Mine Layers
 -----------
 
-Mine-layer hulls dedicated to minelaying.  Note: any hull with a
-``MineLayers`` slot can lay mines; these are purpose-built hulls with high pod
-capacity.  Mine-laying pods require **Biotech 4** or the **SD PRT**.
+Mine-layer hulls dedicated to minelaying.  Note: any hull with a ``MineLayers``
+slot can lay mines; these are purpose-built hulls with high pod capacity.
+Mine-laying pods require **Biotech 4** or the **SD PRT**.
 
 .. list-table::
    :header-rows: 1
@@ -393,7 +408,8 @@ capacity.  Mine-laying pods require **Biotech 4** or the **SD PRT**.
      - 0
      - 2200
      - 0
-     - Engines(3), MineLayers(8), MineLayers(8), ScannerElectMech(3), Protection(3), MineElectMech(3)
+     - Engines(3), MineLayers(8), MineLayers(8), ScannerElectMech(3),
+       Protection(3), MineElectMech(3)
 
 Ultra-Hulls
 -----------

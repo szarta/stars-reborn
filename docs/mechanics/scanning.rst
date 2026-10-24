@@ -30,15 +30,15 @@ What is revealed inside normal range:
 What is **not** revealed inside normal range:
 
 - Planet contents — hab values (gravity/temperature/radiation), mineral
-  concentrations, surface minerals, population, owner, installations.
-  These require penetrating range.
+  concentrations, surface minerals, population, owner, installations.  These
+  require penetrating range.
 - Cloaked fleets beyond their effective detection range.
 
 Penetrating range
 ~~~~~~~~~~~~~~~~~
 
-Penetrating range is typically much shorter than normal range. Inside it,
-in addition to everything visible at normal range:
+Penetrating range is typically much shorter than normal range. Inside it, in
+addition to everything visible at normal range:
 
 - **Planet contents** — hab values, mineral concentrations, surface minerals,
   population, owner, defense level. This is the only mechanism (apart from
@@ -48,9 +48,9 @@ in addition to everything visible at normal range:
   reduction — see :ref:`cloaking-section`).
 - Minefields are always detectable to penetrating scanners (0% cloak vs pen).
 
-Penetrating-capable scanners are blocked by the **NAS** (No Advanced
-Scanners) LRT; NAS races can only learn planet contents by visiting the
-planet with one of their own fleets.
+Penetrating-capable scanners are blocked by the **NAS** (No Advanced Scanners)
+LRT; NAS races can only learn planet contents by visiting the planet with one
+of their own fleets.
 
 *References:* :ref:`planetary-scanners-ref` and :ref:`ship-scanners-ref` give
 per-component normal and penetrating ranges.
@@ -62,7 +62,8 @@ Planetary scanners
 ~~~~~~~~~~~~~~~~~~
 
 Installed via production queue. Auto-scan every planet within range each turn.
-If no scanner is installed, the planet's own data is visible to its owner (range 0).
+If no scanner is installed, the planet's own data is visible to its owner
+(range 0).
 
 **Built-in scanner:** Every owned planet has a minimal built-in scanner.
 
@@ -144,8 +145,8 @@ If no scanner is installed, the planet's own data is visible to its owner (range
 Ship scanners
 ~~~~~~~~~~~~~
 
-Ships with scanner components scan while in flight. The best scanner in a
-fleet determines the fleet's scan radius.
+Ships with scanner components scan while in flight. The best scanner in a fleet
+determines the fleet's scan radius.
 
 Combined scanning
 ~~~~~~~~~~~~~~~~~
@@ -158,9 +159,9 @@ Wormholes
 
 Wormhole positions are revealed by **basic** scanner range from any source
 (planetary or fleet); penetrating range is not required. Knowing a wormhole's
-position is not the same as knowing where it leads — endpoint linkage is
-gated on physical traversal. See :doc:`wormholes` for the full visibility
-contract and the per-player intel record shape.
+position is not the same as knowing where it leads — endpoint linkage is gated
+on physical traversal. See :doc:`wormholes` for the full visibility contract
+and the per-player intel record shape.
 
 .. _cloaking-section:
 
@@ -172,12 +173,16 @@ Ships can have cloaking devices installed. Super Stealth (SS) PRT ships have a
 
 Cloaking reduces the effective scanner range needed to detect the fleet:
 
-- A fleet cloaked at **80%** is visible only within **20% of the scanner's rated range**.
-- Cloaking at 75–95% provides marginal additional benefit over uncloaked detection.
-- Cloaking at **98%+** is substantially stronger than 97%. A 98% cloaked fleet can
-  sit within 25 ly of a planet and remain nearly undetectable regardless of tech level.
-- The difference between 97% and 98% cloaking is larger than the difference between
-  0% and 97%; practical cloaking strategy should target ≥98% or accept 75% (built-in SS).
+- A fleet cloaked at **80%** is visible only within **20% of the scanner's
+  rated range**.
+- Cloaking at 75–95% provides marginal additional benefit over uncloaked
+  detection.
+- Cloaking at **98%+** is substantially stronger than 97%. A 98% cloaked fleet
+  can sit within 25 ly of a planet and remain nearly undetectable regardless of
+  tech level.
+- The difference between 97% and 98% cloaking is larger than the difference
+  between 0% and 97%; practical cloaking strategy should target ≥98% or accept
+  75% (built-in SS).
 
 Detection range for a cloaked fleet:
 
@@ -187,18 +192,20 @@ Detection range for a cloaked fleet:
 
 Where ``cloak_percent`` is the fleet's total cloaking percentage.
 
-.. note:: *Sources: Stars! Strategy Guide, Chapter 9 and Appendix A (reviewed by
-   original authors). The exact formula needs oracle verification — see research
-   open question.*
+.. note::
+
+   *Sources: Stars! Strategy Guide, Chapter 9 and Appendix A (reviewed by
+   original authors). The exact formula needs oracle verification — see
+   research open question.*
 
 .. todo:: Confirm cloaking detection formula via oracle test. See
    ``stars-reborn-research/docs/open_questions/cloaking_detection_formula.rst``.
 
 Cloak Percentage Calculation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ship's cloak percentage is derived from its **cloak units per kT** of ship mass.
-The conversion is piecewise (from the in-game "Appendix of Cloaking"):
+A ship's cloak percentage is derived from its **cloak units per kT** of ship
+mass.  The conversion is piecewise (from the in-game "Appendix of Cloaking"):
 
 .. code-block:: text
 
@@ -210,11 +217,12 @@ The conversion is piecewise (from the in-game "Appendix of Cloaking"):
    elif units < 1612: percent = 97
    else:              percent = 98
 
-Key checkpoints: 100 u/kT → 50%, 300 u/kT → 75%, 612 u/kT → 87.5%,
-1124 u/kT → 96%, ≥1612 u/kT → 98%.
+Key checkpoints: 100 u/kT → 50%, 300 u/kT → 75%, 612 u/kT → 87.5%, 1124 u/kT →
+96%, ≥1612 u/kT → 98%.
 
-For a **loaded** ship: ``units/kT = device_units/kT × empty_mass / loaded_mass``.
-Uncloaked ships in the fleet add to loaded_mass but contribute no cloak units.
+For a **loaded** ship: ``units/kT = device_units/kT × empty_mass /
+loaded_mass``.  Uncloaked ships in the fleet add to loaded_mass but contribute
+no cloak units.
 
 **SS race exception:** cargo does NOT reduce cloaking for SS ships.
 
@@ -225,7 +233,7 @@ inherent to the table, not an explicit stacking penalty.
 *Source: Stars! in-game help, Appendix of Cloaking.*
 
 Tachyon Detector
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Each Tachyon Detector in a fleet reduces enemy cloaking by 5%. Multiple
 detectors stack with diminishing returns:
@@ -239,11 +247,12 @@ Example: 4 detectors: ``0.95^2 = 0.9025`` → 9.75% total reduction.
 *Source: Stars! in-game help, Tachyon Detector section.*
 
 Cloaking in Minefields
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
-Inside a minefield, cloaking is treated as an absolute hit-chance modifier:
-a fleet cloaked at 90% has a **10% hit chance** per minefield detonation check,
-regardless of field density. This differs from the scanner-range reduction model.
+Inside a minefield, cloaking is treated as an absolute hit-chance modifier: a
+fleet cloaked at 90% has a **10% hit chance** per minefield detonation check,
+regardless of field density. This differs from the scanner-range reduction
+model.
 
 Against penetrating scanners: minefields have **0% cloak** (always detectable).
 Against non-penetrating scanners: minefields have **82% cloak**.
@@ -255,34 +264,32 @@ Information Staleness
 
 A player's view of a planet is in exactly one of three states:
 
-1. **Never observed** — the player has never had a penetrating scanner on
-   the planet and has never visited it. Planet contents are entirely
-   unknown; identity (id, name, position) is still visible from the .xy
-   data, but every contents field on ``DiscoverablePlanetData`` is absent
-   (not zero, not null — literally not present).
+1. **Never observed** — the player has never had a penetrating scanner on the
+   planet and has never visited it. Planet contents are entirely unknown;
+   identity (id, name, position) is still visible from the .xy data, but every
+   contents field on ``DiscoverablePlanetData`` is absent (not zero, not null —
+   literally not present).
+2. **Observed before, not currently in penetrating-scan range** — the player
+   has seen the planet at some prior turn. The contents fields hold the values
+   **as they were at last observation**. Ground truth may have drifted since
+   (terraforming changes hab; mining decays concentrations; population grows or
+   declines), but the player's view is frozen until they re-scan.
+   ``years_since_last_scan`` increments each turn the planet is not in
+   penetrating-scan coverage.
+3. **Currently in penetrating-scan range** — the contents fields hold the
+   **current** ground-truth values, and ``years_since_last_scan = 0``.
 
-2. **Observed before, not currently in penetrating-scan range** — the
-   player has seen the planet at some prior turn. The contents fields
-   hold the values **as they were at last observation**. Ground truth may
-   have drifted since (terraforming changes hab; mining decays
-   concentrations; population grows or declines), but the player's view
-   is frozen until they re-scan. ``years_since_last_scan`` increments
-   each turn the planet is not in penetrating-scan coverage.
+Fields that follow this three-state rule on ``DiscoverablePlanetData``: hab
+values (gravity, temperature, radiation), the three mineral concentrations, the
+three surface mineral amounts, population, owner, factories, mines, defense
+level, starbase presence/design.
 
-3. **Currently in penetrating-scan range** — the contents fields hold
-   the **current** ground-truth values, and ``years_since_last_scan = 0``.
-
-Fields that follow this three-state rule on ``DiscoverablePlanetData``:
-hab values (gravity, temperature, radiation), the three mineral
-concentrations, the three surface mineral amounts, population, owner,
-factories, mines, defense level, starbase presence/design.
-
-Identity fields (id, name, position) are always present — they come from
-the shared .xy data and never need scanning.
+Identity fields (id, name, position) are always present — they come from the
+shared .xy data and never need scanning.
 
 The original game uses ``NeverSeenPlanet`` (−1) as a sentinel for
-``years_since_last_scan`` when the planet has never been observed; the
-clone uses field absence instead, consistent with the
+``years_since_last_scan`` when the planet has never been observed; the clone
+uses field absence instead, consistent with the
 :ref:`architecture-discoverable-data` model.
 
 Open Questions

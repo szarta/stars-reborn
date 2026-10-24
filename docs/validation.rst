@@ -6,28 +6,30 @@ Overview
 
 The primary correctness criterion for |project| is **behavioral equivalence
 with the original** |original| **game engine**. The original ``stars.exe``
-executable is the ground truth — an oracle. For any given game state and set
-of player orders, our engine must produce the same outcome.
+executable is the ground truth — an oracle. For any given game state and set of
+player orders, our engine must produce the same outcome.
 
-The validation effort is a first-class part of the project, not an afterthought.
-Without it, we cannot know whether an implementation is faithful or merely
-plausible.
+The validation effort is a first-class part of the project, not an
+afterthought.  Without it, we cannot know whether an implementation is faithful
+or merely plausible.
 
 **Scope of equivalence:** We target full equivalence for all deterministic game
-mechanics — movement, combat, production, research, scanning, population growth,
-planet value — and accept intentional divergence only for CPU player AI behavior,
-which is explicitly out of scope.
+mechanics — movement, combat, production, research, scanning, population
+growth, planet value — and accept intentional divergence only for CPU player AI
+behavior, which is explicitly out of scope.
 
 The Oracle Model
 ----------------
 
-The original ``stars.exe`` is treated as a black box oracle::
+The original ``stars.exe`` is treated as a black box oracle:
 
-  same inputs → stars.exe  →  outputs A
-  same inputs → our engine →  outputs B
+::
 
-  diff(A, B) == ∅   →   engine is correct
-  diff(A, B) ≠ ∅   →   engine has a bug
+   same inputs → stars.exe  →  outputs A
+   same inputs → our engine →  outputs B
+
+   diff(A, B) == ∅   →   engine is correct
+   diff(A, B) ≠ ∅   →   engine has a bug
 
 Every divergence is a bug in our engine until proven otherwise. The oracle is
 always right.
@@ -37,7 +39,7 @@ immediate engineering goal is to drive it **without a human operating a GUI** �
 headless or near-headless, scriptable, repeatable.
 
 Source Hierarchy and Trust Levels
-----------------------------------
+---------------------------------
 
 Not all reference material is equally trustworthy. This hierarchy governs which
 sources can be used for what decisions.
@@ -51,41 +53,39 @@ sources can be used for what decisions.
      - Use for
    * - ``stars.exe`` (original executable)
      - **Oracle**
-     - All correctness decisions. Ground truth.
-       Local: ``sr-old/original/stars.exe``
+     - All correctness decisions. Ground truth.  Local:
+       ``sr-old/original/stars.exe``
    * - Jeff McBride email on turn order
      - **Primary source**
-     - Turn event ordering. Written by a Stars! co-creator.
-       Local: ``reference/freestars/Docs/EventOrder2.txt``
+     - Turn event ordering. Written by a Stars! co-creator.  Local:
+       ``reference/freestars/Docs/EventOrder2.txt``
    * - Posey's spreadsheet (fuel tables)
      - High — community-validated data
-     - Fuel consumption per engine per warp per mass.
-       Already extracted to ``data/fuel_tables/``.
-       Source: http://wiki.starsautohost.org/files/posey.zip
+     - Fuel consumption per engine per warp per mass.  Already extracted to
+       ``data/fuel_tables/``.  Source:
+       http://wiki.starsautohost.org/files/posey.zip
    * - m.a@stars planet value formula
      - High — spot-checked against observed game data
-     - Planet value calculation. Validated against
-       ``data/planet_samples/`` CSVs.
-       Source: starsautohost.org forum archives
+     - Planet value calculation. Validated against ``data/planet_samples/``
+       CSVs.  Source: starsautohost.org forum archives
    * - FreeStars community-tested facts (``Notes.txt``)
      - High — labeled by tester per fact
-     - Specific behavior facts with attributed testing.
-       Local: ``reference/freestars/Docs/Notes.txt``
+     - Specific behavior facts with attributed testing.  Local:
+       ``reference/freestars/Docs/Notes.txt``
    * - FreeStars C++ implementation
      - Medium — high-fidelity where complete; incomplete overall
-     - Mechanics reference for implemented systems.
-       Only 3 documented intentional deviations from Stars!
-       Many major systems were never implemented.
-       Local: ``reference/freestars/Server/``
-       Source: https://github.com/vkholodkov/freestars
+     - Mechanics reference for implemented systems.  Only 3 documented
+       intentional deviations from Stars!  Many major systems were never
+       implemented.  Local: ``reference/freestars/Server/`` Source:
+       https://github.com/vkholodkov/freestars
    * - starsautohost.org wiki
      - Medium — community documentation, unverified
-     - Starting point for mechanics research.
-       Source: http://wiki.starsautohost.org
+     - Starting point for mechanics research.  Source:
+       http://wiki.starsautohost.org
    * - Official Stars! strategy guide
      - Medium — official but player-facing; omits internal formulas
-     - Player-visible rules and UI behavior.
-       Local: ``sr-old/original/strategy_guide/``
+     - Player-visible rules and UI behavior.  Local:
+       ``sr-old/original/strategy_guide/``
 
 Circular Validation Risk
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,29 +99,34 @@ with the oracle counts.
 
 This risk is highest for mechanics where:
 
-- The formula is complex and community documentation is the primary available source
+- The formula is complex and community documentation is the primary available
+  source
 - FreeStars' implementation is the only available reference implementation
 
 In these cases, oracle validation (Layer 2/3) is mandatory before treating the
 formula as confirmed.
 
 FreeStars Assessment
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 FreeStars warrants a detailed assessment given its scope and stated goals.
 
 **What FreeStars got right:**
 
 - Stated goal was faithful replication of Stars!, not innovation
-- ``Docs/Differences.txt`` documents only 3 intentional deviations from the original:
+- ``Docs/Differences.txt`` documents only 3 intentional deviations from the
+  original:
 
   1. AR + ISB starbase cost stacking (FreeStars: 64%, original: 80%)
-  2. Ship designs revealed when transferring fleets (FreeStars reveals them; original does not)
+  2. Ship designs revealed when transferring fleets (FreeStars reveals them;
+     original does not)
   3. Added "drop and load" transfer order (not in original)
 
 - Where implemented, the C++ code is a useful mechanics reference
-- ``Docs/growpop.txt`` contains a community-tested population growth implementation
-- ``Docs/Notes.txt`` contains community-tested facts with named testers and test counts
+- ``Docs/growpop.txt`` contains a community-tested population growth
+  implementation
+- ``Docs/Notes.txt`` contains community-tested facts with named testers and
+  test counts
 
 **What FreeStars did not complete** (from ``Docs/EventOrder.txt``):
 
@@ -143,38 +148,40 @@ FreeStars warrants a detailed assessment given its scope and stated goals.
 files — not the original Stars! binary format. The format documentation in
 ``Docs/m_form.txt``, ``x_form.txt``, and ``hst_form.txt`` describes FreeStars'
 own schema, not the original binary layout. These files are useful for
-understanding the data model (what fields exist) but provide no help for
-binary reverse engineering of the original file format.
+understanding the data model (what fields exist) but provide no help for binary
+reverse engineering of the original file format.
 
 Test Harness Architecture
---------------------------
+-------------------------
 
-The validation test harness is the foundation of all Layer 2 and Layer 3
-work. It must be fully automated — no human in the loop — so that assertions
-about game behavior can be generated, run, and verified systematically and
+The validation test harness is the foundation of all Layer 2 and Layer 3 work.
+It must be fully automated — no human in the loop — so that assertions about
+game behavior can be generated, run, and verified systematically and
 repeatably. This is the critical path item for the entire validation effort.
 
-The target workflow for a single test::
+The target workflow for a single test:
 
-  [sandbox .hst]  +  [crafted .x files]
-          ↓
-    oracle executes (headless)
-          ↓
-    output .m files
-          ↓
-    parse specific fields
-          ↓
-    assert against expected values
+::
 
-Every step must be scripted. A human should never need to touch a mouse to
-run a test.
+   [sandbox .hst]  +  [crafted .x files]
+           ↓
+     oracle executes (headless)
+           ↓
+     output .m files
+           ↓
+     parse specific fields
+           ↓
+     assert against expected values
+
+Every step must be scripted. A human should never need to touch a mouse to run
+a test.
 
 Sandbox Universes
 ~~~~~~~~~~~~~~~~~
 
 A sandbox universe is a committed ``.hst`` file representing a known, stable
-game state designed to isolate a specific mechanic for testing. Each sandbox
-is purpose-built:
+game state designed to isolate a specific mechanic for testing. Each sandbox is
+purpose-built:
 
 .. list-table::
    :header-rows: 1
@@ -186,8 +193,8 @@ is purpose-built:
      - 1 player, 1 planet, specific race params. Tests factory/mine output,
        resource calculation, research advancement.
    * - ``sandbox_movement_01``
-     - 1 player, fleet at known position, planet at known distance. Tests
-       fuel burn, arrival calculation, waypoint resolution.
+     - 1 player, fleet at known position, planet at known distance. Tests fuel
+       burn, arrival calculation, waypoint resolution.
    * - ``sandbox_combat_01``
      - 2 players, opposing fleets at the same location. Tests battle rounds,
        damage, salvage.
@@ -195,13 +202,13 @@ is purpose-built:
      - 1 player, planet at known hab value and population level. Tests growth
        formula, overcrowding onset.
    * - ``sandbox_scanning_01``
-     - 2 players, fleet scanner ranges, cloaked ships. Tests fog of war
-       in turn file output.
+     - 2 players, fleet scanner ranges, cloaked ships. Tests fog of war in turn
+       file output.
 
 Sandbox universes live in ``data/test_scenarios/``. Each is a directory
 containing the ``.hst`` file, a ``README.rst`` describing the game state and
-what it tests, and subdirectories of recorded oracle outputs for each test
-case run against it.
+what it tests, and subdirectories of recorded oracle outputs for each test case
+run against it.
 
 Creating sandbox universes initially requires running Stars! to produce the
 ``.hst`` file for a game configured to match the desired parameters. Once the
@@ -210,10 +217,10 @@ Creating sandbox universes initially requires running Stars! to produce the
 Headless Oracle Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Stars! requires a display — it is a Windows GUI application with no
-documented headless mode. Under Linux, ``Xvfb`` (virtual framebuffer) provides
-a synthetic X11 display that Wine can target, making Stars! "headless" from the
-system's perspective while the application itself runs normally.
+Stars! requires a display — it is a Windows GUI application with no documented
+headless mode. Under Linux, ``Xvfb`` (virtual framebuffer) provides a synthetic
+X11 display that Wine can target, making Stars! "headless" from the system's
+perspective while the application itself runs normally.
 
 The existing ``research/stars_automater.py`` is the seed of this work. It
 already launches Stars! under Wine and drives it via ``xdotool``. However, it
@@ -223,26 +230,25 @@ has two significant limitations that must be resolved:
    screen position (e.g., ``xdotool mousemove 306 1536 click 1``). These
    coordinates are valid only for one specific display resolution and window
    geometry. Moving to a different machine or resolution breaks everything.
-
 2. **Game creation only.** The script automates new game creation, not turn
    processing. The critical missing piece is reliably triggering the host
    "Generate Turn" action.
 
 The path forward for reliable headless execution:
 
-**Step 1: Pin the display geometry.**
-Run Xvfb at a fixed resolution that matches the hardcoded coordinates in
-``stars_automater.py``. This makes the coordinates stable and reproducible on
-any machine without changing the script::
+**Step 1: Pin the display geometry.**  Run Xvfb at a fixed resolution that
+matches the hardcoded coordinates in ``stars_automater.py``. This makes the
+coordinates stable and reproducible on any machine without changing the script:
 
-  Xvfb :99 -screen 0 2560x1600x24 &
-  DISPLAY=:99 wine stars.exe
+::
 
-**Step 2: Investigate auto-processing.**
-Determine whether Stars! auto-detects and processes a turn when launched with
-a complete set of ``.x`` files in place — i.e., does it process without any
-GUI interaction at all? If yes, this eliminates all UI automation complexity
-for the turn processing step.
+   Xvfb :99 -screen 0 2560x1600x24 &
+   DISPLAY=:99 wine stars.exe
+
+**Step 2: Investigate auto-processing.**  Determine whether Stars! auto-detects
+and processes a turn when launched with a complete set of ``.x`` files in place
+— i.e., does it process without any GUI interaction at all? If yes, this
+eliminates all UI automation complexity for the turn processing step.
 
 .. todo::
 
@@ -251,17 +257,17 @@ for the turn processing step.
    to the game directory, launch Stars!, wait for new ``.m`` files to appear.
    This is the first thing to test — if it works, the GUI problem is solved.
 
-**Step 3: If auto-processing fails, automate the single "Generate Turn" action.**
-The host turn-processing action in Stars! is a single menu item or button. If
-it cannot be triggered automatically, a minimal ``xdotool`` sequence (find
-window → click menu item by position) is sufficient. This is far more robust
-than automating the full game UI because it targets exactly one, always-present
-UI element.
+**Step 3: If auto-processing fails, automate the single "Generate Turn"
+action.**  The host turn-processing action in Stars! is a single menu item or
+button. If it cannot be triggered automatically, a minimal ``xdotool`` sequence
+(find window → click menu item by position) is sufficient. This is far more
+robust than automating the full game UI because it targets exactly one,
+always-present UI element.
 
-For robustness, target the window by **title and class** (using
-``xdotool search --name`` or ``--class``) rather than by geometry, and find
-the "Generate Turn" menu item by navigating the menu hierarchy rather than
-clicking an absolute coordinate.
+For robustness, target the window by **title and class** (using ``xdotool
+search --name`` or ``--class``) rather than by geometry, and find the "Generate
+Turn" menu item by navigating the menu hierarchy rather than clicking an
+absolute coordinate.
 
 .. todo::
 
@@ -269,11 +275,11 @@ clicking an absolute coordinate.
    in Stars!. Record its window title, menu path, and keyboard shortcut if
    any (keyboard shortcuts are more reliable than pixel clicks).
 
-**Step 4: Detect completion by output file appearance.**
-Replace all ``time.sleep()`` calls in ``stars_automater.py`` with file-watch
-loops: poll for the expected output ``.m`` files to appear rather than
-sleeping a fixed number of seconds. This makes the harness reliable across
-machines with different Wine/CPU performance.
+**Step 4: Detect completion by output file appearance.**  Replace all
+``time.sleep()`` calls in ``stars_automater.py`` with file-watch loops: poll
+for the expected output ``.m`` files to appear rather than sleeping a fixed
+number of seconds. This makes the harness reliable across machines with
+different Wine/CPU performance.
 
 Harness Script Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -293,10 +299,10 @@ The test harness will live in ``research/harness/``:
      assertions.py        field comparison helpers and assertion library
 
 **Immediate constraint:** ``write_x.py`` and ``parse_m.py`` require binary
-format knowledge. Until the ``.x`` and ``.m`` formats are understood,
-the harness can only run with manually-prepared ``.x`` files and cannot
-programmatically inspect ``.m`` output. Binary format work (see above)
-directly unblocks harness capability.
+format knowledge. Until the ``.x`` and ``.m`` formats are understood, the
+harness can only run with manually-prepared ``.x`` files and cannot
+programmatically inspect ``.m`` output. Binary format work (see above) directly
+unblocks harness capability.
 
 .. todo::
 
@@ -316,15 +322,15 @@ directly unblocks harness capability.
    no-op turn (empty orders), set research field, set fleet waypoint.
 
 Binary File Formats and Reverse Engineering
---------------------------------------------
+-------------------------------------------
 
 **This is the highest-leverage unresolved technical problem.** The sooner the
 original binary formats and executable are reverse-engineered, the sooner
 validation can be made precise, targeted, and automated. All other validation
 work is limited without it.
 
-The oracle communicates via binary files. Understanding them is required
-for full validation coverage.
+The oracle communicates via binary files. Understanding them is required for
+full validation coverage.
 
 .. list-table::
    :header-rows: 1
@@ -346,12 +352,12 @@ for full validation coverage.
      - Read + write (to supply orders to the oracle)
 
 Approach 1: Fixed-seed play-forward (lowest cost, start here)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create games with known parameters (specific universe seed, specific race,
-fixed settings). Run the oracle forward for N turns, capturing ``.m`` files
-at each step via Wine automation. Feed the same initial conditions and orders
-to our engine, compare outputs at each turn.
+fixed settings). Run the oracle forward for N turns, capturing ``.m`` files at
+each step via Wine automation. Feed the same initial conditions and orders to
+our engine, compare outputs at each turn.
 
 **No binary format writing required** — the oracle sets up all game states.
 This approach is limited: you can only test states reachable by playing forward
@@ -376,14 +382,14 @@ loader to handle it correctly.
 
 .. todo::
 
-     Determine whether Ghidra's NE loader handles 16-bit Stars! correctly,
-     or whether a custom loader/preprocessor is needed.
+   Determine whether Ghidra's NE loader handles 16-bit Stars! correctly,
+   or whether a custom loader/preprocessor is needed.
 
 Known File Structure
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
-Initial inspection of a real Stars! game (``~/data/stars/test/``, 3-player
-Tiny universe, year 1) reveals the following.
+Initial inspection of a real Stars! game (``~/data/stars/test/``, 3-player Tiny
+universe, year 1) reveals the following.
 
 **File inventory:**
 
@@ -427,18 +433,18 @@ engineering.
 bytes in the header are yet to be identified (version, timestamp, or encryption
 parameters).
 
-**The files are encrypted.** Body content after the header shows uniformly
-high entropy — no visible ASCII strings, no repeated structures, no alignment
+**The files are encrypted.** Body content after the header shows uniformly high
+entropy — no visible ASCII strings, no repeated structures, no alignment
 patterns consistent with plain binary. Stars! deliberately encrypts file
 content (anti-cheat for multiplayer). This is the primary obstacle to reading
 the files and must be resolved before any field-level parsing is possible.
 
-**The ``.x1`` orders file is only 47 bytes for one change.** This confirms
-the orders format is delta/sparse — only changed fields are present, not a
-full state snapshot. This informs our own orders file design.
+**The ``.x1`` orders file is only 47 bytes for one change.** This confirms the
+orders format is delta/sparse — only changed fields are present, not a full
+state snapshot. This informs our own orders file design.
 
 Encryption is the first concrete blocker
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 All parsing work is blocked until the cipher is understood. The common header
 is the anchor for finding the cipher routine in Ghidra: the decryption function
@@ -465,7 +471,7 @@ become readable simultaneously.
    code is available to bootstrap format knowledge.
 
 Approach 3: Executable reverse engineering (high cost, high payoff)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Disassemble ``stars.exe`` directly to extract implementations of specific
 mechanics — particularly formulas where community documentation is incomplete
@@ -478,7 +484,7 @@ It is not necessary to reverse-engineer the entire executable — targeted
 extraction of specific routines is sufficient and tractable.
 
 Modern Reverse Engineering Capabilities
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is an area where |project| has a genuine advantage over the FreeStars
 developers (early 2000s). The tools and techniques available now are
@@ -496,17 +502,17 @@ variable names, and repeated address calculations that obscure intent. An LLM
 can pattern-match algorithmic intent from this noise considerably faster than a
 human reading raw assembly. When the decompiled output of a suspected planet
 value routine contains a ``sqrt`` call and three accumulator variables, an LLM
-can immediately correlate this with the m.a@stars formula and confirm or
-refute the match. This capability simply did not exist for the FreeStars team.
+can immediately correlate this with the m.a@stars formula and confirm or refute
+the match. This capability simply did not exist for the FreeStars team.
 
 **Accumulated community knowledge** — 30 years of play and analysis means we
 know roughly what each routine should do before we look at it. This allows
-targeted search: locate the routine by its known outputs (e.g., find code
-paths that produce values in the −45 to +100 range for planet value) rather
-than tracing from entry points.
+targeted search: locate the routine by its known outputs (e.g., find code paths
+that produce values in the −45 to +100 range for planet value) rather than
+tracing from entry points.
 
 The Clean-Room Workflow for Executable RE
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Disassembly is permitted under the clean-room requirement provided it is used
 to extract *specifications*, not *code*. The workflow:
@@ -529,20 +535,20 @@ implementation is then written from that specification, and oracle test cases
 provide the evidentiary trail that the implementation matches the original.
 
 The 16-bit NE Format Challenge
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``stars.exe`` is a 16-bit Windows 3.x **NE (New Executable)** format binary.
 This is a legitimate technical challenge:
 
 - Code uses 16-bit x86 (real or protected mode segments)
-- Segment registers and far pointers make decompiled output messier than
-  modern 32/64-bit code
+- Segment registers and far pointers make decompiled output messier than modern
+  32/64-bit code
 - Ghidra's NE support is less mature than its PE (32-bit Windows) support
 - 64 KB segment limit means large data structures span multiple segments
 
-However, these are obstacles to whole-program analysis, not to targeted
-formula extraction. A specific routine (e.g., the planet value calculator) fits
-within a single segment and can be extracted and analyzed in isolation.
+However, these are obstacles to whole-program analysis, not to targeted formula
+extraction. A specific routine (e.g., the planet value calculator) fits within
+a single segment and can be extracted and analyzed in isolation.
 
 .. todo::
 
@@ -577,7 +583,8 @@ Pure mathematical calculations with no dependency on the oracle or Wine.
 
 Covered formulas:
 
-- Planet value (m.a@stars algorithm) — partially validated via ``data/planet_samples/``
+- Planet value (m.a@stars algorithm) — partially validated via
+  ``data/planet_samples/``
 - Research cost (``50 × (N+1)²`` and modifiers)
 - Miniaturization cost (4% per level above requirement, 25% floor)
 - Fuel consumption (per-engine tables in ``data/fuel_tables/``)
@@ -602,8 +609,8 @@ Examples:
 
 - Fleet at position X, orders to move at warp W toward planet Y — assert
   position after one turn matches oracle
-- Planet with N factories, M colonists, research set to Weapons — assert
-  tech level and resource output match oracle
+- Planet with N factories, M colonists, research set to Weapons — assert tech
+  level and resource output match oracle
 - Two fleets meet in combat — assert both players' battle reports match oracle
 
 These tests isolate one mechanic at a time. Failures have a narrow search
@@ -620,9 +627,9 @@ End-to-end game runs over many turns. A fixed-seed game with fixed race
 parameters is played forward simultaneously through both the oracle and our
 engine. Every turn file is compared field by field.
 
-Purpose: catches emergent divergences that component tests miss. A formula
-may be correct in isolation but applied in the wrong turn-order phase, or
-combined with another formula incorrectly.
+Purpose: catches emergent divergences that component tests miss. A formula may
+be correct in isolation but applied in the wrong turn-order phase, or combined
+with another formula incorrectly.
 
 The fixed-seed approach is sufficient here. A library of 3–5 standard game
 configurations (covering different universe sizes, race combinations, and
@@ -673,10 +680,10 @@ from the oracle's ``.m`` output using a one-time conversion tool.
    knowledge to read player turn files.
 
 Known Intentional Divergences
-------------------------------
+-----------------------------
 
-Not all divergences are bugs. This log records intentional deviations from
-the original so validation tooling can exclude them from failure reports.
+Not all divergences are bugs. This log records intentional deviations from the
+original so validation tooling can exclude them from failure reports.
 
 .. list-table::
    :header-rows: 1

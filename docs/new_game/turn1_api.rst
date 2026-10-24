@@ -2,8 +2,8 @@ Turn 1 API
 ==========
 
 After ``POST /games`` succeeds, the turn 1 player files are immediately
-available.  This document specifies the endpoints used to retrieve them and
-the validation approach for comparing engine output against the original game.
+available.  This document specifies the endpoints used to retrieve them and the
+validation approach for comparing engine output against the original game.
 
 Endpoints
 ---------
@@ -12,18 +12,18 @@ All endpoints are under the game created by ``POST /games``.
 
 .. code-block:: text
 
-    GET /games/{game_id}/turns/1/status
-        → Per-slot submission status for year 1.  At game start all human
-          slots are "pending" (no orders submitted) and all AI slots are
-          "ready" (engine will generate orders).
+   GET /games/{game_id}/turns/1/status
+       → Per-slot submission status for year 1.  At game start all human
+         slots are "pending" (no orders submitted) and all AI slots are
+         "ready" (engine will generate orders).
 
-    GET /games/{game_id}/turns/1/players/{slot_index}
-        → Turn 1 player file for the given slot.
-          Requires Authorization: Bearer <token> matching that slot.
-          Returns the player's fog-of-war filtered view of the universe.
+   GET /games/{game_id}/turns/1/players/{slot_index}
+       → Turn 1 player file for the given slot.
+         Requires Authorization: Bearer <token> matching that slot.
+         Returns the player's fog-of-war filtered view of the universe.
 
-    GET /games/{game_id}
-        → Game metadata: name, seed, universe size, player list, current year.
+   GET /games/{game_id}
+       → Game metadata: name, seed, universe size, player list, current year.
 
 Turn Status Object
 ------------------
@@ -67,13 +67,13 @@ Player File Response
 The body conforms to ``turn.json`` in ``stars-reborn-schemas``.  See
 :doc:`initial_state` for the specific contents at turn 1.
 
-On success: ``200 OK``.
-If the requester's token does not match the slot: ``403 Forbidden``.
-If the turn has not yet been generated: ``404 Not Found`` (should not
-occur at turn 1 since generation is synchronous with ``POST /games``).
+On success: ``200 OK``.  If the requester's token does not match the slot:
+``403 Forbidden``.  If the turn has not yet been generated: ``404 Not Found``
+(should not occur at turn 1 since generation is synchronous with ``POST
+/games``).
 
 Validation Against the Original Game
--------------------------------------
+------------------------------------
 
 To confirm the engine produces a faithful initial state, oracle test cases
 compare engine output against observed original ``stars.exe`` behaviour.
@@ -83,8 +83,8 @@ Test case structure:
 1. A known ``.r`` race file (or set of races) is converted to ``race.json``.
 2. A ``POST /games`` request with a fixed ``random_seed`` and known parameters
    is submitted.
-3. The engine's turn 1 player files are compared against turn 1 files
-   extracted from a |original| game started with the same seed and parameters.
+3. The engine's turn 1 player files are compared against turn 1 files extracted
+   from a |original| game started with the same seed and parameters.
 
 Key properties to validate at turn 1:
 
@@ -108,9 +108,9 @@ Key properties to validate at turn 1:
      - Compare which planets are in scanner range (requires matching scanner
        range formula)
 
-The ``stars-reborn-research`` repository contains tooling for extracting
-turn files from original ``.m`` files (the per-player turn format).  Confirmed
-test cases are promoted to the ``stars-reborn-engine`` integration test suite.
+The ``stars-reborn-research`` repository contains tooling for extracting turn
+files from original ``.m`` files (the per-player turn format).  Confirmed test
+cases are promoted to the ``stars-reborn-engine`` integration test suite.
 
 .. todo::
 

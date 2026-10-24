@@ -2,16 +2,16 @@ Race File Format
 ================
 
 Stars Reborn uses a JSON race file format (``*.race.json``) as its native
-format.  The engine can also import the original |original| binary race
-format (``*.r``) and convert it on the fly.
+format.  The engine can also import the original |original| binary race format
+(``*.r``) and convert it on the fly.
 
 Stars Reborn JSON Format
 ------------------------
 
 The file is a single JSON object conforming to ``race.json`` in
-``stars-reborn-schemas``.  It is a direct serialisation of the race
-definition submitted to the engine — the same structure passed in the
-``race`` field of a ``POST /games`` request.
+``stars-reborn-schemas``.  It is a direct serialisation of the race definition
+submitted to the engine — the same structure passed in the ``race`` field of a
+``POST /games`` request.
 
 Top-level fields:
 
@@ -33,11 +33,11 @@ Top-level fields:
      - Plural form (e.g., "Humanoids")
    * - ``prt``
      - string enum
-     - Primary Racial Trait.  One of: ``CA``, ``JOAT``, ``IT``, ``IS``,
-       ``SD``, ``WM``, ``PP``, ``SS``, ``HE``, ``AR``.  Internal byte
-       values: HE=0, SS=1, WM=2, CA=3, IS=4, SD=5, PP=6, IT=7, AR=8,
-       JOAT=9 (confirmed from ``analyze_r1.py``; CA=3 inferred, AR=8
-       pending confirmation — see research task R1.1)
+     - Primary Racial Trait.  One of: ``CA``, ``JOAT``, ``IT``, ``IS``, ``SD``,
+       ``WM``, ``PP``, ``SS``, ``HE``, ``AR``.  Internal byte values: HE=0,
+       SS=1, WM=2, CA=3, IS=4, SD=5, PP=6, IT=7, AR=8, JOAT=9 (confirmed from
+       ``analyze_r1.py``; CA=3 inferred, AR=8 pending confirmation — see
+       research task R1.1)
    * - ``lrts``
      - array of string enum
      - Lesser Racial Traits.  Any subset of the valid LRT identifiers.
@@ -57,8 +57,8 @@ Top-level fields:
 Habitat Object
 ~~~~~~~~~~~~~~
 
-Each of the three axes (``gravity``, ``temperature``, ``radiation``) is
-either an ``immune`` flag or a ``min``/``max`` preference range.
+Each of the three axes (``gravity``, ``temperature``, ``radiation``) is either
+an ``immune`` flag or a ``min``/``max`` preference range.
 
 .. code-block:: json
 
@@ -148,25 +148,24 @@ Complete Example
    }
 
 Original ``.r`` / ``.r1`` File Import
---------------------------------------
+-------------------------------------
 
-The original |original| game saves race designs as ``.r`` files (one per
-player slot, numbered ``.r1``–``.r16``).  The import utility
-(``r1_to_json``, in ``stars_file_parser/src/bin/``) reads these and emits
-the equivalent ``race.json``.
+The original |original| game saves race designs as ``.r`` files (one per player
+slot, numbered ``.r1``–``.r16``).  The import utility (``r1_to_json``, in
+``stars_file_parser/src/bin/``) reads these and emits the equivalent
+``race.json``.
 
 Container Format
 ~~~~~~~~~~~~~~~~
 
 Each ``.r1`` file is a Stars! record container (the same format as ``.m``,
 ``.hst``, ``.xy`` files).  Record headers are 2-byte LE: high 6 bits = record
-type, low 10 bits = payload length.  Payloads are XOR-encrypted with a
-L'Ecuyer (1988) combined LCG seeded from the type-8 header record.
+type, low 10 bits = payload length.  Payloads are XOR-encrypted with a L'Ecuyer
+(1988) combined LCG seeded from the type-8 header record.
 
-A race file contains exactly 3 records:
-1. Type 8 (16-byte plaintext header — seeds the LCG)
-2. Type 6 (race data payload — encrypted)
-3. Type 0 (empty end-of-file marker)
+A race file contains exactly 3 records: 1. Type 8 (16-byte plaintext header —
+seeds the LCG) 2. Type 6 (race data payload — encrypted) 3. Type 0 (empty
+end-of-file marker)
 
 Cipher
 ~~~~~~
@@ -176,10 +175,10 @@ L'Ecuyer combined LCG with two streams:
 - s1: a=40014, m=2^31−85 (Schrage params q=53668, r=12211)
 - s2: a=40692, m=2^31−249 (q=52774, r=3791)
 
-Per 4-byte chunk: ``key = (new_s1 − new_s2) & 0xFFFFFFFF``.
-Bytes are the 4 LE bytes of this 32-bit value.
-Seeds are derived from bytes 12-13 of the type-8 payload; a small
-pre-advance count is computed from other bytes in that payload.
+Per 4-byte chunk: ``key = (new_s1 − new_s2) & 0xFFFFFFFF``.  Bytes are the 4 LE
+bytes of this 32-bit value.  Seeds are derived from bytes 12-13 of the type-8
+payload; a small pre-advance count is computed from other bytes in that
+payload.
 
 Payload Field Map
 ~~~~~~~~~~~~~~~~~
@@ -283,10 +282,12 @@ unless noted.
      - PRT index — see table below
    * - 78
      - 2
-     - LRT bitmask — 16-bit LE word; see `LRT Bitmask Bit Order`_ for file bit layout
+     - LRT bitmask — 16-bit LE word; see `LRT Bitmask Bit Order`_ for file bit
+       layout
    * - 81
      - 1
-     - Flags: bit 7 = ``factory_cheap_germanium``, bit 5 = ``expensive_tech_boost``
+     - Flags: bit 7 = ``factory_cheap_germanium``, bit 5 =
+       ``expensive_tech_boost``
    * - 112+
      - varies
      - Name section (see below)
@@ -346,23 +347,24 @@ number modulo 32 (so icon 32 encodes as 0); bits 0–2 are always ``0b111``.
 
 ``icon_0idx`` is 0-based (0–31); there are 32 unique race icons.
 
-This same byte 6 / decode formula applies to the type-6 PlayerBlock embedded
-in ``.m1``–``.m16`` and ``.hst`` files (confirmed 2026-04-25 via the
+This same byte 6 / decode formula applies to the type-6 PlayerBlock embedded in
+``.m1``–``.m16`` and ``.hst`` files (confirmed 2026-04-25 via the
 same-icon-different-name oracle).  The engine enforces a per-game
-icon-uniqueness invariant: no two players in the same game share an icon —
-see :ref:`name-collision-resolution` and the icon-collision section in
+icon-uniqueness invariant: no two players in the same game share an icon — see
+:ref:`name-collision-resolution` and the icon-collision section in
 :doc:`../reference/ai_races` for the observed reassignment behavior.
 
 Habitat Encoding
 ~~~~~~~~~~~~~~~~
 
-Immunity to an axis: all three bytes for that axis (center, min, max) = ``0xFF``.
+Immunity to an axis: all three bytes for that axis (center, min, max) =
+``0xFF``.
 
 Gravity index (0–100) maps to g values via the ``Gravity_Map`` lookup table
 (see :doc:`../mechanics/habitability`).
 
-Temperature scale: ``temp_°C = (index − 50) × 4``.
-Range: index 0 = −200°C, index 50 = 0°C, index 100 = +200°C.
+Temperature scale: ``temp_°C = (index − 50) × 4``.  Range: index 0 = −200°C,
+index 50 = 0°C, index 100 = +200°C.
 
 Radiation: direct 0–100 mR/yr.
 
@@ -378,9 +380,9 @@ followed by two name blocks (singular and plural).  Each block:
 - **1-byte length**: number of key bytes that follow (typical range: 3–8)
 - **length bytes**: nibble-packed encoded name (see algorithm below)
 
-Blocks are contiguous; plural block immediately follows singular.
-If plural length is ``0``, no plural is stored and the importer defaults to
-``singular + "s"``.
+Blocks are contiguous; plural block immediately follows singular.  If plural
+length is ``0``, no plural is stored and the importer defaults to ``singular +
+"s"``.
 
 All names — both the 6 race-editor dropdown presets and any user-typed name —
 use the same encoding algorithm (confirmed 2026-04-22 via Ghidra decompilation
@@ -390,9 +392,8 @@ of ``FUN_1070_551c``, ``FUN_1040_45a0``, and ``FUN_1040_4880`` in
 The same name-section layout (offset 112+) and encoding apply to the type-6
 PlayerBlock embedded in ``.m1``–``.m16`` player turn files and ``.hst`` host
 files, not just standalone ``.r1`` race files (confirmed 2026-04-25 via the
-all-human-players collision oracles — see
-:doc:`../reference/ai_races`).  In the parser, both
-``r1_to_json`` and ``m1_to_json`` use a single shared decoder
+all-human-players collision oracles — see :doc:`../reference/ai_races`).  In
+the parser, both ``r1_to_json`` and ``m1_to_json`` use a single shared decoder
 ``stars_file_parser::name::decode_names``.
 
 Name Encoding Algorithm
@@ -440,8 +441,8 @@ last byte is padded with ``0xF`` in the low nibble position.
      - Rare; not used in practice
 
 Nibble packing: emit ``code & 0xF`` first (→ high nibble of current output
-byte), then ``(code >> 4) & 0xF`` (→ low nibble, advance byte), then
-``(code >> 8) & 0xF`` for 3-nibble codes.
+byte), then ``(code >> 4) & 0xF`` (→ low nibble, advance byte), then ``(code >>
+8) & 0xF`` for 3-nibble codes.
 
 Lowercase character codes:
 
@@ -457,8 +458,8 @@ Lowercase character codes:
    Code with low nibble 0xE → 2 nibbles:
      w=0x0E  x=0x1E  y=0x2E  z=0x3E
 
-**Key byte 0** always equals ``first_char + 111`` for any name starting with
-an ASCII letter or digit (a consequence of the code formula for that range).
+**Key byte 0** always equals ``first_char + 111`` for any name starting with an
+ASCII letter or digit (a consequence of the code formula for that range).
 
 **Example** — "Terran":
 
@@ -477,8 +478,8 @@ an ASCII letter or digit (a consequence of the code formula for that range).
    total 8 nibbles (even) → no pad
    packed: [C3] [28] [81] [69] = [195, 40, 129, 105]
 
-The reference implementation is ``encode_name_key`` / ``decode_name_key``
-in ``scripts/analyze_r1.py`` of ``stars-reborn-research``.
+The reference implementation is ``encode_name_key`` / ``decode_name_key`` in
+``scripts/analyze_r1.py`` of ``stars-reborn-research``.
 
 .. rubric:: Dropdown preset names (singular / plural key bytes)
 
@@ -497,9 +498,9 @@ the ``stars.exe`` dialog resource at 0x347039):
 LRT Bitmask Bit Order
 ~~~~~~~~~~~~~~~~~~~~~
 
-The 16-bit LE word at payload bytes 78–79 encodes all 14 LRTs.  Bits 14–15
-are unused.  The bit layout does **not** follow the logical LRT order;
-it is a fixed scramble confirmed by single-LRT differential experiments
+The 16-bit LE word at payload bytes 78–79 encodes all 14 LRTs.  Bits 14–15 are
+unused.  The bit layout does **not** follow the logical LRT order; it is a
+fixed scramble confirmed by single-LRT differential experiments
 (``scripts/analyze_r1.py`` in ``stars-reborn-research``, 2026-04-11).
 
 .. list-table::
@@ -552,6 +553,6 @@ validation as a hand-authored file:
 4. Economy values are within allowed ranges.
 5. Advantage point total is within the valid budget.
 
-If the imported race fails validation (e.g., was created with a different
-game version that allowed now-invalid combinations), the importer should
-report specific errors rather than silently adjusting values.
+If the imported race fails validation (e.g., was created with a different game
+version that allowed now-invalid combinations), the importer should report
+specific errors rather than silently adjusting values.

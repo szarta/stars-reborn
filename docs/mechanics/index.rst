@@ -1,8 +1,9 @@
 Mechanics Reference
 ===================
 
-Detailed formulas and data tables for |project| game mechanics, reverse-engineered
-from |original|. These documents are the implementation contracts for the engine.
+Detailed formulas and data tables for |project| game mechanics,
+reverse-engineered from |original|. These documents are the implementation
+contracts for the engine.
 
 .. list-table:: Mechanics Status
    :header-rows: 1

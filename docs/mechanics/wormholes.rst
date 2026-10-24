@@ -5,9 +5,9 @@ Overview
 --------
 
 Wormholes are paired ``SpaceObject`` instances that allow fleets to traverse
-between two points in the galaxy in a single turn, bypassing normal warp travel.
-Each wormhole has a partner; entering one and selecting *traverse* moves a fleet
-to its partner's location.
+between two points in the galaxy in a single turn, bypassing normal warp
+travel.  Each wormhole has a partner; entering one and selecting *traverse*
+moves a fleet to its partner's location.
 
 Wormhole positions are not static: their endpoints jiggle each turn (see
 :doc:`turn_resolution` Phase 2 sub-step).
@@ -16,7 +16,8 @@ Visibility
 ----------
 
 Wormhole visibility is **per-player** and follows the same fog-of-war model as
-planets and fleets — see :ref:`architecture-discoverable-data` for the data shape.
+planets and fleets — see :ref:`architecture-discoverable-data` for the data
+shape.
 
 Position visibility (entry point)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,16 +28,16 @@ wormhole lies inside the union of that player's **basic scanner ranges**
 cloaked.
 
 When a wormhole goes out of scanner range, the player retains the **last
-observed position** as stale intel (mirroring planet last-seen behaviour).
-The intel is annotated:
+observed position** as stale intel (mirroring planet last-seen behaviour).  The
+intel is annotated:
 
 - ``seen_this_turn = false``
 - ``last_seen_year`` is the most recent year the wormhole was inside the
   player's scan coverage
 
-The next-turn jiggle is **not** visible to a player who is out of scanner
-range — they continue to see the stale position until they re-acquire the
-wormhole, at which point the new position replaces the old.
+The next-turn jiggle is **not** visible to a player who is out of scanner range
+— they continue to see the stale position until they re-acquire the wormhole,
+at which point the new position replaces the old.
 
 Endpoint linkage (where it leads)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,16 +45,16 @@ Endpoint linkage (where it leads)
 Knowing a wormhole's *position* is distinct from knowing its *partner*.
 
 A player learns the linkage between a wormhole and its partner only by
-**physically traversing** the wormhole with one of their fleets. Scanning
-both endpoints is **not** sufficient — the player will see two unconnected
-wormhole entries until a traversal occurs.
+**physically traversing** the wormhole with one of their fleets. Scanning both
+endpoints is **not** sufficient — the player will see two unconnected wormhole
+entries until a traversal occurs.
 
 Once learned, the linkage is **sticky**: the player retains knowledge of the
 pairing across turns even if neither endpoint is currently in scanner range,
 and even after subsequent jiggles. The player does not, however, see the
-*current* position of the partner unless that endpoint is also in scanner
-range — they only know "this wormhole pairs with the one I previously
-observed at coordinates X".
+*current* position of the partner unless that endpoint is also in scanner range
+— they only know "this wormhole pairs with the one I previously observed at
+coordinates X".
 
 .. todo:: Oracle-verify endpoint-known stickiness across:
    (a) jiggle of either endpoint after traversal,
@@ -77,8 +78,8 @@ Each player's turn file (``.m`` equivalent) contains a
        stability             : Stability           # absent until first observation; refreshed on each scan
    }
 
-Wormholes the player has never observed do **not** appear in the turn file
-at all (consistent with the "fields never observed are absent" rule for
+Wormholes the player has never observed do **not** appear in the turn file at
+all (consistent with the "fields never observed are absent" rule for
 ``DiscoverablePlanetData``).
 
 Engine ground-truth wormhole records, including current paired endpoint,

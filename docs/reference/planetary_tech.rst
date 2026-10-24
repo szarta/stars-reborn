@@ -1,40 +1,39 @@
 Planetary Technology
-=====================
+====================
 
-Planetary and orbital installations that are built on planets (not on ships
-or starbases): planetary scanners, planetary defenses, and terraforming.
+Planetary and orbital installations that are built on planets (not on ships or
+starbases): planetary scanners, planetary defenses, and terraforming.
 
 For starbase-mounted orbital items (stargates, mass drivers) see
 :doc:`starbase_components`.  For the GenesisDevice (MT ship component that
 terraforms an entire planet) see :doc:`components`.
 
-**Source:** Python engine ``factory.py``; cross-verified against original help file
-images (Stars! Player's Guide, 1998, ctx_6703b121 / bm125.png).  Defense and
-scanner data confirmed.  Full oracle verification against ``stars.exe`` still
-recommended for exact values.
+**Source:** Python engine ``factory.py``; cross-verified against original help
+file images (Stars! Player's Guide, 1998, ctx_6703b121 / bm125.png).  Defense
+and scanner data confirmed.  Full oracle verification against ``stars.exe``
+still recommended for exact values.
 
 Tech requirements: ``En/We/Pr/Co/El/Bio``.  Costs: ``[Ir, Bo, Ge, Resources]``.
 
 Access: see :doc:`technology_access` — planetary scanners and defenses are not
 in the base research pool; they are granted via ``PRT_Technologies`` lists.
-Terraforming is in the base pool (axis-specific) or via TT LRT (total terraform).
+Terraforming is in the base pool (axis-specific) or via TT LRT (total
+terraform).
 
 .. _planetary-scanners-ref:
 
 Planetary Scanners
 ------------------
 
-Planetary scanners are orbital installations (no mass).  They provide
-normal scan coverage (normal range) and, for the Snooper series,
-penetrating coverage (pen range) that reveals colonists and minerals on
-enemy planets.
+Planetary scanners are orbital installations (no mass).  They provide normal
+scan coverage (normal range) and, for the Snooper series, penetrating coverage
+(pen range) that reveals colonists and minerals on enemy planets.
 
 Cost for all planetary scanners: ``[10, 10, 70, 100]``.
 
-Access: all PRTs except AR have Viewer50–Scoper280.  Snooper series
-(320X, 400X, 620X) are removed for NAS races and AR races.
-Snooper500X accessibility is a known source inconsistency — see
-:doc:`technology_access`.
+Access: all PRTs except AR have Viewer50–Scoper280.  Snooper series (320X,
+400X, 620X) are removed for NAS races and AR races.  Snooper500X accessibility
+is a known source inconsistency — see :doc:`technology_access`.
 
 .. list-table::
    :header-rows: 1
@@ -96,8 +95,8 @@ Snooper500X accessibility is a known source inconsistency — see
 Planetary Defenses
 ------------------
 
-Planetary defenses are orbital installations (no mass).  A planet can have
-up to 100 defenses; each unit contributes independently to overall protection.
+Planetary defenses are orbital installations (no mass).  A planet can have up
+to 100 defenses; each unit contributes independently to overall protection.
 
 Cost for all planetary defenses: ``[5, 5, 5, 15]``.
 
@@ -115,8 +114,8 @@ source: Leonard Dickens "Guts of bombing", 1998):
    building_protection = colonist_protection × 0.5
    invasion_protection = colonist_protection × 0.75
 
-Example: 100× SDI (base_coverage = 0.0099):
-colonist protection = 1 − (1 − 0.0099)^100 = 1 − 0.9901^100 ≈ 63.3%.
+Example: 100× SDI (base_coverage = 0.0099): colonist protection = 1 − (1 −
+0.0099)^100 = 1 − 0.9901^100 ≈ 63.3%.
 
 .. list-table::
    :header-rows: 1
@@ -153,22 +152,22 @@ Terraforming
 ------------
 
 Terraforming items improve planetary habitability by adjusting gravity,
-temperature, and/or radiation toward the race's ideal range.  Each
-technology improves the target axis by ``rate`` steps per year.
+temperature, and/or radiation toward the race's ideal range.  Each technology
+improves the target axis by ``rate`` steps per year.
 
-All terraforming items occupy the orbital/mechanical slot on ships or
-are built via the production queue at terraforming rate.
+All terraforming items occupy the orbital/mechanical slot on ships or are built
+via the production queue at terraforming rate.
 
-Cost for all axis-specific terraforming: ``[0, 0, 0, 100]``.
-Cost for total terraforming: ``[0, 0, 0, 70]``.
+Cost for all axis-specific terraforming: ``[0, 0, 0, 100]``.  Cost for total
+terraforming: ``[0, 0, 0, 70]``.
 
-Access: axis-specific terraforming (Gravity/Temperature/Radiation 3–15)
-is in the base pool for all races.  TT (Total Terraforming) LRT grants
-access to the TotalTerraform series; axis-specific items remain accessible
-(TT does not remove them).
+Access: axis-specific terraforming (Gravity/Temperature/Radiation 3–15) is in
+the base pool for all races.  TT (Total Terraforming) LRT grants access to the
+TotalTerraform series; axis-specific items remain accessible (TT does not
+remove them).
 
 Total Terraforming (TT LRT only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -203,7 +202,7 @@ Total Terraforming (TT LRT only)
      - 30 steps/yr each axis
 
 Axis-Specific Terraforming (base pool — all races)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1

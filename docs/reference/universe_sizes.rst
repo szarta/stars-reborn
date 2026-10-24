@@ -1,7 +1,8 @@
 Universe Sizes Reference
 ========================
 
-Source: `Stars! wiki — New Game Advanced Setup Step 1 <http://wiki.starsautohost.org/wiki/New_Game(Advanced_Setup)_Step_1:_Specify_the_Universe>`_
+Source: `Stars! wiki — New Game Advanced Setup Step 1
+<http://wiki.starsautohost.org/wiki/New_Game(Advanced_Setup)_Step_1:_Specify_the_Universe>`_
 
 Universe Sizes
 --------------
@@ -60,9 +61,9 @@ Game Options
 
 **Accelerated BBS Play**
    All planets have 20% more minerals; poor mineral worlds are improved
-   slightly.  Starting population uses the formula
-   ``25,000 + 5,000 × GR%`` — e.g., 10% GR → 75,000; 15% GR → 100,000;
-   20% GR → 125,000.  See :doc:`../new_game/initial_state` for details.
+   slightly.  Starting population uses the formula ``25,000 + 5,000 × GR%`` —
+   e.g., 10% GR → 75,000; 15% GR → 100,000; 20% GR → 125,000.  See
+   :doc:`../new_game/initial_state` for details.
 
 **No Random Events**
    Disables all random occurrences: new mineral and artifact discoveries,

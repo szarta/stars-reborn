@@ -9,8 +9,8 @@ All ship-installable components except engines (see :doc:`engines`) and hulls
 Tech requirements: ``En/We/Pr/Co/El/Bio``.  Costs: ``[Ir, Bo, Ge, Resources]``.
 
 Miniaturization: 4% cost reduction per tech level above requirement (non-BET),
-minimum 25% of base cost.  BET races: 5% per level, minimum 20%, but ×2 cost
-at exactly meeting requirements.  See :doc:`../mechanics/research`.
+minimum 25% of base cost.  BET races: 5% per level, minimum 20%, but ×2 cost at
+exactly meeting requirements.  See :doc:`../mechanics/research`.
 
 Access: see :doc:`technology_access` for PRT/LRT-specific items.
 
@@ -389,8 +389,8 @@ Beam Weapons
      - 140
      - 3
      - 6
-     - MT item; also: +10% torpedo accuracy, 10% cloak, scan 150/75 pen,
-       40 mines/yr, 2% colonist kill (300 min), 5 buildings/run
+     - MT item; also: +10% torpedo accuracy, 10% cloak, scan 150/75 pen, 40
+       mines/yr, 2% colonist kill (300 min), 5 buildings/run
 
 .. _torpedoes-ref:
 
@@ -807,9 +807,8 @@ Mine Layers
 
 All mine fields: hit chance per light-year traveled through the field.
 **Normal:** min safe warp 4, 0.3%/ly hit, 100 dmg/engine (125 vs. ram scoops),
-500 min fleet dmg (600 vs. ram scoops).
-**Heavy:** min safe warp 6, 1.0%/ly, 500 dmg/engine (600 vs. ram scoops),
-2000 min fleet dmg (2500 vs. ram scoops).
+500 min fleet dmg (600 vs. ram scoops).  **Heavy:** min safe warp 6, 1.0%/ly,
+500 dmg/engine (600 vs. ram scoops), 2000 min fleet dmg (2500 vs. ram scoops).
 **Speed trap:** min safe warp 5, 3.5%/ly, 0 dmg — drops fleet to safe speed.
 
 .. list-table::
@@ -952,8 +951,8 @@ Mining Robots
      - [25,25,25,50]
      - 80
      - —
-     - CA exclusive; adjusts planetary hab (not a mining robot despite occupying
-       that slot type); 25% cloaking
+     - CA exclusive; adjusts planetary hab (not a mining robot despite
+       occupying that slot type); 25% cloaking
    * - AlienMiner *(MT)*
      - En 5 / Co 10 / El 5 / Bio 5
      - [4,0,1,10]
@@ -979,7 +978,8 @@ Mechanical Components
      - —
      - [12,10,10,10]
      - 32
-     - Enables colonization (required in colony ship designs); all PRTs via PRT lists
+     - Enables colonization (required in colony ship designs); all PRTs via PRT
+       lists
    * - OrbitalConstructionModule
      - —
      - [20,15,15,20]
@@ -1034,7 +1034,8 @@ Mechanical Components
      - En 20 / We 10 / Pr 10 / Co 20 / El 10 / Bio 20
      - [0,0,0,5000]
      - 0
-     - MT item; one-use; sets all three hab axes to race ideal (100% value) on any planet
+     - MT item; one-use; sets all three hab axes to race ideal (100% value) on
+       any planet
 
 .. _electrical-ref:
 

@@ -59,6 +59,10 @@ archived read-only with a pointer here.
   so the contract cannot drift between the two languages; until then the schema
   is the single source of truth by convention.
 - Formatting in this repo uses rustfmt and ruff for Rust and Python and
-  `moldy` for the neutral formats (JSON/YAML/Markdown). Moving Rust and Python
-  onto `moldy` as well is a deliberate, separately A/B-tested change to make
-  after the restructuring has settled, not part of it.
+  `moldy` for the neutral formats (JSON/YAML/Markdown) plus reStructuredText
+  (`docs/*.rst`). RST was A/B-tested against the existing docs and adopted with
+  the authored conventions preserved (underline headings, bullet style, two-
+  space sentence gaps); its settings live in `moldy-rst.toml` and it runs on a
+  separate `moldy-rst` pre-commit hook because RST support is still an
+  unreleased moldy branch build. Moving Rust and Python onto `moldy` as well is
+  a deliberate, separately A/B-tested change still to come, not part of this.

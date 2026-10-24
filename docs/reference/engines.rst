@@ -2,8 +2,8 @@ Engine Reference
 ================
 
 All engine data sourced from Posey's spreadsheet (the canonical community
-source, originally hand-extracted from the in-game tech browser), which is
-also what populated the historical Python ``factory.py`` implementation.
+source, originally hand-extracted from the in-game tech browser), which is also
+what populated the historical Python ``factory.py`` implementation.
 
 Tech requirements format: ``E/W/P/C/El/B`` (Energy, Weapons, Propulsion,
 Construction, Electronics, Biotechnology). Costs: ``[Ir, Bo, Ge, Resources]``.
@@ -30,12 +30,11 @@ The FUN tables below have been validated three ways:
    canonical screencap of Settler's Delight as a worked example).
 2. **FreeStars rules** (``MyModRules.xml``) — every FUN value matches when
    FreeStars's fractional notation is multiplied by 100. (FreeStars stores
-   ramscoop free-speed warps as small negatives like ``-10/-6/-3/-1`` purely
-   as graph-zone markers; the actual fuel cost is zero, and fuel
-   *generation* — when applicable — is governed by the separate gain matrix
-   below.)
-3. **advfaq §4.5.1 worked example** — the Cawley formula reproduces the
-   advfaq Privateer/Fuel Mizer range example at warps 8 and 9.
+   ramscoop free-speed warps as small negatives like ``-10/-6/-3/-1`` purely as
+   graph-zone markers; the actual fuel cost is zero, and fuel *generation* —
+   when applicable — is governed by the separate gain matrix below.)
+3. **advfaq §4.5.1 worked example** — the Cawley formula reproduces the advfaq
+   Privateer/Fuel Mizer range example at warps 8 and 9.
 
 Engine Summary
 --------------
@@ -171,7 +170,7 @@ Enigma Pulsar also grants +10% cloaking and a +0.25 battle speed modifier
 stacked on its base battle speed of 10.
 
 Fuel Tables (mg per light-year)
---------------------------------
+-------------------------------
 
 Values at warp 0 and 1 are always 0 (stationary or negligible). Listed from
 warp 2 onward.
@@ -359,10 +358,10 @@ Ram Scoop Fuel Gain Matrix
 
 Ram scoop engines generate fuel passively while traveling. The gain is indexed
 by the engine's free warp (``FS``) and the travel warp speed. Values are **mg
-of fuel gained per full segment** — that is, per turn at warp W, where one
-turn covers ``W²`` light years. For partial segments the gain scales linearly
-with distance traveled (per-ly rate = ``table[FS][W] / W²``), with integer
-rounding applied at each segment boundary.
+of fuel gained per full segment** — that is, per turn at warp W, where one turn
+covers ``W²`` light years. For partial segments the gain scales linearly with
+distance traveled (per-ly rate = ``table[FS][W] / W²``), with integer rounding
+applied at each segment boundary.
 
 Generation is **per-engine, not per-ship** — a ship with N ramscoop engines
 generates N× the table value per turn.
@@ -470,5 +469,5 @@ oracle-validated against the original Stars! game (see
 :doc:`research:findings/engine_fuel_oracle_validation`). The matrix above is
 the corrected (column-shifted) version of the legacy ``factory.py`` matrix,
 which was off-by-one to the right at every row. The advfaq footnote claiming
-"Galaxy Scoop generates no fuel at its free speed of warp 9" is **incorrect**
-— Galaxy Scoop generates 81 mg/turn at W=9, confirmed empirically.
+"Galaxy Scoop generates no fuel at its free speed of warp 9" is **incorrect** —
+Galaxy Scoop generates 81 mg/turn at W=9, confirmed empirically.

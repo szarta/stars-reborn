@@ -4,30 +4,37 @@ Combat
 When Combat Occurs
 ------------------
 
-Battle occurs when **all four** of the following conditions hold simultaneously:
+Battle occurs when **all four** of the following conditions hold
+simultaneously:
 
-1. Fleets from two or more players are at the same location (planet or deep space).
+1. Fleets from two or more players are at the same location (planet or deep
+   space).
 2. At least one fleet is armed.
-3. At least one fleet of the opposing player matches the armed fleet's target specification.
-4. The opposing race is set as an enemy (attackable) in the armed fleet's battle orders.
+3. At least one fleet of the opposing player matches the armed fleet's target
+   specification.
+4. The opposing race is set as an enemy (attackable) in the armed fleet's
+   battle orders.
 
 Even declared enemies will not fight if their battle orders forbid it.
 
-.. note:: *Source: Stars! Strategy Guide, Chapter 8 (reviewed by original authors).*
+.. note::
+
+   *Source: Stars! Strategy Guide, Chapter 8 (reviewed by original authors).*
 
 Starbases and Battle Initiation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An armed starbase counts as an armed fleet for the purpose of defending against
-attack, but **cannot initiate a battle**. Only a fleet of ships can start a battle.
-If an enemy fleet with no battle orders arrives at a planet, the starbase will not
-fight even if it is armed — the attacking fleet must have orders that trigger combat.
+attack, but **cannot initiate a battle**. Only a fleet of ships can start a
+battle.  If an enemy fleet with no battle orders arrives at a planet, the
+starbase will not fight even if it is armed — the attacking fleet must have
+orders that trigger combat.
 
 Intercept Mechanics
 ~~~~~~~~~~~~~~~~~~~
 
-A fleet can be sent on an intercept course toward a moving enemy fleet. The resolution
-order is:
+A fleet can be sent on an intercept course toward a moving enemy fleet. The
+resolution order is:
 
 1. The **targeted fleet** moves to its new location first.
 2. The **pursuing fleet** then moves toward that new location.
@@ -40,9 +47,9 @@ toward the pursuer; the target gets its move first.
 Battle Orders
 -------------
 
-Players set **battle orders** per ship design. The default order is to attack all
-races specified as enemies or neutral, targeting **armed ships first**, then anything
-else second.
+Players set **battle orders** per ship design. The default order is to attack
+all races specified as enemies or neutral, targeting **armed ships first**,
+then anything else second.
 
 Custom orders allow:
 
@@ -57,18 +64,17 @@ Battle Grid
 Combat takes place on a **10×10 grid** of squares. Each square holds zero or
 more **tokens** (a token is a stack of identical ships from a single fleet);
 multiple tokens — including tokens from different players — may share the same
-square. The total number of tokens admitted to a single battle event is
-capped at **256**, distributed equally between participating players (a 4-way
-battle gets 64 token slots per player; unused slots are redistributed).
-Tokens beyond the cap are excluded, with the highest-fleet-numbered tokens
-dropped first.
+square. The total number of tokens admitted to a single battle event is capped
+at **256**, distributed equally between participating players (a 4-way battle
+gets 64 token slots per player; unused slots are redistributed).  Tokens beyond
+the cap are excluded, with the highest-fleet-numbered tokens dropped first.
 
 Ships are placed at deterministic starting squares based on **player number**
 (the lowest-numbered player in the battle is assigned position 1, the next
-lowest position 2, etc.). Starting positions do not vary by fleet
-composition. Example (2-player battle): player 1 starts at row 4 col 1;
-player 2 at row 5 col 8 (0-indexed). The full 2–16 player starting-square
-table is documented in the SAH Forum battle-board-positioning thread.
+lowest position 2, etc.). Starting positions do not vary by fleet composition.
+Example (2-player battle): player 1 starts at row 4 col 1; player 2 at row 5
+col 8 (0-indexed). The full 2–16 player starting-square table is documented in
+the SAH Forum battle-board-positioning thread.
 
 Players can attempt to manipulate their effective player number (e.g., by
 transferring a single ship to an ally the turn before a battle) to influence
@@ -79,10 +85,10 @@ starting position.
 
 .. note::
 
-   Earlier drafts of this doc and the legacy stars-reborn implementation
-   stated "32×32 grid". That was a confusion of two different 32-valued
-   constants in the original game: **token sprite icons are 32×32 pixels**
-   (see ``archive/resources/race/r*.png``), but the **logical board is 10×10
+   Earlier drafts of this doc and the legacy stars-reborn implementation stated
+   "32×32 grid". That was a confusion of two different 32-valued constants in
+   the original game: **token sprite icons are 32×32 pixels** (see
+   ``archive/resources/race/r*.png``), but the **logical board is 10×10
    squares**. A 10×10 grid of 32×32 px tiles is 320×320 px in total — which
    matches the original game's battle viewer area.
 
@@ -114,8 +120,8 @@ Battle movement formula (in ¼-square units):
              + (0.25 × num_maneuvering_jets)
              + (0.5 × num_overthrusters)
 
-Movement is capped in the range **½ to 2½ squares per round**.
-WM (War Monger) race gets an additional **+½ square** bonus.
+Movement is capped in the range **½ to 2½ squares per round**.  WM (War Monger)
+race gets an additional **+½ square** bonus.
 
 Each round has 3 movement phases:
 
@@ -137,11 +143,11 @@ Beams
 
 - Fire first in each round
 - Deal damage to the nearest enemy ship within range
-- **Attenuation:** damage decreases with distance. At maximum range, beams
-  deal significantly less damage than at close range
+- **Attenuation:** damage decreases with distance. At maximum range, beams deal
+  significantly less damage than at close range
 - Beam weapons: Laser, X-Ray Laser, Mini Gun, Yakimora Light Phaser, Blackjack,
-  Phaser Bazooka, Pulsed Sapper, Disruptor, Syncro Sapper, Mega Disruptor,
-  Big Mutha Cannon, Streaming Pulverizer, Anti-Matter Pulverizer
+  Phaser Bazooka, Pulsed Sapper, Disruptor, Syncro Sapper, Mega Disruptor, Big
+  Mutha Cannon, Streaming Pulverizer, Anti-Matter Pulverizer
 
 Beam Decay Formula
 ^^^^^^^^^^^^^^^^^^
@@ -154,13 +160,13 @@ Beam damage decays linearly from full power (range 0) to 90% power (max range):
 
 Where ``d`` = distance to target, ``R`` = weapon max range.
 
-Example: 100 dp weapon, max range 3, target at distance 2:
-``100 × (1 − 0.1 × 2/3) = 94 dp``
+Example: 100 dp weapon, max range 3, target at distance 2: ``100 × (1 − 0.1 ×
+2/3) = 94 dp``
 
 *Source: Stars! in-game help, Beam Weapons section.*
 
 Missiles & Torpedoes
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 - Fire second each round
 - Travel to target; can miss (affected by accuracy and jammers)
@@ -169,8 +175,8 @@ Missiles & Torpedoes
 - Overflow if target token destroyed: applied to other tokens in same square
 - **One missile = one kill (per round):** the game caps missile kills at the
   number of missiles fired in a round.  Each missile destroys at most one ship
-  (excess damage is not applied to the next ship in the stack).  Beam weapons do
-  not share this limit — a single beam hit can kill multiple ships.
+  (excess damage is not applied to the next ship in the stack).  Beam weapons
+  do not share this limit — a single beam hit can kill multiple ships.
 
 *Source: SAH Forum, Chaff article (Art Lathrop) / community consensus.*
 
@@ -180,8 +186,8 @@ Targeting Algorithm
 Missiles and torpedoes select targets by **attractiveness**.  Cheaply-built,
 lightly-armored ships are the most attractive targets and are fired upon first.
 
-The formula (Art Lathrop, April 1999 — community hypothesis, Ghidra confirmation
-pending):
+The formula (Art Lathrop, April 1999 — community hypothesis, Ghidra
+confirmation pending):
 
 .. code-block:: text
 
@@ -219,11 +225,12 @@ target has more armor than shields.
 
 Practical effects:
 
-- Scouts/frigates with cheap engines and minimal armor are chosen first, soaking
-  missiles before capital ships are targeted ("chaff" strategy).
-- Adding shields to cheap chaff reduces attractiveness (raises APN), but increases
-  durability — a design tradeoff.
-- Adding armor to capital ships decreases their attractiveness relative to chaff.
+- Scouts/frigates with cheap engines and minimal armor are chosen first,
+  soaking missiles before capital ships are targeted ("chaff" strategy).
+- Adding shields to cheap chaff reduces attractiveness (raises APN), but
+  increases durability — a design tradeoff.
+- Adding armor to capital ships decreases their attractiveness relative to
+  chaff.
 - Stack size does not affect attractiveness.
 
 .. todo::
@@ -276,7 +283,8 @@ Damage Model
 
 Each ship has:
 
-- **Shields:** absorbed first; regenerate 10% per round (25% for IS race with RS LRT)
+- **Shields:** absorbed first; regenerate 10% per round (25% for IS race with
+  RS LRT)
 - **Armor:** absorbed second; does not regenerate
 
 When armor reaches 0, the ship is destroyed. Partial armor damage carries over
@@ -284,9 +292,9 @@ between rounds.
 
 **Minimum damage resolution:** Armor damage is stored in **1/512th increments**
 of the token's total armor.  Any hit that would deal armor damage rounds up to
-the nearest 1/512th of total armor (≈ 0.2%).  In normal play this is negligible,
-but a large number of individually-weak salvos (e.g., 900 separate torpedo shots)
-can collectively destroy a token via accumulated 0.2% hits.
+the nearest 1/512th of total armor (≈ 0.2%).  In normal play this is
+negligible, but a large number of individually-weak salvos (e.g., 900 separate
+torpedo shots) can collectively destroy a token via accumulated 0.2% hits.
 
 *Source: SAH Forum Known Bugs thread; also confirmed in FreeStars source.*
 
@@ -300,8 +308,8 @@ IS race (or RS LRT): 25% regeneration rate.
 
 **RS (Regenerating Shields) LRT specifics:**
 
-- Shields are **40% stronger** than their listed rating (e.g., a 100-rating shield
-  provides 140 shield points)
+- Shields are **40% stronger** than their listed rating (e.g., a 100-rating
+  shield provides 140 shield points)
 - Armor is **50% of rated strength** (penalty)
 - Regeneration: **10% of max shield value per round** (not base rated value)
 
@@ -313,26 +321,27 @@ Capacitors & Jammers
 Capacitors
 ~~~~~~~~~~
 
-Two types of beam capacitors: +10% or +20% beam damage per capacitor.
-Stacking is **multiplicative**:
+Two types of beam capacitors: +10% or +20% beam damage per capacitor.  Stacking
+is **multiplicative**:
 
 .. code-block:: text
 
    Example: three 10% capacitors: ×1.1 × 1.1 × 1.1 = ×1.331
 
-**Hard cap:** capacitors may not contribute more than **250% additional damage**
-(= ×3.5 total multiplier).
+**Hard cap:** capacitors may not contribute more than **250% additional
+damage** (= ×3.5 total multiplier).
 
 *Source: Stars! in-game help, Capacitors section.*
 
 Energy Dampener
 ~~~~~~~~~~~~~~~
 
-The Energy Dampener (SD PRT exclusive) slows **all ships in the battle** by
-−1 square per round for the entire battle. Notable properties:
+The Energy Dampener (SD PRT exclusive) slows **all ships in the battle** by −1
+square per round for the entire battle. Notable properties:
 
 - Effect persists even if the ship carrying it is destroyed
-- Multiple dampeners in one battle provide **no additional effect** (not stacked)
+- Multiple dampeners in one battle provide **no additional effect** (not
+  stacked)
 
 *Source: Stars! in-game help, Energy Dampener section.*
 
@@ -353,8 +362,8 @@ Battle Results
 After combat:
 
 - Surviving ships remain at the battle location
-- Destroyed ships produce **salvage** (a fraction of their mineral cost)
-  that can be picked up by any fleet
+- Destroyed ships produce **salvage** (a fraction of their mineral cost) that
+  can be picked up by any fleet
 - Battle report is generated for all players involved
 
 Damage Repair
@@ -385,7 +394,8 @@ Damaged ships repair a percentage of damage each year based on location:
    * - + Super Fuel Xport hull in fleet (bonus)
      - +10%
 
-- Fuel Transport/Xport bonuses are not stacked; only the best hull in the fleet applies
+- Fuel Transport/Xport bonuses are not stacked; only the best hull in the fleet
+  applies
 - No repair when using a stargate
 - No repair when fleet has Attack orders while orbiting an enemy planet
 
@@ -408,12 +418,11 @@ Open Questions
 
 .. todo:: SD (Space Demolition) mine explosion mechanics in combat
 
-
 Bombing
 -------
 
-Bombing occurs after fleet battles in the turn order.  A fleet with bomb weapons
-at a planet that has no defending fleet executes its bombing orders.
+Bombing occurs after fleet battles in the turn order.  A fleet with bomb
+weapons at a planet that has no defending fleet executes its bombing orders.
 
 Defense Coverage
 ~~~~~~~~~~~~~~~~
@@ -506,7 +515,8 @@ Each bomb type has a kill percentage, building-kill count, and minimum kill:
      - ?
 
 Normal bombs stack linearly.  Pop killed = max(percentage × pop, min_kill), all
-modified by ``(1 - Def(pop))``.  Buildings killed similarly using ``Def(build)``.
+modified by ``(1 - Def(pop))``.  Buildings killed similarly using
+``Def(build)``.
 
 Smart Bombs
 ~~~~~~~~~~~
@@ -514,9 +524,9 @@ Smart Bombs
 Smart bombs kill only colonists, not defenses or buildings.  Defense coverage
 against smart bombs uses ``Def(smart)`` (halved base coverage).
 
-**Retroviruses** (SD PRT only) — spread a retrovirus causing population loss over
-subsequent years (decreasing effect over 3 years).
+**Retroviruses** (SD PRT only) — spread a retrovirus causing population loss
+over subsequent years (decreasing effect over 3 years).
 
-*Source: Leonard Dickens, rec.games.computer.stars 1998-07-17, via*
-*Stars! FAQ advfaq/guts1.htm.  Community hypothesis; oracle confirmation pending*
-*for exact bomb kill percentages and minimum kill values.*
+*Source: Leonard Dickens, rec.games.computer.stars 1998-07-17, via* *Stars! FAQ
+advfaq/guts1.htm.  Community hypothesis; oracle confirmation pending* *for
+exact bomb kill percentages and minimum kill values.*

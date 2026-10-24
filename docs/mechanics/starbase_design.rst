@@ -10,16 +10,16 @@ Design Limits
 
 - Each player may have at most **10 active starbase designs** (separate pool
   from the 16-design ship limit).
-- A starbase is upgraded by scrapping the existing one and building a new design
-  in its place, or by directly upgrading via the production queue if the hull
-  supports it.
+- A starbase is upgraded by scrapping the existing one and building a new
+  design in its place, or by directly upgrading via the production queue if the
+  hull supports it.
 - Starbase hull parts (weapons, shields, etc.) cost **50% less** to build than
   the same parts on a ship hull.
 
 *Source: Stars! in-game help, Starbases section.*
 
 Starbase vs. Ship Design Differences
--------------------------------------
+------------------------------------
 
 .. list-table::
    :header-rows: 1
@@ -53,8 +53,8 @@ Starbase vs. Ship Design Differences
 Slot Types
 ----------
 
-Starbases use the same slot type bitmask system as ships (see :doc:`ship_design`),
-with one additional slot type exclusive to starbases:
+Starbases use the same slot type bitmask system as ships (see
+:doc:`ship_design`), with one additional slot type exclusive to starbases:
 
 **OrbitalElect** — accepts:
 
@@ -72,8 +72,8 @@ This means a 100/Any gate and an Any/300 gate on the same starbase do **not**
 combine into Any/Any capability. Players who accidentally place two gates only
 get the capabilities of one.
 
-The same slot-priority rule applies to IT gate scanning (see :ref:`it-gate-scanning`
-below).
+The same slot-priority rule applies to IT gate scanning (see
+:ref:`it-gate-scanning` below).
 
 **Two Mass Drivers** on the same starbase do provide an additive advantage; see
 the in-game help for details.
@@ -102,7 +102,7 @@ starbases.  Details:
 *Source: SAH Forum, Starbase FAQ thread.*
 
 Starbase Battle Behaviour
---------------------------
+-------------------------
 
 - Starbases use **any/any** as their combat target (primary and secondary),
   regardless of the default battle plan's primary/secondary target settings.
@@ -114,13 +114,13 @@ Starbase Battle Behaviour
   battle if its "attack who" setting triggers.
 - Starbases **always sweep neutral minefields**, independent of the default
   battle plan's "attack who" setting.
-- Specific slot firing order applies to starbases (community-documented;
-  needs oracle confirmation).
+- Specific slot firing order applies to starbases (community-documented; needs
+  oracle confirmation).
 
 *Source: SAH Forum, Starbase FAQ thread.*
 
 Starbase Salvage and Tech
---------------------------
+-------------------------
 
 - Starbases leave **no salvage** when destroyed.
 - Players cannot gain tech from destroying a starbase, even if the starbase
@@ -129,11 +129,11 @@ Starbase Salvage and Tech
 *Source: SAH Forum, Starbase FAQ thread.*
 
 Starbase Jamming and Cloaking
-------------------------------
+-----------------------------
 
-- Starbase jamming is **75% as effective** as equivalent ship jamming.
-  The maximum jamming a starbase can achieve is 75% (= 0.75 × 99%),
-  compared to the 95% ship cap.
+- Starbase jamming is **75% as effective** as equivalent ship jamming.  The
+  maximum jamming a starbase can achieve is 75% (= 0.75 × 99%), compared to the
+  95% ship cap.
 - Starbase cloaking obeys the same **98% maximum** as ships.
 - Cloaking a starbase reduces IT gate scan range (as with any scanner).
   Exception: an IT gate with "any" range still detects all gates in the
@@ -142,11 +142,11 @@ Starbase Jamming and Cloaking
 *Source: SAH Forum, Starbase FAQ thread.*
 
 Mystery Trader Items on Starbases
------------------------------------
+---------------------------------
 
-- **Langston Shell / Mega Poly Shell** mounted on a starbase provides
-  jamming and cloaking, but **does not** provide the scanning bonus those
-  items give on ships.
+- **Langston Shell / Mega Poly Shell** mounted on a starbase provides jamming
+  and cloaking, but **does not** provide the scanning bonus those items give on
+  ships.
 - Multi-Contained Munition in weapon slots cannot lay mines on a starbase
   (starbases cannot issue waypoint orders).
 

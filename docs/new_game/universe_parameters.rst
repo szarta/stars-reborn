@@ -2,8 +2,8 @@ Universe Parameters
 ===================
 
 The host configures universe generation parameters when creating a new game.
-These become the ``universe_params`` block in the ``POST /games`` request.
-For the generation algorithms that consume these parameters, see
+These become the ``universe_params`` block in the ``POST /games`` request.  For
+the generation algorithms that consume these parameters, see
 :doc:`../mechanics/universe_generation`.
 
 Size
@@ -68,12 +68,13 @@ Planet count: ``floor((dim / 10)² × density_factor / 100)`` — always at leas
 
 .. note::
 
-   ``dense`` is the highest density selectable through the Stars! game UI and the
-   highest code observed in ``.xy`` files (internal code 3).  A ``packed`` token
-   (internal code 4) exists in the ``game.def`` file format but is invalid — Stars!
-   exits silently with no output when given ``density=4`` in headless mode.  The
-   original game UI's top density option (sometimes labeled "Packed" in community
-   guides) stores as code 3 and is equivalent to ``dense``.
+   ``dense`` is the highest density selectable through the Stars! game UI and
+   the highest code observed in ``.xy`` files (internal code 3).  A ``packed``
+   token (internal code 4) exists in the ``game.def`` file format but is
+   invalid — Stars! exits silently with no output when given ``density=4`` in
+   headless mode.  The original game UI's top density option (sometimes labeled
+   "Packed" in community guides) stores as code 3 and is equivalent to
+   ``dense``.
 
    Combinations where the formula target exceeds ~960 produce stochastic planet
    counts in the 908–965 range; see :doc:`../mechanics/universe_generation`.
@@ -94,28 +95,28 @@ settings; the two middle values correspond to the Stars! UI options labelled
      - Behaviour
    * - ``close``
      - ≈ 62 ly (absolute)
-     - Homeworlds tightly clustered; early conflict.
-       Threshold is approximately an absolute constant (not scaling with map
-       size), unlike the other three settings.
+     - Homeworlds tightly clustered; early conflict.  Threshold is
+       approximately an absolute constant (not scaling with map size), unlike
+       the other three settings.
    * - ``moderate``
      - ≈ 0.221 × dim
-     - Moderate spread; labelled "Random" in Stars! UI
-       (180 ly on Small, 264 ly on Medium, 435 ly on Huge)
+     - Moderate spread; labelled "Random" in Stars! UI (180 ly on Small, 264 ly
+       on Medium, 435 ly on Huge)
    * - ``farther``
      - ≈ 0.303 × dim
-     - Larger spread; labelled "Farther Apart" in Stars! UI
-       (244 ly on Small, 364 ly on Medium, 604 ly on Huge)
+     - Larger spread; labelled "Farther Apart" in Stars! UI (244 ly on Small,
+       364 ly on Medium, 604 ly on Huge)
    * - ``distant``
      - ≈ 0.364 × dim
-     - Homeworlds maximally spread; most common competitive choice
-       (293 ly on Small, 437 ly on Medium, 728 ly on Huge)
+     - Homeworlds maximally spread; most common competitive choice (293 ly on
+       Small, 437 ly on Medium, 728 ly on Huge)
 
-**Minimum-separation constraint (oracle-confirmed 2026-04-22; scaling
-confirmed 2026-04-22 via R3.6):**
+**Minimum-separation constraint (oracle-confirmed 2026-04-22; scaling confirmed
+2026-04-22 via R3.6):**
 
 Each setting enforces a hard minimum Euclidean separation between any two
-homeworlds.  The placement algorithm is minimum-distance rejection sampling:
-a candidate homeworld is rejected if it falls within the threshold of any
+homeworlds.  The placement algorithm is minimum-distance rejection sampling: a
+candidate homeworld is rejected if it falls within the threshold of any
 already-placed homeworld.
 
 ``moderate``, ``farther``, and ``distant`` thresholds **scale proportionally
@@ -144,8 +145,8 @@ with map dimension** (confirmed across all five map sizes, 15 seeds each):
 
 ``close`` behaves differently: the observed minimum distance on Small (≈ 62 ly,
 from R3.1) does not appear to scale proportionally — raw values increase only
-sub-linearly across map sizes (37 → 60 → 77 → 92 → 100 ly), consistent with
-an approximately **absolute threshold of ≈ 62 ly**.  Exact confirmation on
+sub-linearly across map sizes (37 → 60 → 77 → 92 → 100 ly), consistent with an
+approximately **absolute threshold of ≈ 62 ly**.  Exact confirmation on
 non-Small maps is P4.
 
 On very small maps with many players and large spacing, Stars! may silently
@@ -166,12 +167,12 @@ Boolean flags that modify generation or gameplay.
      - Effect
    * - ``beginner_max_minerals``
      - false
-     - All mineral concentrations set to exactly 100 (oracle-confirmed 2026-04-22).
-       Removes mineral scarcity entirely.
+     - All mineral concentrations set to exactly 100 (oracle-confirmed
+       2026-04-22).  Removes mineral scarcity entirely.
    * - ``accelerated_bbs``
      - false
-     - Starting population = ``25,000 + 5,000 × GR%`` (scales with growth
-       rate; ≈ 100,000 for a 15% race); homeworld surface minerals ×1.25
+     - Starting population = ``25,000 + 5,000 × GR%`` (scales with growth rate;
+       ≈ 100,000 for a 15% race); homeworld surface minerals ×1.25
        (oracle-confirmed; community "+20%" claim is wrong — it is +25%);
        non-homeworld surface minerals assumed ×1.25 (untestable without
        ownership).  See :doc:`initial_state` for full formula.
@@ -190,8 +191,8 @@ Boolean flags that modify generation or gameplay.
      - Score sheet (F10) visible to all players after year 20.
    * - ``galaxy_clumping``
      - false
-     - Star systems are placed in clusters; faster initial expansion.
-       See :doc:`../mechanics/universe_generation`.
+     - Star systems are placed in clusters; faster initial expansion.  See
+       :doc:`../mechanics/universe_generation`.
 
 Random Seed
 -----------

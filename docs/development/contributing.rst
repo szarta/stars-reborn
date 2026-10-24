@@ -6,10 +6,10 @@ Development Setup
 
 ::
 
-    git clone <repo> stars-reborn
-    cd stars-reborn
-    pip install -e ".[dev,docs]"
-    pytest tests/      # verify everything passes
+   git clone <repo> stars-reborn
+   cd stars-reborn
+   pip install -e ".[dev,docs]"
+   pytest tests/      # verify everything passes
 
 Code Organization
 -----------------
@@ -24,7 +24,8 @@ When adding a new mechanic:
 1. Add the implementation to the appropriate ``engine/`` module.
 2. Add tests in ``tests/``.
 3. Document the formula in ``docs/mechanics/``.
-4. If research validates a new value from the original game, note it in ``CHANGELOG.txt``.
+4. If research validates a new value from the original game, note it in
+   ``CHANGELOG.txt``.
 
 Commit Messages
 ---------------
@@ -49,6 +50,6 @@ Style
 -----
 
 * Python: PEP 8, 100-char line limit.
-* Docstrings: one-line summary for simple functions; full docstring for anything involving
-  a formula (include the formula and source).
+* Docstrings: one-line summary for simple functions; full docstring for
+  anything involving a formula (include the formula and source).
 * No type annotations required, but welcome where they clarify intent.

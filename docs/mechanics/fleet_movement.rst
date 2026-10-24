@@ -52,8 +52,8 @@ Fuel Consumption
 Fuel consumption is a function of **total ship mass** (hull + components +
 cargo), **warp** speed, and the engine's **Fuel Usage Number** (FUN). FUN is
 expressed in percent units, where ``100`` is the chart's "100% efficiency"
-line: at FUN = 100, **1 mg of fuel moves 200 kT of weight 1 light-year**
-(Jason Cawley, advfaq §4.5.1).
+line: at FUN = 100, **1 mg of fuel moves 200 kT of weight 1 light-year** (Jason
+Cawley, advfaq §4.5.1).
 
 Cawley fuel formula:
 
@@ -142,9 +142,9 @@ Load/Unload cargo orders support a **threshold** parameter:
 - **Load all**: load as much of the named mineral/colonists as available.
 - **Load to X kT**: load the mineral until the fleet carries X kT total.
 - **Unload all**: drop everything of the named type to the planet.
-- **Unload to X kT**: leave at least X kT on the source planet; only load
-  what keeps the planet at or above X.  This is the primary tool for
-  maintaining mineral reserves on source planets in repeat routes.
+- **Unload to X kT**: leave at least X kT on the source planet; only load what
+  keeps the planet at or above X.  This is the primary tool for maintaining
+  mineral reserves on source planets in repeat routes.
 
 Repeat Orders
 ~~~~~~~~~~~~~
@@ -178,18 +178,18 @@ Distance Formula
 
    distance = sqrt((x2 - x1)² + (y2 - y1)²)   [in light years]
 
-A fleet traveling at warp W covers ``W²`` light years per year. If the destination
-is within ``W²`` light years, the fleet arrives this turn.
+A fleet traveling at warp W covers ``W²`` light years per year. If the
+destination is within ``W²`` light years, the fleet arrives this turn.
 
 Fuel Capacity
 -------------
 
 Each ship design has a fuel tank capacity (determined by hull). A fleet's total
-fuel capacity is the sum of all ships' capacities. Fuel is shared within a fleet.
+fuel capacity is the sum of all ships' capacities. Fuel is shared within a
+fleet.
 
 If a fleet runs out of fuel mid-journey, it drops to warp 1 for the remainder
 of travel (consuming no additional fuel).
-
 
 Fleet Routing
 -------------
@@ -214,12 +214,11 @@ Stargate Overgating
 
 A stargate has two ratings: a **mass limit** (kT, possibly "infinite", encoded
 as ``-1``) and a **range limit** (light years, possibly "infinite"). A fleet
-that uses a stargate may exceed either limit by up to 5×; beyond 5× the
-transit is hard-blocked. Overgated transit always succeeds in moving the
-fleet, but inflicts damage and may destroy ships outright.
+that uses a stargate may exceed either limit by up to 5×; beyond 5× the transit
+is hard-blocked. Overgated transit always succeeds in moving the fleet, but
+inflicts damage and may destroy ships outright.
 
-Rules summary (per the help file and the community "Guts of Overgating"
-spec):
+Rules summary (per the help file and the community "Guts of Overgating" spec):
 
 - Both mass and distance overgating cause ship damage. Damage is applied per
   ship and accumulates with prior damage; a ship at ≥100% total damage is
@@ -228,8 +227,8 @@ spec):
 - Distance overgating uses **only the sending gate's range**.
 - Mass overgating uses **both gates' mass limits for damage**, but **only the
   sending gate** for the vanishing roll.
-- Gates with an "infinite" cap on either axis contribute no damage on that
-  axis (treat their ``safe`` factor as 1).
+- Gates with an "infinite" cap on either axis contribute no damage on that axis
+  (treat their ``safe`` factor as 1).
 - IT (Interstellar Traveler) races never lose ships to the void from
   overgating, but their ships take the same damage as any other race's.
 
@@ -262,8 +261,7 @@ ship-design mass, and ``distance`` the gate-to-gate distance.
    tdam = mdam + rdam - mdam * rdam
 
 Each ship's damage on transit is ``tdam`` (as a fraction of its armor),
-**added** to its existing damage. A ship whose total reaches 100% is
-destroyed.
+**added** to its existing damage. A ship whose total reaches 100% is destroyed.
 
 Vanishing probability
 ~~~~~~~~~~~~~~~~~~~~~
@@ -278,12 +276,12 @@ range damage:
    vrange = rdam / 3
    vodds  = (1 - (1 - vmass) * (1 - vrange)) * OvergateLossFactor
 
-``OvergateLossFactor`` is ``0`` for IT races and ``1`` otherwise. The result
-is rounded down to the nearest 1%.
+``OvergateLossFactor`` is ``0`` for IT races and ``1`` otherwise. The result is
+rounded down to the nearest 1%.
 
 At the 5× mass limit, ``safe_send = 0`` and ``vmass = 1/3`` — confirming the
-"kills 1/3 of your ships at the limit" rule of thumb. Surviving ships at
-that limit have already taken ~98% damage.
+"kills 1/3 of your ships at the limit" rule of thumb. Surviving ships at that
+limit have already taken ~98% damage.
 
 .. todo:: Oracle-validate the exact rounding rules and confirm the
    sending-only-vs-both-gates question for the mass component of ``vodds``;

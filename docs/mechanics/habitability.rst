@@ -17,11 +17,13 @@ Gravity
 
 - Displayed as: ``Xg`` (e.g., ``1.00g``, ``0.22g``, ``4.40g``)
 - 101 discrete values: 0.12g to 8.00g (non-linear spacing)
-- Normalized to 0–100 via the ``Gravity_Map`` lookup table (display value → index)
+- Normalized to 0–100 via the ``Gravity_Map`` lookup table (display value →
+  index)
 
-The mapping is **non-linear** and has a quirk at the low end: indices 1, 3, 5, 7,
-and 10 are unreachable — no display value maps to them.  This double-increment
-behavior appears to reflect logarithmic perception of gravity at low values.
+The mapping is **non-linear** and has a quirk at the low end: indices 1, 3, 5,
+7, and 10 are unreachable — no display value maps to them.  This
+double-increment behavior appears to reflect logarithmic perception of gravity
+at low values.
 
 This matters for **race file decoding**: if the stored value is a 0–100 index,
 some index values will never appear in a valid race file.  See
@@ -120,29 +122,29 @@ Race range constraints:
 Planet Value Formula
 --------------------
 
-**Source:** m.a@stars, starsautohost.org forum (reverse-engineered).
-`Thread #2299 <http://starsautohost.org/sahforum2/index.php?t=msg&th=2299&rid=625&S=ee625fe2bec617564d7c694e9c5379c5&pl_view=&start=0#msg_19643>`_
+**Source:** m.a@stars, starsautohost.org forum (reverse-engineered).  `Thread
+#2299
+<http://starsautohost.org/sahforum2/index.php?t=msg&th=2299&rid=625&S=ee625fe2bec617564d7c694e9c5379c5&pl_view=&start=0#msg_19643>`_
 
 **Status:** Oracle-confirmed (R3 ``hab_proximity_growth_rate``).  A faithful
 re-implementation of the integer-arithmetic formula below produces a
-**byte-perfect match** on all 241 planets observed by 4 AI races at year 30
-of a Small/Normal/Farther map (seed 42), spanning positive, negative, and
-clamped value cases.  The same formula appears as ``Hab%`` in advfaq §4.11
-(Bill Butler, "Race wizard - Hab studies", 1998-04-10) — algebraically
-equivalent, with the floating-point form
-``Hab% = √[(1−g)² + (1−t)² + (1−r)²] · (1−x)(1−y)(1−z) / √3``
-where ``g, t, r`` are fractional distances from range center and
-``x, y, z = max(0, frac − 0.5)``.  The advfaq presentation gives 100% at
-center exactly: ``√3/√3 · 1·1·1 = 1.0``; an earlier worry that the formula
-was inverted was a hand-calculation slip.
+**byte-perfect match** on all 241 planets observed by 4 AI races at year 30 of
+a Small/Normal/Farther map (seed 42), spanning positive, negative, and clamped
+value cases.  The same formula appears as ``Hab%`` in advfaq §4.11 (Bill
+Butler, "Race wizard - Hab studies", 1998-04-10) — algebraically equivalent,
+with the floating-point form ``Hab% = √[(1−g)² + (1−t)² + (1−r)²] ·
+(1−x)(1−y)(1−z) / √3`` where ``g, t, r`` are fractional distances from range
+center and ``x, y, z = max(0, frac − 0.5)``.  The advfaq presentation gives
+100% at center exactly: ``√3/√3 · 1·1·1 = 1.0``; an earlier worry that the
+formula was inverted was a hand-calculation slip.
 
 .. note::
 
    The community C implementation (``planet_hab.c``) required a correction to
-   the ideality calculation: the original posted code had an incorrect double-cast
-   in the ideality path; the integer math path
-   ``ideality = ideality * (habRadius*2 - margin) / (habRadius*2)``
-   produces correct results and is what this formula uses.
+   the ideality calculation: the original posted code had an incorrect
+   double-cast in the ideality path; the integer math path ``ideality =
+   ideality * (habRadius*2 - margin) / (habRadius*2)`` produces correct results
+   and is what this formula uses.
 
 .. code-block:: python
 
@@ -170,7 +172,8 @@ Positive value (per axis)
    if margin > 0:
        ideality *= ((hab_radius * 2) - margin) / (hab_radius * 2)
 
-- Perfect center on all three axes: ``planet_value_points = 30000``, ``ideality = 10000``
+- Perfect center on all three axes: ``planet_value_points = 30000``, ``ideality
+  = 10000``
 - Final value = ``sqrt(30000/3 + 0.9) × 1.0 ≈ 100``
 
 Negative value (per axis)
@@ -218,31 +221,34 @@ The formula has been validated against observed |original| games. See
 ``data/planet_samples/`` for CSV exports of planet hab values vs. calculated
 planet values for known race configurations.
 
-Example validation case (Tiny/Normal map, Humanoid race: grav 0.22–4.40g,
-temp −140–140°C, rad 15–85 mR/yr):
+Example validation case (Tiny/Normal map, Humanoid race: grav 0.22–4.40g, temp
+−140–140°C, rad 15–85 mR/yr):
 
-- Planet ``Scorpius``: grav 2.96g, temp −32°C, rad 45 → observed 45%, formula gives 45% ✓
-- Planet ``Planet 9``: grav 0.65g, temp 12°C, rad 46 → observed 83%, formula gives 83% ✓
+- Planet ``Scorpius``: grav 2.96g, temp −32°C, rad 45 → observed 45%, formula
+  gives 45% ✓
+- Planet ``Planet 9``: grav 0.65g, temp 12°C, rad 46 → observed 83%, formula
+  gives 83% ✓
 
 .. _hab-race-file-encoding:
 
 Race File Encoding — Hypothesis
----------------------------------
+-------------------------------
 
-The race record (binary type-6, 131 bytes) stores hab range min/max for each axis.
-The exact byte offsets within the type-6 payload are **not yet decoded**, but
-``RACEWIZARDDLG1–6`` (``10e0:03ac``–``10e0:3bae``) is the confirmed Ghidra address
-range for the race designer wizard, noted to contain "hab range encoding."
+The race record (binary type-6, 131 bytes) stores hab range min/max for each
+axis.  The exact byte offsets within the type-6 payload are **not yet
+decoded**, but ``RACEWIZARDDLG1–6`` (``10e0:03ac``–``10e0:3bae``) is the
+confirmed Ghidra address range for the race designer wizard, noted to contain
+"hab range encoding."
 
 Two plausible encodings for the stored gravity value:
 
-1. **Stored as 0–100 index** — the normalized internal value from ``Gravity_Map``.
-   Display value is recovered by the inverse lookup.  This is the most likely
-   encoding given that all three hab axes work on the same 0–100 scale internally.
-
+1. **Stored as 0–100 index** — the normalized internal value from
+   ``Gravity_Map``.  Display value is recovered by the inverse lookup.  This is
+   the most likely encoding given that all three hab axes work on the same
+   0–100 scale internally.
 2. **Stored as display value** — e.g., gravity as a fixed-point integer (e.g.,
-   ``0.22g`` stored as ``22`` after multiplying by 100), temperature as a signed
-   integer in °C, radiation as a raw 0–100 byte.
+   ``0.22g`` stored as ``22`` after multiplying by 100), temperature as a
+   signed integer in °C, radiation as a raw 0–100 byte.
 
 **Community evidence for encoding (1):** The starsautohost.org reference C
 implementation (``planet_hab.c``, m.a@stars, 2299) defines:
@@ -255,12 +261,13 @@ implementation (``planet_hab.c``, m.a@stars, 2299) defines:
    };
 
 The explicit "0 to 100 clicks, -1 for immunity" comment strongly suggests the
-author knew the race file stores hab ranges as 0–100 integers, not display values.
+author knew the race file stores hab ranges as 0–100 integers, not display
+values.
 
-**Race file likely stores a third center byte per axis.** Forum discussion on the
-same thread (Kotk, m.a@stars) identifies "3 bytes" of potential waste as
-"Radiation, Gravity and Temperature" — one center byte per axis.  The hypothesis
-is that the race file layout per axis is:
+**Race file likely stores a third center byte per axis.** Forum discussion on
+the same thread (Kotk, m.a@stars) identifies "3 bytes" of potential waste as
+"Radiation, Gravity and Temperature" — one center byte per axis.  The
+hypothesis is that the race file layout per axis is:
 
 .. code-block:: text
 
@@ -268,19 +275,19 @@ is that the race file layout per axis is:
    upperHab  (1 byte, 0–100 or -1)
    centerHab (1 byte, 0–100 or -1)   ← always == (lower+upper)/2 in practice
 
-**Bounds checker confirmed:** ConstB (forum thread) notes a bounds-checker inside
-Stars! validates hab center correctness; PricklyPea confirms "it checks that it
-is in the middle."  Encoding an off-center hab range would be detected and
-rejected.  The formula code nonetheless handles arbitrary centers, suggesting the
-design originally allowed them.
+**Bounds checker confirmed:** ConstB (forum thread) notes a bounds-checker
+inside Stars! validates hab center correctness; PricklyPea confirms "it checks
+that it is in the middle."  Encoding an off-center hab range would be detected
+and rejected.  The formula code nonetheless handles arbitrary centers,
+suggesting the design originally allowed them.
 
 The unreachable gravity indices (1, 3, 5, 7, 10) remain the hard diagnostic: if
 a decoded type-6 byte lands on one of those values, encoding (1) is ruled out.
 
 .. todo:: Decode hab range bytes in type-6 record via ``RACEWIZARDDLG`` analysis
-          and resolve which encoding is used. Confirm whether center byte is
-          stored separately (9 hab bytes total) or derived. Cross-reference with
-          ``binary_map.rst``.
+   and resolve which encoding is used. Confirm whether center byte is
+   stored separately (9 hab bytes total) or derived. Cross-reference with
+   ``binary_map.rst``.
 
 Open Questions
 --------------
@@ -292,12 +299,11 @@ Open Questions
 .. todo:: AR (Alternate Reality) race: does planet value work differently?
 
 .. todo:: **Asymmetric hab ranges** — the formula code handles an explicit center
-          byte that need not equal ``(min + max) / 2``, but a confirmed bounds
-          checker in Stars! enforces centering in practice.  m.a@stars speculates
-          this was an earlier design that was later locked down.  Confirm via
-          ``RACEWIZARDDLG`` whether the center byte is stored separately and
-          whether the bounds check is in the race wizard or the host engine.
-
+   byte that need not equal ``(min + max) / 2``, but a confirmed bounds
+   checker in Stars! enforces centering in practice.  m.a@stars speculates
+   this was an earlier design that was later locked down.  Confirm via
+   ``RACEWIZARDDLG`` whether the center byte is stored separately and
+   whether the bounds check is in the race wizard or the host engine.
 
 .. _stars-reborn-impl:
 
@@ -307,30 +313,32 @@ Implementation Notes (from stars-reborn)
 Planet Value Formula
 --------------------
 
-Each planet has three habitat readings: gravity (g), temperature (t), and radiation (r),
-each on a 0–100 integer scale. Your race has a range [min, max] on each axis (or "immune").
-Planet value is the product of three per-axis values, normalized to [-45, 100]:
+Each planet has three habitat readings: gravity (g), temperature (t), and
+radiation (r), each on a 0–100 integer scale. Your race has a range [min, max]
+on each axis (or "immune").  Planet value is the product of three per-axis
+values, normalized to [-45, 100]:
 
 For each axis:
 
 .. code-block:: text
 
-    If immune:
-        axis_value = 100
-    Else:
-        mid = (min + max) / 2
-        range_half = (max - min) / 2
-        If planet_val is within [min, max]:
-            distance_from_mid = abs(planet_val - mid)
-            axis_value = 100 * (1 - distance_from_mid / range_half)
-        Else (out of range):
-            out_of_range = min(abs(planet_val - min), abs(planet_val - max))
-            axis_value = -45 * out_of_range / 15   (capped at -45)
+   If immune:
+       axis_value = 100
+   Else:
+       mid = (min + max) / 2
+       range_half = (max - min) / 2
+       If planet_val is within [min, max]:
+           distance_from_mid = abs(planet_val - mid)
+           axis_value = 100 * (1 - distance_from_mid / range_half)
+       Else (out of range):
+           out_of_range = min(abs(planet_val - min), abs(planet_val - max))
+           axis_value = -45 * out_of_range / 15   (capped at -45)
 
 Overall planet_value = product formula combining three axis values.
 
-**Reference:** ``sr-old/reference/research/`` — ``planet_hab.c`` (community C implementation),
-validated against live Stars! game data in ``stars-research/planet_data/``.
+**Reference:** ``sr-old/reference/research/`` — ``planet_hab.c`` (community C
+implementation), validated against live Stars! game data in
+``stars-research/planet_data/``.
 
 Gravity Map
 -----------
@@ -339,37 +347,41 @@ Gravity values are non-linear. The 0–100 integer scale maps to g values:
 
 .. code-block:: text
 
-    0  → 0.12g       25 → 0.50g       50 → 1.00g
-    10 → 0.20g       30 → 0.55g       55 → 1.12g
-    20 → 0.36g       40 → 0.71g       75 → 2.24g
-                                       100 → 8.00g
+   0  → 0.12g       25 → 0.50g       50 → 1.00g
+   10 → 0.20g       30 → 0.55g       55 → 1.12g
+   20 → 0.36g       40 → 0.71g       75 → 2.24g
+                                      100 → 8.00g
 
 Full mapping in ``stars_reborn/engine/space.py`` ``Gravity_Map``.
 
 Temperature Map
 ---------------
 
-Temperature maps linearly: ``temperature = (scale_value - 50) * 4``
-Range: scale 0 = -200°C, scale 50 = 0°C, scale 100 = +200°C.
+Temperature maps linearly: ``temperature = (scale_value - 50) * 4`` Range:
+scale 0 = -200°C, scale 50 = 0°C, scale 100 = +200°C.
 
 Radiation Map
 -------------
 
-Radiation maps linearly (1:1 with mR/yr): scale 0 = 0 mR/yr, scale 100 = 100 mR/yr.
+Radiation maps linearly (1:1 with mR/yr): scale 0 = 0 mR/yr, scale 100 = 100
+mR/yr.
 
 Homeworld Initialization
 ------------------------
 
-A player's homeworld is always set to a planet value of exactly 100% for that race:
+A player's homeworld is always set to a planet value of exactly 100% for that
+race:
 
 * Gravity set to the midpoint of the race's gravity range (or 50 if immune)
-* Temperature set to the midpoint of the race's temperature range (or 50 if immune)
+* Temperature set to the midpoint of the race's temperature range (or 50 if
+  immune)
 * Radiation set to the midpoint of the race's radiation range (or 50 if immune)
 
 Population Capacity
 -------------------
 
-Maximum population per planet is determined by planet size (set at universe generation):
+Maximum population per planet is determined by planet size (set at universe
+generation):
 
 .. list-table::
    :header-rows: 1

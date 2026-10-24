@@ -1,0 +1,17 @@
+# moldy configuration for reStructuredText formatting (docs/*.rst).
+#
+# Kept separate from a plain `moldy.toml` on purpose: RST support is only in an
+# unreleased moldy branch build, and the released moldy used for JSON/YAML/
+# Markdown (the `moldy` pre-commit hook) rejects an `[rst]` section. When RST
+# ships in a moldy release, fold these settings into `moldy.toml` and switch the
+# `moldy-rst` hook over to the released binary.
+#
+# These options keep the repo's authored conventions; moldy still normalizes
+# layout (indentation, blank lines, wrapping). See docs/adr once ADR-0006 is
+# mirrored here.
+[rst]
+indent_width = 3                 # directive options and bodies at 3 spaces
+max_width = 79                   # wrap prose at 79 columns
+heading_style = "preserve"       # keep each title's underline/overline character
+bullet_style = "preserve"        # keep `*` bullets (incl. list-table `* -` rows)
+sentence_spacing = "preserve"    # keep two spaces between sentences

@@ -9,8 +9,8 @@ import from the original game, see :doc:`race_file_format`.
 Player Slots
 ------------
 
-The host defines between 2 and 16 player slots when creating a game.  Each
-slot has:
+The host defines between 2 and 16 player slots when creating a game.  Each slot
+has:
 
 .. list-table::
    :header-rows: 1
@@ -37,8 +37,8 @@ When configuring a slot the host (or human player in a lobby) chooses one of:
 1. **Load from file** — an existing ``race.json`` saved from the race designer.
 2. **Import original** — an original |original| ``.r`` race file, converted on
    import.  See :doc:`race_file_format`.
-3. **Pick pre-built** — one of the built-in races bundled with the engine.
-   See `Pre-built Races`_ below.
+3. **Pick pre-built** — one of the built-in races bundled with the engine.  See
+   `Pre-built Races`_ below.
 4. **Design new** — opens the race designer to build from scratch.
 
 Race Designer Steps
@@ -51,17 +51,17 @@ the allowed tolerance).  The steps match the original game's wizard pages:
    :doc:`../mechanics/race_design` for the full table.
 2. **Lesser Racial Traits (LRTs)** — any combination without prerequisite
    violations.
-3. **Habitat ranges** — gravity, temperature, radiation.  Each axis may be
-   set to immune (always 10 000 hab points) or a min/max preference range.
-   Minimum range width: 80°C for temperature.
+3. **Habitat ranges** — gravity, temperature, radiation.  Each axis may be set
+   to immune (always 10 000 hab points) or a min/max preference range.  Minimum
+   range width: 80°C for temperature.
 4. **Economy** — resources per colonist, factory production/cost/operators,
    mine production/cost/operators, growth rate.
-5. **Research costs** — Cheap / Normal / Expensive per field.  Expensive
-   grants +1 starting level.
+5. **Research costs** — Cheap / Normal / Expensive per field.  Expensive grants
+   +1 starting level.
 6. **Race name and icon.**
 
-The designer must show a running point total and block submission if the
-budget is out of range.
+The designer must show a running point total and block submission if the budget
+is out of range.
 
 Leftover Advantage Points
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -104,8 +104,8 @@ Saving and Loading
 Pre-built Races
 ---------------
 
-The engine ships with a set of pre-built race definitions used for AI slots
-and as starting points for new players.  These are bundled from
+The engine ships with a set of pre-built race definitions used for AI slots and
+as starting points for new players.  These are bundled from
 ``stars-reborn-schemas`` (file: ``builtin_races/``).
 
 **Source:** Decoded from original ``stars.exe`` default ``.r1`` files
@@ -140,7 +140,8 @@ Radiation: direct mR/yr.  Research cost: ``N``\=Normal, ``E``\=Expensive,
      - 35–81
      - 13–53
      - 20%
-     - IFE+TT+CE+NAS; cheap_germ; En/We Exp, Pr Cheap, Bio Cheap; rp=1000 fc=9 cof=17k mc=9
+     - IFE+TT+CE+NAS; cheap_germ; En/We Exp, Pr Cheap, Bio Cheap; rp=1000 fc=9
+       cof=17k mc=9
    * - Insectoid
      - WM
      - immune
@@ -154,7 +155,8 @@ Radiation: direct mR/yr.  Research cost: ``N``\=Normal, ``E``\=Expensive,
      - 12–88
      - immune
      - 10%
-     - ARM+ISB+BET*; all research Expensive; rp=900 mc=15 com=5k. PRT unconfirmed (likely IT)
+     - ARM+ISB+BET*; all research Expensive; rp=900 mc=15 com=5k. PRT
+       unconfirmed (likely IT)
    * - Antetheral
      - AR (inf.)
      - 0–30
@@ -194,8 +196,9 @@ AI difficulty controls two independent dimensions:
    * - **Race template**
      - Each difficulty level uses a distinct, hand-tuned race design per PRT.
        Higher tiers use stronger LRT combinations, wider hab ranges, better
-       economy stats, and more aggressive research-cost picks.  (Six PRTs × four
-       tiers = 24 built-in AI race templates — see :doc:`../reference/ai_races`.)
+       economy stats, and more aggressive research-cost picks.  (Six PRTs ×
+       four tiers = 24 built-in AI race templates — see
+       :doc:`../reference/ai_races`.)
    * - **Starting advantage**
      - **Expert only:** +10% starting population on every initial planet
        (baseline 250k → 275k for 1/1000 races, 175k → 192k for 1/400 races,
@@ -207,13 +210,12 @@ AI difficulty controls two independent dimensions:
        the usual leftover-advantage-point effect.  For races with
        ``leftover_spend = surface_minerals`` this is the only concentration
        boost they get (Easy/Standard show natural concentrations; Tough/Expert
-       jump to a boosted value).  Races with
-       ``leftover_spend = mineral_concentrations`` already receive the boost
-       from leftover points at all tiers, so the tier-based boost is not
-       additionally visible in their homeworld concentrations.
-       Surface minerals and homeworld concentrations themselves follow the
-       usual leftover-advantage-point rules and are not otherwise scaled by
-       difficulty.
+       jump to a boosted value).  Races with ``leftover_spend =
+       mineral_concentrations`` already receive the boost from leftover points
+       at all tiers, so the tier-based boost is not additionally visible in
+       their homeworld concentrations.  Surface minerals and homeworld
+       concentrations themselves follow the usual leftover-advantage-point
+       rules and are not otherwise scaled by difficulty.
    * - **Decision quality**
      - Higher difficulty enables more sophisticated order generation (fleet
        routing, production prioritisation, combat targeting).  *Mechanism not
@@ -249,10 +251,10 @@ game-start time; it is not itself a difficulty level.
 
    Labels confirmed from ``stars.exe`` string table (slots 2414-2418) and
    cross-verified against the 24 AI race templates captured in community data
-   (:doc:`../reference/ai_races`).  Each of the 24 extracted
-   m1-per-AI race records matches its corresponding AIs.md template exactly
-   (LRT set, hab ranges, pop efficiency, factory/mine rates, growth %, research
-   costs).  Source: ``ai_games/{1,2}/`` corpus, 2026-04-23.
+   (:doc:`../reference/ai_races`).  Each of the 24 extracted m1-per-AI race
+   records matches its corresponding AIs.md template exactly (LRT set, hab
+   ranges, pop efficiency, factory/mine rates, growth %, research costs).
+   Source: ``ai_games/{1,2}/`` corpus, 2026-04-23.
 
 .. todo::
 

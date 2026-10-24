@@ -3,7 +3,7 @@ name: Agent and commit policy
 # The AGENTS.md commit rules, checked independently of local hooks: the
 # non-compiled pre-commit hooks, the guard regression tests, and the
 # commit-msg policy over each new commit. The Rust hooks run in the CI
-# workflow; moldy is skipped here because it is not installed on the runner.
+# workflow; moldy and moldy-rst are skipped here (neither is on the runner).
 
 on:
   pull_request:
@@ -25,7 +25,7 @@ jobs:
         run: pip install pre-commit
       - name: Run non-compiled hooks
         env:
-          SKIP: cargo-fmt,cargo-clippy,cargo-test,moldy,generate-python-types
+          SKIP: cargo-fmt,cargo-clippy,cargo-test,moldy,moldy-rst,generate-python-types
         run: pre-commit run --all-files
       - name: Guard regression tests
         run: python3 -W error::ResourceWarning -m unittest discover -s scripts -p 'test_check_*.py' -v

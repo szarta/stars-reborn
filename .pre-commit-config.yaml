@@ -81,6 +81,21 @@ repos:
         exclude: ^engine/tests/data/
         verbose: true
 
+  # moldy for reStructuredText (docs/*.rst). RST support only exists in an
+  # unreleased moldy branch build, so this runs a locally-built `moldy-rst`
+  # binary with the RST config, separate from the released `moldy` above (which
+  # cannot read an [rst] config). Switch to the released moldy + a merged
+  # moldy.toml once RST ships. A declined file makes moldy exit 3 and fails the
+  # hook rather than passing silently.
+  - repo: local
+    hooks:
+      - id: moldy-rst
+        name: moldy (reStructuredText)
+        entry: moldy-rst --in-place --config moldy-rst.toml
+        language: system
+        types_or: [rst]
+        verbose: true
+
   # knots complexity gate (rust + python), from the prebuilt-wheel mirror.
   # The default hook ships args [--aird-threshold=85].
   - repo: https://github.com/brandon-arrendondo/knots-pre-commit

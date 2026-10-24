@@ -14,8 +14,8 @@ Project Tenets
    must feel immediately at home.
 3. **Respectful enhancement** — a "Legacy" mode preserves original behavior
    exactly; optional fixes address known bugs and micromanagement pain points.
-4. **Collaborative** — acknowledge prior clone efforts, community research,
-   and contributors.
+4. **Collaborative** — acknowledge prior clone efforts, community research, and
+   contributors.
 
 Overview
 --------
@@ -26,19 +26,19 @@ language interop between them.
 
 .. code-block:: text
 
-    ┌────────────────────────────┐        HTTP        ┌────────────────────────────┐
-    │       Game Client (UI)     │ ◄────────────────► │    Game Engine (Rust)      │
-    │                            │                    │                            │
-    │  Renders universe state    │                    │  Universe generation       │
-    │  Collects player orders    │                    │  Turn processing           │
-    │  Submits orders to engine  │                    │  Victory detection         │
-    │  Displays turn results     │                    │  Authoritative data model  │
-    │  Enforces UI-level rules   │                    │  Validates all inputs      │
-    └────────────────────────────┘                    └────────────────────────────┘
+   ┌────────────────────────────┐        HTTP        ┌────────────────────────────┐
+   │       Game Client (UI)     │ ◄────────────────► │    Game Engine (Rust)      │
+   │                            │                    │                            │
+   │  Renders universe state    │                    │  Universe generation       │
+   │  Collects player orders    │                    │  Turn processing           │
+   │  Submits orders to engine  │                    │  Victory detection         │
+   │  Displays turn results     │                    │  Authoritative data model  │
+   │  Enforces UI-level rules   │                    │  Validates all inputs      │
+   └────────────────────────────┘                    └────────────────────────────┘
 
-**Single-player:** a thin launcher starts the engine on ``localhost:PORT``
-and opens the client. On exit the launcher shuts down the engine. The user
-sees a single application.
+**Single-player:** a thin launcher starts the engine on ``localhost:PORT`` and
+opens the client. On exit the launcher shuts down the engine. The user sees a
+single application.
 
 **Multiplayer:** the client connects to a remote engine host. No code changes
 required on either side — just a different host address.
@@ -59,7 +59,8 @@ Repository Structure
      - This repo. Authoritative developer reference: mechanics, API contracts,
        architecture decisions. Read before writing engine or UI code.
    * - ``stars-reborn-engine``
-     - Rust game engine. HTTP API server, turn processing, data model authority.
+     - Rust game engine. HTTP API server, turn processing, data model
+       authority.
    * - ``stars-reborn-ui``
      - Python/PySide6 view layer. Pure HTTP client, no game logic.
    * - ``stars-reborn-schemas``
@@ -81,23 +82,24 @@ The engine is a standalone Rust binary exposing an HTTP API. It has four core
 jobs:
 
 **1. Universe Generation**
-  Generate the initial star map: planet placement, hab values, mineral
-  concentrations, homeworld setup per race, starting fleets. Seeded for
-  reproducibility.
+   Generate the initial star map: planet placement, hab values, mineral
+   concentrations, homeworld setup per race, starting fleets. Seeded for
+   reproducibility.
 
 **2. Turn Processing**
-  Each year, resolve the full turn sequence across all player orders (see
-  :doc:`mechanics/turn_resolution`). Generate per-player turn files containing
-  only what that player can observe.
+   Each year, resolve the full turn sequence across all player orders (see
+   :doc:`mechanics/turn_resolution`). Generate per-player turn files containing
+   only what that player can observe.
 
 **3. Victory Detection**
-  After each turn, evaluate all victory conditions and notify affected players.
+   After each turn, evaluate all victory conditions and notify affected
+   players.
 
 **4. Data Model Authority**
-  The engine is the single source of truth for all game rules and data
-  structures: technology tree, race trait definitions, ship hull definitions,
-  valid component data, habitat formulae, schema versions. Clients retrieve
-  this data from the engine rather than hardcoding it.
+   The engine is the single source of truth for all game rules and data
+   structures: technology tree, race trait definitions, ship hull definitions,
+   valid component data, habitat formulae, schema versions. Clients retrieve
+   this data from the engine rather than hardcoding it.
 
 Core Data Model
 ---------------
@@ -106,8 +108,8 @@ Game Object Model
 ~~~~~~~~~~~~~~~~~
 
 The universe contains a set of ``SpaceObject`` instances, each at a
-``SpaceCoordinate``. Every object a player can observe or interact with is
-one of these subtypes:
+``SpaceCoordinate``. Every object a player can observe or interact with is one
+of these subtypes:
 
 .. uml::
 
@@ -193,8 +195,8 @@ includes only the record for their own slot.
 The record is in one of three states for a given player (see
 :doc:`mechanics/scanning` for the full rules):
 
-1. **Never observed** — every contents field absent. Identity fields (id,
-   name, position) come from the shared .xy data and are always present.
+1. **Never observed** — every contents field absent. Identity fields (id, name,
+   position) come from the shared .xy data and are always present.
 2. **Observed before, not currently penetrating-scanned** — contents fields
    hold values **as they were at last observation**; ``years_since_last_scan``
    tells the client how stale they are. Ground truth may have drifted
@@ -207,15 +209,16 @@ Contents fields subject to the three-state rule: ``gravity``, ``temperature``,
 ``radiation``, the three mineral concentrations, the three surface mineral
 amounts, ``population``, ``owner``, ``factories``, ``mines``, ``defense``,
 starbase presence/design. **Fields the player has never observed are absent
-(not zero, not null — literally not in the JSON.)** This is critical: a UI
-that reads a "0" for population on an unobserved planet would be wrong.
+(not zero, not null — literally not in the JSON.)** This is critical: a UI that
+reads a "0" for population on an unobserved planet would be wrong.
 
 The same per-player intel pattern applies to other ``SpaceObject`` types that
 are scanner-gated. ``DiscoverableWormholeData`` records last-seen position,
 ``seen_this_turn``, and a sticky ``partner_id`` (set only on traversal); see
-:doc:`mechanics/wormholes`. ``DiscoverableFleetData`` and ``DiscoverableMinefieldData``
-follow the same convention — fields never observed are absent, and intel
-about the most recent observation is retained across turns.
+:doc:`mechanics/wormholes`. ``DiscoverableFleetData`` and
+``DiscoverableMinefieldData`` follow the same convention — fields never
+observed are absent, and intel about the most recent observation is retained
+across turns.
 
 Engine ground truth (full planet state for every player slot, full wormhole
 linkages, uncloaked fleet positions, AI internals) lives in the host-side
@@ -224,12 +227,12 @@ choke point that derives a player's turn file from ``GameState`` is the place
 to enforce — and test — that no host-only field can leak into a per-player
 view.
 
-Each ``Player`` may have at most **20 ship designs** and **20 starbase designs**
-active simultaneously. Scrapping a ship frees its design slot only when no
-ships of that design remain.
+Each ``Player`` may have at most **20 ship designs** and **20 starbase
+designs** active simultaneously. Scrapping a ship frees its design slot only
+when no ships of that design remain.
 
-``NPC`` is a computer-controlled player; it uses the same data model as a
-human ``Player`` and the same order format.
+``NPC`` is a computer-controlled player; it uses the same data model as a human
+``Player`` and the same order format.
 
 Ship Classification
 ~~~~~~~~~~~~~~~~~~~
@@ -256,8 +259,8 @@ predicates are used by scoring, combat, and order validation:
    * - ``isEscort()``
      - Armed, non-capital, non-bomber ship
 
-These map directly to scoring categories (capital ships ×3, unarmed ×0.5,
-armed ×1) and to combat stack behavior. See :doc:`mechanics/combat` and
+These map directly to scoring categories (capital ships ×3, unarmed ×0.5, armed
+×1) and to combat stack behavior. See :doc:`mechanics/combat` and
 :doc:`mechanics/victory`.
 
 .. todo::
@@ -268,18 +271,20 @@ armed ×1) and to combat stack behavior. See :doc:`mechanics/combat` and
 Every game year produces two artifacts per player:
 
 **Turn file** (engine → player)
-  A fog-of-war filtered snapshot of the universe from that player's
-  perspective. Read-only. Contains everything the player is allowed to see
-  this year: planet states, visible fleets, messages, battle reports, scores.
+   A fog-of-war filtered snapshot of the universe from that player's
+   perspective. Read-only. Contains everything the player is allowed to see
+   this year: planet states, visible fleets, messages, battle reports, scores.
 
 **Orders file** (player → engine)
-  The player's instructions for this year. Submitted once per year per
-  player. Contains fleet waypoints, production queue changes, research
-  allocation, ship design changes, messages to other players.
+   The player's instructions for this year. Submitted once per year per player.
+   Contains fleet waypoints, production queue changes, research allocation,
+   ship design changes, messages to other players.
 
-The engine is a pure function over these inputs::
+The engine is a pure function over these inputs:
 
-    (universe_state, orders[all_players]) → (new_universe_state, turn_files[all_players])
+::
+
+   (universe_state, orders[all_players]) → (new_universe_state, turn_files[all_players])
 
 Fog of war is applied by the engine at turn-file generation time. A player's
 turn file does not contain data they cannot see — it is absent, not hidden.
@@ -288,14 +293,14 @@ This is essential for multiplayer integrity.
 Orders as Desired State
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Orders are expressed as **desired state**, not commands. The orders file for
-a fleet says "fleet 12 waypoints: [Scorpius, Antares]", not "add Antares to
-fleet 12's waypoint list". This makes orders idempotent and easy to display
-as a diff against the previous turn's defaults.
+Orders are expressed as **desired state**, not commands. The orders file for a
+fleet says "fleet 12 waypoints: [Scorpius, Antares]", not "add Antares to fleet
+12's waypoint list". This makes orders idempotent and easy to display as a diff
+against the previous turn's defaults.
 
-Unset fields in the orders file carry forward from the previous year's
-defaults — the same behavior as the original |original|. A player who never
-touches research allocation does not lose their research settings.
+Unset fields in the orders file carry forward from the previous year's defaults
+— the same behavior as the original |original|. A player who never touches
+research allocation does not lose their research settings.
 
 File Format
 -----------
@@ -321,31 +326,30 @@ Schemas for all file formats live in ``stars-reborn-schemas``.
 Engine API
 ----------
 
-The engine embeds an HTTP server (axum) and listens on a configured port.
-The API has two distinct surfaces.
+The engine embeds an HTTP server (axum) and listens on a configured port.  The
+API has two distinct surfaces.
 
 Data Model API
 ~~~~~~~~~~~~~~
 
-Read-only endpoints exposing the authoritative game rules. Clients use these
-to build the tech browser, populate the ship designer, understand race traits,
-and know valid parameter ranges. The data model does not change during a game.
+Read-only endpoints exposing the authoritative game rules. Clients use these to
+build the tech browser, populate the ship designer, understand race traits, and
+know valid parameter ranges. The data model does not change during a game.
 
 .. code-block:: text
 
-    GET /model/version                  → engine version + API schema version
-    GET /model/technologies             → full technology tree
-    GET /model/technologies/{id}        → single technology item
-    GET /model/race/traits              → PRT/LRT definitions and point costs
-    GET /model/ships/hulls              → all hull definitions
-    GET /model/schemas                  → JSON schemas for all request/response types
+   GET /model/version                  → engine version + API schema version
+   GET /model/technologies             → full technology tree
+   GET /model/technologies/{id}        → single technology item
+   GET /model/race/traits              → PRT/LRT definitions and point costs
+   GET /model/ships/hulls              → all hull definitions
+   GET /model/schemas                  → JSON schemas for all request/response types
 
 Response shapes for these endpoints live in ``stars-reborn-schemas``:
 
-- ``/model/ships/hulls`` → ``response-model-ship-hulls.json``
-  (id, slug, name, category, trait gating, mass/armor/init,
-  fuel/cargo capacity, cost, tech requirements, and slot list with
-  layout-grid positions).
+- ``/model/ships/hulls`` → ``response-model-ship-hulls.json`` (id, slug, name,
+  category, trait gating, mass/armor/init, fuel/cargo capacity, cost, tech
+  requirements, and slot list with layout-grid positions).
 
 Game API
 ~~~~~~~~
@@ -354,19 +358,19 @@ Stateful endpoints for gameplay:
 
 .. code-block:: text
 
-    POST /games                                         → create new game
-    GET  /games/{game_id}                               → game metadata
-    GET  /games/{game_id}/turns/{year}/status           → per-player submission status
-    GET  /games/{game_id}/turns/{year}/players/{pid}    → turn file for player
-    PUT  /games/{game_id}/turns/{year}/orders/{pid}     → submit player orders (idempotent)
-    POST /games/{game_id}/turns/{year}/skip/{pid}       → generate AI orders, mark skipped
-    GET  /games/{game_id}/turns/{year}/ai-orders/{pid}  → AI-suggested orders (not submitted)
+   POST /games                                         → create new game
+   GET  /games/{game_id}                               → game metadata
+   GET  /games/{game_id}/turns/{year}/status           → per-player submission status
+   GET  /games/{game_id}/turns/{year}/players/{pid}    → turn file for player
+   PUT  /games/{game_id}/turns/{year}/orders/{pid}     → submit player orders (idempotent)
+   POST /games/{game_id}/turns/{year}/skip/{pid}       → generate AI orders, mark skipped
+   GET  /games/{game_id}/turns/{year}/ai-orders/{pid}  → AI-suggested orders (not submitted)
 
 There is no explicit "process turn" endpoint. Processing is a side effect of
 all player slots being either ``submitted`` or ``skipped``.
 
 Skip, AI, and Computer Players
--------------------------------
+------------------------------
 
 These three cases share a single code path in the engine:
 
@@ -407,15 +411,15 @@ Validation layers:
    this player's turn?
 
 Engine Internal Structure
---------------------------
+-------------------------
 
 .. code-block:: text
 
-    engine/
-      http/    axum router and request handlers
-               (thin layer: parse request → call game logic → serialize response)
-      game/    all game logic: turn processing, fog of war, AI, scoring
-      store/   game state persistence (JSON files on disk)
+   engine/
+     http/    axum router and request handlers
+              (thin layer: parse request → call game logic → serialize response)
+     game/    all game logic: turn processing, fog of war, AI, scoring
+     store/   game state persistence (JSON files on disk)
 
 The ``http`` layer has no game logic. The ``game`` layer has no HTTP knowledge.
 The core logic is independently testable without an HTTP server.
@@ -436,7 +440,8 @@ The client does **not**:
 
 - Implement game logic (movement calculations, combat, research accumulation)
 - Maintain authoritative copies of the tech tree or rule definitions
-- Trust its own validation as sufficient — the engine always makes the final call
+- Trust its own validation as sufficient — the engine always makes the final
+  call
 
 The reference client is Python/PySide6 (``stars-reborn-ui``), but any
 HTTP-capable implementation is a valid client.
@@ -457,11 +462,11 @@ Packaging
 
 .. code-block:: text
 
-    stars-reborn/
-    ├── launcher     ← thin binary: starts engine + client, manages lifecycle
-    ├── engine       ← game engine binary
-    ├── schemas/     ← bundled from stars-reborn-schemas
-    └── client/      ← UI application files
+   stars-reborn/
+   ├── launcher     ← thin binary: starts engine + client, manages lifecycle
+   ├── engine       ← game engine binary
+   ├── schemas/     ← bundled from stars-reborn-schemas
+   └── client/      ← UI application files
 
 The launcher is what becomes the ``.exe`` (Windows) or ``AppImage`` (Linux).
 For multiplayer server deployments, the engine binary is run standalone.
@@ -485,12 +490,12 @@ Technology Stack
      - Native to the engine binary; no separate process needed.
    * - Reference client
      - Python 3 / PySide6
-     - Cross-platform Qt6; QPainter space map; Win95 aesthetic reproducible
-       via QStyle/QPalette.
+     - Cross-platform Qt6; QPainter space map; Win95 aesthetic reproducible via
+       QStyle/QPalette.
    * - Client↔Engine transport
      - HTTP + JSON
-     - Language-agnostic; enables third-party clients; identical interface
-       for local and remote play.
+     - Language-agnostic; enables third-party clients; identical interface for
+       local and remote play.
    * - Schemas
      - JSON Schema (``stars-reborn-schemas``)
      - Structural validation enforced by engine; shared artifact for both
@@ -506,7 +511,7 @@ Technology Stack
      - Single executable ships engine + client together.
 
 Clean-Room Implementation Requirement
---------------------------------------
+-------------------------------------
 
 |project| must be a **clean-room independent implementation** of |original|'s
 mechanics. This is a legal and architectural constraint, not merely a
@@ -515,32 +520,30 @@ preference.
 **What this means in practice:**
 
 - If the original ``stars.exe`` source code were ever discovered or made
-  available, we cannot read it, incorporate it, or use it as a reference.
-  Even accidental exposure creates IP contamination.
-- No contributor may have read the original source while working on
-  |project|. If this occurs, that contributor must be isolated from the
-  affected systems.
-- The implementation must be derived solely from: behavioral observation of
-  the original executable (the oracle), community-documented specifications,
-  and mathematical descriptions independently derived from those sources.
+  available, we cannot read it, incorporate it, or use it as a reference.  Even
+  accidental exposure creates IP contamination.
+- No contributor may have read the original source while working on |project|.
+  If this occurs, that contributor must be isolated from the affected systems.
+- The implementation must be derived solely from: behavioral observation of the
+  original executable (the oracle), community-documented specifications, and
+  mathematical descriptions independently derived from those sources.
 
 **What this does not prohibit:**
 
 - Running ``stars.exe`` as a black-box oracle to observe outputs.
-- Disassembling ``stars.exe`` to extract behavioral specifications —
-  provided the extracted knowledge is written as mathematical formulas or
-  prose, and the implementation is written independently from those
-  descriptions (never from the disassembly itself). See
-  ``stars-reborn-research`` for Ghidra tooling.
+- Disassembling ``stars.exe`` to extract behavioral specifications — provided
+  the extracted knowledge is written as mathematical formulas or prose, and the
+  implementation is written independently from those descriptions (never from
+  the disassembly itself). See ``stars-reborn-research`` for Ghidra tooling.
 - Reading FreeStars C++ source, since FreeStars is an independent
   re-implementation under its own license.
 
 **Why oracle test cases are our evidence:**
 
 A library of structured test cases — specific inputs fed to ``stars.exe``
-producing specific outputs, with our engine required to match them — serves
-as the auditable record of design intent. Each test case is a traceable
-citation. This evidentiary record protects the project.
+producing specific outputs, with our engine required to match them — serves as
+the auditable record of design intent. Each test case is a traceable citation.
+This evidentiary record protects the project.
 
 Open Design Questions
 ---------------------

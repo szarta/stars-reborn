@@ -48,14 +48,11 @@ Design Constraints
 - **Seed reproducibility.** Providing an explicit ``random_seed`` in the
   creation request must produce an identical universe.  This is required for
   integration tests that compare our output against oracle games.
-
 - **At least one human player.** The engine may accept an all-AI game (useful
   for testing) but this should be clearly flagged in the request schema.
-
 - **Race file isolation.** A race definition submitted with the creation
   request is a snapshot; subsequent changes to a saved race file do not affect
   a game already created.
-
 - **Original race import.** The UI must be able to import a ``.r`` file from
   the original |original| and convert it to a ``race.json`` for submission.
   See :doc:`race_file_format`.

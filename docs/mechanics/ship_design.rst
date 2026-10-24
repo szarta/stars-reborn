@@ -128,7 +128,8 @@ bit is set in the slot's bitmask.
    * - ``ArmorScannerElectMech``
      - Armor, scanners, electrical, or mechanical parts.
    * - ``OrbitalElect``
-     - Orbital items (stargates, mass drivers) or electrical parts. *Starbase-only.*
+     - Orbital items (stargates, mass drivers) or electrical parts.
+       *Starbase-only.*
 
 Design Validation Rules
 -----------------------
@@ -154,9 +155,10 @@ Miniaturization
 
 Components become cheaper as tech levels exceed their requirements:
 
-- Normal: 4% cost reduction per level above requirement, minimum 25% of base cost.
-- BET LRT: 5% per level, minimum 20%, but items at the exact unlock level
-  cost 2× base.
+- Normal: 4% cost reduction per level above requirement, minimum 25% of base
+  cost.
+- BET LRT: 5% per level, minimum 20%, but items at the exact unlock level cost
+  2× base.
 
 Miniaturization applies to mineral and resource costs equally. It does not
 affect mass.
@@ -167,9 +169,9 @@ across all required fields.
 Ship Classification
 -------------------
 
-Classification is determined at turn resolution time from hull type and loadout.
-These predicates affect scoring, combat stacking, and order validation.
-See :doc:`../architecture` for the full predicate table.
+Classification is determined at turn resolution time from hull type and
+loadout.  These predicates affect scoring, combat stacking, and order
+validation.  See :doc:`../architecture` for the full predicate table.
 
 Component Access Restrictions
 -----------------------------
@@ -203,9 +205,9 @@ Advanced Scanners LRT); a non-penetrating scanner suffices for exploration.
 Freighters
 ~~~~~~~~~~
 
-The Privateer hull (Construction 4) offers 650 mg fuel, 250 kT base cargo,
-and three ``GeneralPurpose`` slots that accept fuel or cargo pods, with only
-2 kT Germanium hull cost — far less than Small Freighters (17 kT) or Medium
+The Privateer hull (Construction 4) offers 650 mg fuel, 250 kT base cargo, and
+three ``GeneralPurpose`` slots that accept fuel or cargo pods, with only 2 kT
+Germanium hull cost — far less than Small Freighters (17 kT) or Medium
 Freighters (19 kT).  Its 50 kT Ironium cost is the main drawback on
 Ironium-scarce maps.
 
@@ -231,19 +233,19 @@ the mining fleet instead).
 Minelayers
 ~~~~~~~~~~
 
-A Scout-hull minelayer (engine + mine pod + scanner) is the cheapest option
-and buildable early.  A Frigate-hull minelayer (Construction 6) outputs three
-times the mines per turn at similar cost-per-mine and accommodates two
-scanners.  Use the longest-range scanner available; penetrating is preferred
-for border patrol but not required.
+A Scout-hull minelayer (engine + mine pod + scanner) is the cheapest option and
+buildable early.  A Frigate-hull minelayer (Construction 6) outputs three times
+the mines per turn at similar cost-per-mine and accommodates two scanners.  Use
+the longest-range scanner available; penetrating is preferred for border patrol
+but not required.
 
 Warships
 ~~~~~~~~
 
 For beam warships, aim for battle speed **≥ 1¾** squares/round (target 2 or
 2½).  The Frigate hull has no Mechanical or Electrical slots, so it cannot
-carry Maneuvering Jets or Battle Computers — this limits its effectiveness as
-a beam platform.  See :doc:`combat` for the battle speed formula.
+carry Maneuvering Jets or Battle Computers — this limits its effectiveness as a
+beam platform.  See :doc:`combat` for the battle speed formula.
 
 Hull Reference
 --------------

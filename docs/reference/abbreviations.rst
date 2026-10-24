@@ -1,15 +1,15 @@
 Community Abbreviations
 =======================
 
-Abbreviations used on the Stars! Usenet group (rec.games.computer.stars) and
-in PBEM communities. Source: Art Lathrop's Stars! strategy site (arglos.net).
+Abbreviations used on the Stars! Usenet group (rec.games.computer.stars) and in
+PBEM communities. Source: Art Lathrop's Stars! strategy site (arglos.net).
 
 .. contents::
    :local:
    :depth: 1
 
 Primary Racial Traits (PRTs)
------------------------------
+----------------------------
 
 .. list-table::
    :header-rows: 1
@@ -39,7 +39,7 @@ Primary Racial Traits (PRTs)
      - Jack of All Trades
 
 Lesser Racial Traits (LRTs)
------------------------------
+---------------------------
 
 .. list-table::
    :header-rows: 1
@@ -318,7 +318,7 @@ MT
    Mystery Trader
 
 General Community Abbreviations
----------------------------------
+-------------------------------
 
 Standard Usenet shorthand used in Stars! forums and mailing lists.
 

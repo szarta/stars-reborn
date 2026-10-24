@@ -1,12 +1,12 @@
 Victory Condition Parameters
 ============================
 
-The host selects which victory conditions are active and sets their
-thresholds when creating a new game.  These become the
-``victory_conditions`` block in the ``POST /games`` request.
+The host selects which victory conditions are active and sets their thresholds
+when creating a new game.  These become the ``victory_conditions`` block in the
+``POST /games`` request.
 
-For scoring formulae, minimum-year behaviour, and win-announcement
-semantics, see :doc:`../mechanics/victory`.
+For scoring formulae, minimum-year behaviour, and win-announcement semantics,
+see :doc:`../mechanics/victory`.
 
 Available Conditions
 --------------------
@@ -15,9 +15,9 @@ The host checks any subset of the seven conditions below, and separately
 configures **how many** of the checked conditions a player must meet for
 victory, plus the earliest game year at which victory may be declared.
 
-Condition ranges and field names are drawn from the Step-3 *Winning
-Conditions* page of the Advanced New Game wizard and from the
-``stars!.exe -a game.def`` CLI reference in the help file.
+Condition ranges and field names are drawn from the Step-3 *Winning Conditions*
+page of the Advanced New Game wizard and from the ``stars!.exe -a game.def``
+CLI reference in the help file.
 
 .. list-table::
    :header-rows: 1
@@ -115,10 +115,10 @@ Full Parameter Object
      "min_years":              50
    }
 
-The example above matches the values shown on a freshly-opened *Step 3
-Winning Conditions* page of the Advanced New Game wizard (captured from
-the original game).  The host may toggle any checkbox and adjust any
-spinner before clicking *Finish*.
+The example above matches the values shown on a freshly-opened *Step 3 Winning
+Conditions* page of the Advanced New Game wizard (captured from the original
+game).  The host may toggle any checkbox and adjust any spinner before clicking
+*Finish*.
 
 Validation Rules
 ----------------
@@ -140,7 +140,7 @@ Engine-enforced at game creation:
 Open Questions
 --------------
 
-.. todo:: Clarify the semantics of ``must_meet_count = 0``.  The Step-3
+.. todo:: Clarify the semantics of ``must_meet_count = 0``. The Step-3
    wizard permits selecting 0 even when one or more conditions are
    checked; does this make victory unreachable, or does 0 have some other
    meaning (e.g. "ignore the must-meet combinator")?

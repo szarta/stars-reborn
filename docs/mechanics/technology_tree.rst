@@ -1,8 +1,9 @@
 Technology Tree
 ===============
 
-Technologies are unlocked when a player's tech level in the required field reaches
-the specified level. Each technology has resource costs, mineral costs, and mass.
+Technologies are unlocked when a player's tech level in the required field
+reaches the specified level. Each technology has resource costs, mineral costs,
+and mass.
 
 Tech Fields
 -----------
@@ -181,8 +182,8 @@ Technology Categories
 Scanners (ship-mounted)
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Basic range and penetrating range. Higher tech = longer range and penetrating ability.
-First scanner: Bat Scanner (E0, W0, P0, C0, El1, B0).
+Basic range and penetrating range. Higher tech = longer range and penetrating
+ability.  First scanner: Bat Scanner (E0, W0, P0, C0, El1, B0).
 
 Planetary Scanners
 ~~~~~~~~~~~~~~~~~~
@@ -194,8 +195,8 @@ Planetary Defenses
 ~~~~~~~~~~~~~~~~~~
 
 ``baseCoverage`` is the per-defense kill probability against a single bomb.
-Stacks as ``1 - (1 - baseCoverage)^n`` for ``n`` defenses. Applies to both normal
-and smart bombs; smart bombs halve effective coverage per defense.
+Stacks as ``1 - (1 - baseCoverage)^n`` for ``n`` defenses. Applies to both
+normal and smart bombs; smart bombs halve effective coverage per defense.
 Defenses also reduce remote mining yield.
 
 Defense coverage values (per unit, per population unit — unverified):
@@ -253,20 +254,22 @@ weapons (sappers) deal damage exclusively to shields and cannot damage armor.
 Missiles / Torpedoes
 ~~~~~~~~~~~~~~~~~~~~
 
-``accuracy`` is the base hit probability before ECM/jammers are applied. Initiative
-determines firing order within a combat round.
+``accuracy`` is the base hit probability before ECM/jammers are applied.
+Initiative determines firing order within a combat round.
 
 Bombs (normal and smart)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Normal bombs: ``colonistKillPercent`` fraction of colonists killed per bomb,
-minimum ``minimumColonistsKilled``. ``buildingsDestroyed`` buildings destroyed per bomb.
-Smart bombs: same formula but skips defenses more effectively (see Planetary Defenses).
+minimum ``minimumColonistsKilled``. ``buildingsDestroyed`` buildings destroyed
+per bomb.  Smart bombs: same formula but skips defenses more effectively (see
+Planetary Defenses).
 
 Mine Layers
 ~~~~~~~~~~~
 
-``minesPerYear`` mines laid per fleet per year at any waypoint task. Three mine types:
+``minesPerYear`` mines laid per fleet per year at any waypoint task. Three mine
+types:
 
 .. list-table::
    :header-rows: 1
@@ -277,9 +280,9 @@ Mine Layers
      - Collision effect
    * - NORMAL
      - warp 4
-     - ``hitChancePerLightYear`` per l-y traversed; on hit: ``shipDamageNoRamScoop``
-       damage to ship, ``fleetDamageNoRamScoop`` damage spread to fleet. Ram-scoop
-       hulls use the ``RamScoop`` variants.
+     - ``hitChancePerLightYear`` per l-y traversed; on hit:
+       ``shipDamageNoRamScoop`` damage to ship, ``fleetDamageNoRamScoop``
+       damage spread to fleet. Ram-scoop hulls use the ``RamScoop`` variants.
    * - HEAVY
      - warp 6
      - Higher damage, lower hit probability than normal.
@@ -294,7 +297,7 @@ Mining Robots (remote)
 to concentration). No colonists required.
 
 Mechanical / Electrical Components
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``Mechanical`` and ``Electrical`` are catch-all part categories for components
 that don't fit the above specializations (e.g., cargo pods, fuel tanks,
@@ -305,16 +308,16 @@ type-specific fields — capabilities are implicit in the specific item data.
 Mass Drivers
 ~~~~~~~~~~~~
 
-``warp`` is the packet velocity. Packets arriving at a planet without a matching
-driver of equal or higher warp deal damage. See :doc:`../new_game/universe_parameters`
-for mass driver packet mechanics.
+``warp`` is the packet velocity. Packets arriving at a planet without a
+matching driver of equal or higher warp deal damage. See
+:doc:`../new_game/universe_parameters` for mass driver packet mechanics.
 
 Stargates
 ~~~~~~~~~
 
-``safeMass`` (kT) and ``safeDistance`` (l-y) are the per-gate limits. The effective
-limit for a transfer is the minimum of both endpoints. Exceeding either limit
-causes hull damage or destruction.
+``safeMass`` (kT) and ``safeDistance`` (l-y) are the per-gate limits. The
+effective limit for a transfer is the minimum of both endpoints. Exceeding
+either limit causes hull damage or destruction.
 
 Terraforming
 ~~~~~~~~~~~~
@@ -330,9 +333,9 @@ Ship hulls and starbase hulls are both ``Technology`` subclasses but are never
 ship-installable parts.
 
 ``ShipHull.minimumEngineSlots`` / ``maximumEngineSlots`` constrain the valid
-engine count in the ship designer. ``minimumArmorSlots`` is the number of
-armor slots pre-filled by the hull design. ``fuelCapacity`` is the base fuel
-tank; additional fuel pods (``Mechanical`` parts) may increase it.
+engine count in the ship designer. ``minimumArmorSlots`` is the number of armor
+slots pre-filled by the hull design. ``fuelCapacity`` is the base fuel tank;
+additional fuel pods (``Mechanical`` parts) may increase it.
 
 ``StarbaseHull.dockCapacity`` is the maximum ship mass (kT) that can be built
 or repaired at this starbase; 0 = no docking.
@@ -340,8 +343,9 @@ or repaired at this starbase; 0 = no docking.
 Full Data Reference
 -------------------
 
-Numeric values for all technology items are in ``stars-reborn-research/data/technologies.dat``
-(original game data) and will be encoded in the engine's data model.
+Numeric values for all technology items are in
+``stars-reborn-research/data/technologies.dat`` (original game data) and will
+be encoded in the engine's data model.
 
 .. todo::
 

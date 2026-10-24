@@ -19,9 +19,11 @@ Resources represent colonist labor + factory output.
    factory_resources  = factories_built × factory_production
    total_resources    = colonist_resources + factory_resources
 
-Where ``resource_production`` is the race parameter (700–2500 colonists per resource).
+Where ``resource_production`` is the race parameter (700–2500 colonists per
+resource).
 
-Example: 1,000,000 colonists, ``resource_production=1000``, 100 factories × 10 production:
+Example: 1,000,000 colonists, ``resource_production=1000``, 100 factories × 10
+production:
 
 .. code-block:: text
 
@@ -32,16 +34,19 @@ Example: 1,000,000 colonists, ``resource_production=1000``, 100 factories × 10 
 Factories
 ---------
 
-- Cost to build: ``factory_cost`` resources + 4 germanium (or 3 germanium with the "costs one less" race option)
+- Cost to build: ``factory_cost`` resources + 4 germanium (or 3 germanium with
+  the "costs one less" race option)
 - Production: ``factory_production`` resources/year when operated
-- Capacity: max ``(population / 10,000) × colonists_operate_factories`` factories
+- Capacity: max ``(population / 10,000) × colonists_operate_factories``
+  factories
 - Factories beyond capacity sit idle (no production, no cost)
 
 Mines
 -----
 
 - Cost to build: ``mine_cost`` resources
-- Production: extracts ``mine_production`` kT of each mineral/year × (concentration/100)
+- Production: extracts ``mine_production`` kT of each mineral/year ×
+  (concentration/100)
 - Capacity: max ``(population / 10,000) × colonists_operate_mines`` mines
 - Mineral extraction formula:
 
@@ -52,7 +57,7 @@ Mines
 - Concentration slowly depletes over time as minerals are extracted
 
 Mineral Concentration Decay
-----------------------------
+---------------------------
 
 Concentrations range from 0 to 200 (not 0–100 as colloquially described).
 
@@ -62,8 +67,8 @@ Each mine-year of extraction reduces concentration by:
 
    mine_years_to_reduce_by_1 = 12,500 / current_concentration
 
-So a concentration-100 mineral requires 125 mine-years to drop by 1 point.
-A concentration-50 mineral requires 250 mine-years. At concentration 1 (the
+So a concentration-100 mineral requires 125 mine-years to drop by 1 point.  A
+concentration-50 mineral requires 250 mine-years. At concentration 1 (the
 floor), no further reduction occurs.
 
 **Homeworld special rule:** concentration never drops below 30% on a homeworld
@@ -116,17 +121,17 @@ Items in the production queue are built in order each turn:
      - 0
      - 0
 
-**Partial production:** if insufficient resources to complete an item, progress is
-banked. The item will be completed in a subsequent turn.
+**Partial production:** if insufficient resources to complete an item, progress
+is banked. The item will be completed in a subsequent turn.
 
 **Auto items:** Auto-mines and auto-factories continue building until the
 colonist-capacity limit is reached, then stop automatically.
 
-**"Up To N" items:** A queue item with an "Up To N" quantity builds at most
-*N* total of that item on this planet (counting items already built), then
-removes itself from the queue.  This lets players encode multi-phase priorities:
-build the first 100 factories, then mines, then more factories, etc., without
-manual queue edits each turn.
+**"Up To N" items:** A queue item with an "Up To N" quantity builds at most *N*
+total of that item on this planet (counting items already built), then removes
+itself from the queue.  This lets players encode multi-phase priorities: build
+the first 100 factories, then mines, then more factories, etc., without manual
+queue edits each turn.
 
 **Mineral Alchemy as sentinel:** placing a Mineral Alchemy item at the bottom
 of the queue (set to "as needed") triggers alchemy only when everything above
@@ -151,7 +156,8 @@ Defenses
 --------
 
 Defenses protect the population from orbital bombing. Each defense installation
-adds to the planet's kill rate (% of incoming bombers' bomb effectiveness blocked).
+adds to the planet's kill rate (% of incoming bombers' bomb effectiveness
+blocked).
 
 .. todo:: Document defense costs by tech level and the kill rate formula.
 
@@ -186,7 +192,6 @@ Open Questions
 
 .. todo:: AR race: production runs in starbases, not planets
 
-
 .. _stars-reborn-impl:
 
 Implementation Notes (from stars-reborn)
@@ -195,27 +200,34 @@ Implementation Notes (from stars-reborn)
 Resource Generation
 -------------------
 
-Annual resources per planet::
+Annual resources per planet:
 
-    resources = floor(population / (10000 / resources_per_10k))
-              + floor(factories * factory_output)
+::
+
+   resources = floor(population / (10000 / resources_per_10k))
+             + floor(factories * factory_output)
 
 Where:
 
 * ``population`` — current colonist count on the planet
-* ``resources_per_10k`` — race parameter (5–25 resources per 10,000 colonists per year)
-* ``factories`` — number of operational factories (capped by colonists: max = pop / colonists_per_factory)
+* ``resources_per_10k`` — race parameter (5–25 resources per 10,000 colonists
+  per year)
+* ``factories`` — number of operational factories (capped by colonists: max =
+  pop / colonists_per_factory)
 * ``factory_output`` — race parameter (5–15 resources per factory per year)
 
-The production queue is an ordered list of items. Each turn, resources are applied
-from top to bottom. Partial completion banks resources toward the next turn.
+The production queue is an ordered list of items. Each turn, resources are
+applied from top to bottom. Partial completion banks resources toward the next
+turn.
 
 Queue item types:
 
-* **Factory** — costs (factory_cost) resources + 4 germanium; limited by colonists_per_factory
+* **Factory** — costs (factory_cost) resources + 4 germanium; limited by
+  colonists_per_factory
 * **Mine** — costs (mine_cost) resources; limited by colonists_per_mine
 * **Defense** — costs 5 resources; up to 100 defenses per planet
-* **Ship** — costs vary by hull + installed parts (hull cost + sum of part costs)
+* **Ship** — costs vary by hull + installed parts (hull cost + sum of part
+  costs)
 * **Starbase** — same as ship but immobile; upgrades existing starbase
 * **Mineral Alchemy** — converts resources to minerals:
 
