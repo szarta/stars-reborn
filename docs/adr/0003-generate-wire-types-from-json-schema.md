@@ -62,7 +62,13 @@ To change the contract, edit the schema; then rebuild (Rust) and run
   annotation.
 - A new schema is wired in by adding it to the `SCHEMAS` list in `build.rs`
   and/or `scripts/generate_types.py` and giving it a contract test. Not every
-  schema needs both sides.
+  schema needs both sides (`game-state.json` is host-only, so Rust only).
+- A schema may reference another by a cross-file `$ref`
+  (`race.json#/definitions/race`), keeping shared shapes defined once. typify
+  cannot follow a file `$ref`, so `build.rs` bundles the referenced files'
+  definitions into one self-contained schema (rewriting refs local) before
+  generating. This is how interdependent schemas — the host-state model and,
+  later, its fleet/wormhole/combat sub-objects — are generated as one cluster.
 - `race.json` is the pilot. The remaining schemas (universe, turn, battle, …)
   are converted the same way as they gain typed producers/consumers; some are
   assembled ad hoc today and have no typed struct yet.

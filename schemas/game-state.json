@@ -1,0 +1,269 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/game-state.json",
+  "version": 1,
+  "definitions": {
+    "game-state": {
+      "type": "object",
+      "description": "The host's authoritative ground-truth state for one active game, as persisted to game.json and exposed only via host-token-gated endpoints. Per-player turn files are derived from this (fog-of-war filtered) and have their own schema; this is never sent to a non-host client. See docs/architecture.rst.",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "universe",
+        "planet_states",
+        "players",
+        "year"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "UUID v4 — the engine's canonical identifier for this game."
+        },
+        "name": {
+          "type": "string"
+        },
+        "universe": {
+          "$ref": "#/definitions/universe"
+        },
+        "planet_states": {
+          "type": "object",
+          "description": "Mutable per-planet ground truth, keyed by planet id (stringified u32).",
+          "additionalProperties": {
+            "$ref": "#/definitions/planet-state"
+          }
+        },
+        "players": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/player"
+          }
+        },
+        "year": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Current game year."
+        }
+      }
+    },
+    "universe": {
+      "type": "object",
+      "description": "Static, shared map data (the .xy-equivalent): identity and position only. Mutable planet state lives in game-state.planet_states, not here.",
+      "additionalProperties": false,
+      "required": [
+        "size",
+        "width",
+        "height",
+        "planets"
+      ],
+      "properties": {
+        "size": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Universe size constant (0=Tiny … 4=Huge)."
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Side length of the square boundary in light years."
+        },
+        "height": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "planets": {
+          "type": "object",
+          "description": "All planets, keyed by planet id (stringified u32).",
+          "additionalProperties": {
+            "$ref": "#/definitions/planet-static"
+          }
+        }
+      }
+    },
+    "planet-static": {
+      "type": "object",
+      "description": "Static planet data (the .xy-equivalent): identity and position, constant for the lifetime of the game.",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "x": {
+          "type": "integer",
+          "format": "int32",
+          "description": "X coordinate within the universe boundary (light years)."
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "planet-state": {
+      "type": "object",
+      "description": "Mutable per-game planet state — host-side ground truth. Hab values are in original-game units: gravity is one of 101 discrete floats (0.12–8.00), temperature an integer -200..+200 step 4, radiation an integer 0..100.",
+      "additionalProperties": false,
+      "required": [
+        "gravity",
+        "temperature",
+        "radiation",
+        "ironium_concentration",
+        "boranium_concentration",
+        "germanium_concentration",
+        "surface_ironium",
+        "surface_boranium",
+        "surface_germanium",
+        "homeworld",
+        "owner",
+        "population",
+        "factories",
+        "mines"
+      ],
+      "properties": {
+        "gravity": {
+          "type": "number",
+          "format": "float"
+        },
+        "temperature": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "radiation": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "ironium_concentration": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "boranium_concentration": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "germanium_concentration": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "surface_ironium": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "surface_boranium": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "surface_germanium": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "homeworld": {
+          "type": "boolean"
+        },
+        "owner": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "description": "Owning player id, or null if unowned."
+        },
+        "population": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "factories": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "mines": {
+          "type": "integer",
+          "format": "uint32"
+        }
+      }
+    },
+    "tech-levels": {
+      "type": "object",
+      "description": "A player's current technology level in each of the six fields.",
+      "additionalProperties": false,
+      "required": [
+        "energy",
+        "weapons",
+        "propulsion",
+        "construction",
+        "electronics",
+        "biotechnology"
+      ],
+      "properties": {
+        "energy": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "weapons": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "propulsion": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "construction": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "electronics": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "biotechnology": {
+          "type": "integer",
+          "format": "uint32"
+        }
+      }
+    },
+    "player": {
+      "type": "object",
+      "description": "A player (human or NPC): links a race to in-game state. NPC players share this shape.",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "race_name",
+        "homeworld_id",
+        "tech"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "race_name": {
+          "type": "string"
+        },
+        "homeworld_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "description": "Planet id of this player's homeworld, or null before placement."
+        },
+        "tech": {
+          "$ref": "#/definitions/tech-levels"
+        },
+        "race": {
+          "description": "Full race definition. Optional: pre-existing games may have been persisted without it; new games always set it, and per-player view derivation requires it.",
+          "$ref": "race.json#/definitions/race"
+        }
+      }
+    }
+  }
+}

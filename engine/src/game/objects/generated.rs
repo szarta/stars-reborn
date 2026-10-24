@@ -28,3 +28,8 @@ pub mod create_game {
     #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
     include!(concat!(env!("OUT_DIR"), "/create_game_types.rs"));
 }
+
+pub mod game_state {
+    #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
+    include!(concat!(env!("OUT_DIR"), "/game_state_types.rs"));
+}
