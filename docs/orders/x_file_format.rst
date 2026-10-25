@@ -82,10 +82,12 @@ unknown.
      - 6–10 B
      - LOAD opcode 0x12, UNLOAD 0x02 (R0.7).
    * - 2
-     - **Unknown** — fleet-create / new-fleet metadata?
-     - ❓
+     - Fleet depart orbit
+     - ⚠️
      - 8 B
-     - Always paired with a following ``waypoint_add``; needs oracle.
+     - An orbiting fleet is given its first waypoint; records the fleet and the
+       planet it leaves. Fields confirmed on 26 records; ``b5`` and the
+       trailing two bytes still unknown.
    * - 3
      - Waypoint delete
      - ✅
@@ -187,6 +189,28 @@ length depending on how many resource types are involved.
    b6+     amounts      (one byte per set bit, ascending bit order; kT)
 
 Confirmed via R0.7 oracle (2026-04-20/21).
+
+Type 2 — Fleet Depart Orbit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Emitted when a fleet that is currently **in orbit** is given its first movement
+waypoint. It records the fleet and the planet it is leaving, and always
+immediately precedes that fleet's type-4 ``waypoint_add`` (``waypoint_nr =
+1``).  A fleet that is already under way when re-routed produces no type-2, so
+the record is far less common than ``waypoint_add``.
+
+.. code-block:: text
+
+   two 2-byte slots, order set by b4:
+     b4 = 0x12   b0–b1 fleet_num (9-bit),  b2–b3 planet_idx (LE uint16)
+     b4 = 0x21   b0–b1 planet_idx (uint16), b2–b3 fleet_num (9-bit)
+   b5           always 0x08 (meaning unknown)
+   b6–b7        vary between records (not yet decoded)
+
+Both decoded fields are confirmed on 26 real records across two games: the
+fleet always matches the paired ``waypoint_add``, and the planet always matches
+that fleet's ``orbit_planet_idx`` in the corresponding ``.mN`` turn file.
+``b5`` and the trailing two bytes are surfaced raw rather than guessed.
 
 Type 3 — Waypoint Delete
 ~~~~~~~~~~~~~~~~~~~~~~~~
