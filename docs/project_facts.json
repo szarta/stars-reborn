@@ -1,0 +1,90 @@
+{
+  "description": "Single source of truth for confirmed game/research figures that also appear in the design docs. scripts/project_facts.py checks that every matched figure in a target doc equals the pinned value here, so a number in prose can't silently drift from the oracle-confirmed finding. Add a fact as: id, value (the exact text as it appears, e.g. \"25,000\"), note, source, targets (paths under docs/), and patterns (regexes capturing the number in group 1; may span line wraps via \\s+). Each fact must match at least once across its targets, so a reworded doc that drops the figure fails loudly rather than leaving a dead pin. See docs/adr and the aurora-lint check_project_facts.py this is modeled on.",
+  "facts": [
+    {
+      "id": "max-ship-designs",
+      "value": "20",
+      "note": "Max simultaneous ship designs per player.",
+      "source": "docs/architecture.rst (Game Object Model); original-game constant.",
+      "targets": [
+        "architecture.rst"
+      ],
+      "patterns": [
+        "at most \\*\\*(\\d+) ship designs\\*\\*"
+      ]
+    },
+    {
+      "id": "max-starbase-designs",
+      "value": "20",
+      "note": "Max simultaneous starbase designs per player.",
+      "source": "docs/architecture.rst (Game Object Model); original-game constant.",
+      "targets": [
+        "architecture.rst"
+      ],
+      "patterns": [
+        "\\*\\*(\\d+) starbase\\s+designs\\*\\*"
+      ]
+    },
+    {
+      "id": "gravity-discrete-values",
+      "value": "101",
+      "note": "Number of discrete gravity values (0.12g–8.00g, non-linear).",
+      "source": "docs/mechanics/habitability.rst; oracle-confirmed index table.",
+      "targets": [
+        "mechanics/habitability.rst"
+      ],
+      "patterns": [
+        "(\\d+) discrete values: 0\\.12g"
+      ]
+    },
+    {
+      "id": "gravity-min",
+      "value": "0.12",
+      "note": "Minimum gravity in g.",
+      "source": "docs/mechanics/habitability.rst.",
+      "targets": [
+        "mechanics/habitability.rst"
+      ],
+      "patterns": [
+        "min (\\d\\.\\d+)g, max 8\\.00g"
+      ]
+    },
+    {
+      "id": "gravity-max",
+      "value": "8.00",
+      "note": "Maximum gravity in g.",
+      "source": "docs/mechanics/habitability.rst.",
+      "targets": [
+        "mechanics/habitability.rst"
+      ],
+      "patterns": [
+        "min 0\\.12g, max (\\d\\.\\d+)g"
+      ]
+    },
+    {
+      "id": "temperature-step",
+      "value": "4",
+      "note": "Temperature step size in degrees C (101 discrete values).",
+      "source": "docs/mechanics/habitability.rst.",
+      "targets": [
+        "mechanics/habitability.rst"
+      ],
+      "patterns": [
+        "step (\\d+) \\(101 discrete values\\)"
+      ]
+    },
+    {
+      "id": "base-starting-population",
+      "value": "25,000",
+      "note": "Flat base starting population (Normal start; BBS adds 5,000 x GR%).",
+      "source": "docs/mechanics/race_design.rst; confirmed flat vs craigstars Consts.java.",
+      "targets": [
+        "mechanics/race_design.rst"
+      ],
+      "patterns": [
+        "Normal start: (\\d{2},\\d{3}) colonists",
+        "The base (\\d{2},\\d{3}) is confirmed flat"
+      ]
+    }
+  ]
+}

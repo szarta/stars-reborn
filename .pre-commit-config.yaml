@@ -96,6 +96,25 @@ repos:
         types_or: [rst]
         verbose: true
 
+  # Project facts: design-doc figures must match the pinned values in
+  # docs/project_facts.json (the source of truth for confirmed game/research
+  # numbers), so a quoted figure can't drift silently. The test covers the
+  # check itself. See docs/adr and scripts/project_facts.py.
+  - repo: local
+    hooks:
+      - id: project-facts
+        name: design-doc figures match docs/project_facts.json
+        entry: python3 scripts/project_facts.py
+        language: system
+        pass_filenames: false
+        files: ^(docs/.*\.rst|docs/project_facts\.json|scripts/project_facts\.py)$
+      - id: project-facts-tests
+        name: project-facts check regression tests
+        entry: python3 -W error::ResourceWarning -m unittest discover -s scripts -p test_project_facts.py
+        language: system
+        pass_filenames: false
+        files: ^scripts/(project_facts|test_project_facts)\.py$
+
   # knots complexity gate (rust + python), from the prebuilt-wheel mirror.
   # The default hook ships args [--aird-threshold=85].
   - repo: https://github.com/brandon-arrendondo/knots-pre-commit
