@@ -43,6 +43,15 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > `json!` — replacing that with the generated typed producer is a tracked
 > follow-up.
 >
+> `GET /model/buildables` (the production-queue buildable registry, task #93) is
+> likewise hand-built with `json!` in `engine/src/http/mod.rs`
+> (`buildables_response`) and covered by a unit test, but has **no schema file
+> yet** — formalizing `response-model-buildables.json` (draft-07, contract test,
+> generated client types) is a tracked follow-up, mirroring the ship-hulls one.
+> The production-queue shape itself is in the SSoT: `build_queue` /
+> `build-item` were added to `game-state.json` (host, snake_case) and
+> `response-turn-file.json` (view, kebab-case), both contract-tested.
+>
 > The POST /race/validate contract is reconciled (draft-07) and
 > contract-tested both ways: `request-validate-race.json` is a bare `Race`
 > (a `$ref` to race.json, matching the engine), and `response-validate-race.json`

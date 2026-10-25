@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/game-state.json",
-  "version": 1,
+  "version": 2,
   "definitions": {
     "game-state": {
       "type": "object",
@@ -188,6 +188,42 @@
         "mines": {
           "type": "integer",
           "format": "uint32"
+        },
+        "build_queue": {
+          "type": "array",
+          "description": "Ordered production queue for this planet. Items are built top-to-bottom at turn resolution (see docs/mechanics/production.rst). Absent on pre-existing saves predating the queue; treated as empty.",
+          "items": {
+            "$ref": "#/definitions/build-item"
+          }
+        }
+      }
+    },
+    "build-item": {
+      "type": "object",
+      "description": "One entry in a planet's production queue. build_object_id indexes the buildable registry (GET /model/buildables); build_progress is server-managed (0 for a freshly queued item).",
+      "additionalProperties": false,
+      "required": [
+        "build_object_id",
+        "build_quantity",
+        "build_progress"
+      ],
+      "properties": {
+        "build_object_id": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Buildable registry id (e.g. 7=factory, 8=mine, 9=defenses; 1024+N=design slot N). See docs/mechanics/production.rst."
+        },
+        "build_quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Number of this item remaining to build."
+        },
+        "build_progress": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "maximum": 99,
+          "description": "Percent complete (0..99) of the item currently at the head of this entry."
         }
       }
     },

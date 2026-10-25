@@ -33,6 +33,24 @@ impl PlanetStatic {
     }
 }
 
+/// One entry in a planet's production queue — host-side ground truth.
+///
+/// `build_object_id` indexes the buildable registry (see
+/// `objects::buildable` and `GET /model/buildables`): 7=factory, 8=mine,
+/// 9=defenses, 1024+N=design slot N, etc. `build_progress` is server-managed
+/// and starts at 0 for a freshly queued item; the turn engine advances it.
+///
+/// Matches `schemas/game-state.json#/definitions/build-item` (snake_case,
+/// the host-state convention). The per-player turn-file view carries its own
+/// generated build-item shape; `game::view` maps between them.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct BuildItem {
+    pub build_object_id: u32,
+    pub build_quantity: u32,
+    #[serde(default)]
+    pub build_progress: u32,
+}
+
 /// Mutable per-game planet state — host-side ground truth.
 ///
 /// Hab values are stored in the same units as the original game:
@@ -61,6 +79,12 @@ pub struct PlanetState {
     pub population: u32,
     pub factories: u32,
     pub mines: u32,
+
+    /// Ordered production queue. Empty for a new or unowned planet; built
+    /// top-to-bottom at turn resolution. `#[serde(default)]` keeps pre-queue
+    /// saves loadable (they deserialize to an empty queue).
+    #[serde(default)]
+    pub build_queue: Vec<BuildItem>,
 }
 
 impl PlanetState {

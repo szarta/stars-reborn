@@ -20,6 +20,30 @@ class PlanetUnobserved(BaseModel):
     y: int
 
 
+class BuildItem(BaseModel):
+    """
+    One entry in an owned planet's production queue. build-object-id indexes the buildable registry (GET /model/buildables): 7=factory, 8=mine, 9=defenses, 1024+N=design slot N. See docs/mechanics/production.rst.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    build_object_id: conint(ge=0, le=65535) = Field(..., alias="build-object-id")
+    build_quantity: conint(ge=0, le=65535) = Field(
+        ..., alias="build-quantity", description="Number of this item remaining to build."
+    )
+    build_progress: conint(ge=0, le=99) | None = Field(
+        None,
+        alias="build-progress",
+        description="Percent complete (0..99) of the item at the head of this entry; 0 for a freshly queued item.",
+    )
+    estimated_years_to_complete: conint(ge=1, le=100) | None = Field(
+        None,
+        alias="estimated-years-to-complete",
+        description="Projected years to finish this entry at the planet's current output. Absent until the cost/output model lands.",
+    )
+
+
 class PlanetObserved(BaseModel):
     """
     A planet the player has observed. Contents fields hold values as of the last scan; years-since-last-scan = 0 means current ground truth, anything higher is stale (see Information Staleness in stars-reborn-design/docs/mechanics/scanning.rst).
@@ -61,6 +85,11 @@ class PlanetObserved(BaseModel):
     value: conint(ge=-45, le=100) = Field(
         ...,
         description="Planet value computed against the viewing player's race. 0..100 = habitable; negative = red (capped at -45). Different players see different values for the same planet.",
+    )
+    build_queue: list[BuildItem] = Field(
+        ...,
+        alias="build-queue",
+        description="The planet's production queue, in build order. Present only for planets the viewing player owns (production is private); empty array when the queue is empty.",
     )
 
 

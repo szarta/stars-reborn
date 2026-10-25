@@ -12,6 +12,7 @@
 //   GET /model/technologies/{id}                    — single technology item
 //   GET /model/race/traits                          — PRT/LRT definitions and point costs
 //   GET /model/ships/hulls                          — all hull definitions
+//   GET /model/buildables                           — production-queue buildable registry
 //   GET /model/schemas                              — JSON schemas for all request/response types
 //
 //   POST   /games                                   — create new game
@@ -36,6 +37,9 @@ use axum::{
 use serde::Deserialize;
 use serde_json::{json, Value};
 
+use crate::game::objects::buildable::{
+    design_build_object_id, Category, DESIGN_SLOTS, FIXED_BUILDABLES,
+};
 use crate::game::objects::{
     advantage_points::advantage_points,
     player::{Player, TechLevels},
@@ -45,6 +49,7 @@ use crate::game::objects::{
         hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
     },
 };
+use crate::game::orders::{apply_set_production_queue, OrderError, ProductionItemInput};
 use crate::game::state::GameState;
 use crate::game::universe::generate_universe;
 use crate::game::view::player_view;
@@ -90,6 +95,7 @@ pub fn router(state: AppState) -> Router {
         .route("/model/technologies/:id", get(model_technology_by_id))
         .route("/model/race/traits", get(model_race_traits))
         .route("/model/ships/hulls", get(model_ship_hulls))
+        .route("/model/buildables", get(model_buildables))
         .route("/model/schemas", get(model_schemas))
         // Race design utilities
         .route("/race/validate", post(race_validate))
@@ -208,6 +214,43 @@ pub fn ship_hulls_response() -> Value {
         })
         .collect();
     json!({ "hulls": hulls })
+}
+
+/// GET /model/buildables — the production-queue buildable registry.
+///
+/// Maps every `build-object-id` a planet queue can hold to its semantic kind,
+/// display name, and category. Clients resolve queue ids (and offer the add-item
+/// picker) from this instead of hardcoding the mapping. The id scheme is the
+/// single source of truth in `game::objects::buildable`; see
+/// `docs/mechanics/production.rst` (Buildable Registry).
+async fn model_buildables() -> impl IntoResponse {
+    Json(buildables_response())
+}
+
+/// Build the `GET /model/buildables` response body. Fixed installation/auto
+/// buildables first (in registry order), then the per-player design slots.
+pub fn buildables_response() -> Value {
+    let mut buildables: Vec<Value> = FIXED_BUILDABLES
+        .iter()
+        .map(|b| {
+            json!({
+                "build-object-id": b.id,
+                "kind": b.kind,
+                "name": b.name,
+                "category": b.category.slug(),
+            })
+        })
+        .collect();
+    for slot in 0..DESIGN_SLOTS {
+        buildables.push(json!({
+            "build-object-id": design_build_object_id(slot).expect("slot in range"),
+            "kind": "design",
+            "design-slot": slot,
+            "name": format!("Design Slot {slot}"),
+            "category": Category::ShipDesign.slug(),
+        }));
+    }
+    json!({ "buildables": buildables })
 }
 
 async fn model_schemas() -> impl IntoResponse {
@@ -627,13 +670,138 @@ async fn get_turn_file(
     Json(view).into_response()
 }
 
-/// PUT /games/{game_id}/turns/{year}/orders/{pid} — submit player orders
-async fn submit_orders(Path((game_id, year, pid)): Path<(String, u32, u32)>) -> impl IntoResponse {
-    let (_, _, _) = (game_id, year, pid);
+/// Submit-orders request body (schemas/request-submit-orders.json). Orders are
+/// kept as raw JSON and dispatched per `kind` below, since only a subset of the
+/// schema's order kinds is applied today.
+#[derive(Deserialize)]
+struct SubmitOrdersBody {
+    #[serde(default)]
+    #[allow(dead_code)]
+    schema_version: Option<u32>,
+    player_id: u32,
+    turn_year: u32,
+    orders: Vec<Value>,
+}
+
+/// The `planet.set_production_queue` order payload (minus its `kind` tag).
+#[derive(Deserialize)]
+struct SetProductionQueueOrder {
+    planet_id: u32,
+    items: Vec<ProductionItemInput>,
+}
+
+/// Map an `OrderError` from the game layer to an HTTP response.
+fn order_error_response(e: OrderError) -> axum::response::Response {
+    let (status, msg) = match e {
+        OrderError::PlanetNotFound(id) => (StatusCode::NOT_FOUND, format!("planet {id} not found")),
+        OrderError::PlanetNotOwned(id) => (
+            StatusCode::FORBIDDEN,
+            format!("planet {id} is not owned by the submitting player"),
+        ),
+        OrderError::UnknownBuildable => (
+            StatusCode::BAD_REQUEST,
+            "order names an unknown buildable".to_string(),
+        ),
+    };
+    (status, Json(json!({"error": msg}))).into_response()
+}
+
+/// PUT /games/{game_id}/turns/{year}/orders/{pid} — submit player orders.
+///
+/// The single orders choke point (docs/orders/engine_api.rst). This slice
+/// applies `planet.set_production_queue`; any other order kind is rejected with
+/// 501 rather than silently accepted, so the client is never told an
+/// unimplemented order succeeded. The engine is the gatekeeper: body/path
+/// consistency and planet ownership are enforced here regardless of the client.
+async fn submit_orders(
+    State(state): State<AppState>,
+    Path((game_id, year, pid)): Path<(String, u32, u32)>,
+    Json(body): Json<SubmitOrdersBody>,
+) -> impl IntoResponse {
+    if body.player_id != pid {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "player_id in body does not match path"})),
+        )
+            .into_response();
+    }
+    if body.turn_year != year {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "turn_year in body does not match path"})),
+        )
+            .into_response();
+    }
+
+    let mut games = state.games.write().unwrap();
+    let game = match games.get_mut(&game_id) {
+        Some(g) => g,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "game not found"})),
+            )
+                .into_response()
+        }
+    };
+    if !game.players.iter().any(|p| p.id == pid) {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "player not found"})),
+        )
+            .into_response();
+    }
+
+    let mut orders_applied = 0u32;
+    for order in &body.orders {
+        let kind = order.get("kind").and_then(Value::as_str).unwrap_or("");
+        match kind {
+            "planet.set_production_queue" => {
+                let parsed: SetProductionQueueOrder = match serde_json::from_value(order.clone()) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({
+                                "error": format!("invalid planet.set_production_queue order: {e}"),
+                            })),
+                        )
+                            .into_response()
+                    }
+                };
+                if let Err(e) =
+                    apply_set_production_queue(game, pid, parsed.planet_id, &parsed.items)
+                {
+                    return order_error_response(e);
+                }
+                orders_applied += 1;
+            }
+            other => {
+                return (
+                    StatusCode::NOT_IMPLEMENTED,
+                    Json(json!({
+                        "error": format!("order kind '{other}' is not yet supported by this engine build"),
+                    })),
+                )
+                    .into_response()
+            }
+        }
+    }
+
+    if let Err(e) = crate::store::save_game(game) {
+        log::error!("Failed to persist game {game_id}: {e}");
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "failed to persist game"})),
+        )
+            .into_response();
+    }
+
     (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({"error": "not yet implemented"})),
+        StatusCode::OK,
+        Json(json!({ "accepted": true, "orders_applied": orders_applied })),
     )
+        .into_response()
 }
 
 /// POST /games/{game_id}/turns/{year}/skip/{pid}
@@ -652,4 +820,38 @@ async fn get_ai_orders(Path((game_id, year, pid)): Path<(String, u32, u32)>) -> 
         StatusCode::NOT_IMPLEMENTED,
         Json(json!({"error": "not yet implemented"})),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn buildables_registry_is_well_formed() {
+        let body = buildables_response();
+        let list = body["buildables"].as_array().expect("buildables array");
+
+        // 12 fixed buildables + one entry per design slot.
+        assert_eq!(list.len(), FIXED_BUILDABLES.len() + DESIGN_SLOTS as usize);
+
+        // Core installations keep the original Type-29 item ids.
+        let by_kind = |k: &str| {
+            list.iter()
+                .find(|b| b["kind"] == k)
+                .and_then(|b| b["build-object-id"].as_u64())
+        };
+        assert_eq!(by_kind("factory"), Some(7));
+        assert_eq!(by_kind("mine"), Some(8));
+        assert_eq!(by_kind("defenses"), Some(9));
+
+        // Every id is unique across fixed + design entries.
+        let mut ids: Vec<u64> = list
+            .iter()
+            .map(|b| b["build-object-id"].as_u64().expect("id"))
+            .collect();
+        let n = ids.len();
+        ids.sort_unstable();
+        ids.dedup();
+        assert_eq!(ids.len(), n, "build-object-ids must be unique");
+    }
 }

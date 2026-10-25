@@ -141,6 +141,60 @@ colony.
 
 *Source: Stars! Strategy Guide, Chapter 11.*
 
+Buildable Registry
+------------------
+
+The engine assigns every queueable item a flat ``build_object_id``. The host
+build queue (``schemas/game-state.json`` ``planet-state.build_queue``) and the
+per-player turn file store this numeric id; a client resolves it to a name and
+category — and drives the "add item" picker — from ``GET /model/buildables``
+rather than hardcoding the mapping. The scheme is the single source of truth in
+``engine/src/game/objects/buildable.rs``.
+
+Ids 7/8/9 are faithful to the original game's Type-29 ``item_id`` for
+Factory/Mine/Defenses (``docs/orders/x_file_format.rst``, ``item_type`` 2); the
+rest are engine-assigned.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 12 28 40 20
+
+   * - Id
+     - ``kind``
+     - Item
+     - Category
+   * - 7
+     - ``factory``
+     - Factory
+     - installation
+   * - 8
+     - ``mine``
+     - Mine
+     - installation
+   * - 9
+     - ``defenses``
+     - Defenses
+     - installation
+   * - 10
+     - ``alchemy``
+     - Mineral Alchemy
+     - installation
+   * - 20–27
+     - ``auto_*``
+     - Auto factories/mines/defenses/alchemy, min/max terraform, max
+       factories/mines
+     - auto
+   * - 1024 + *N*
+     - ``design`` (slot *N*)
+     - Ship/starbase built from design slot *N*
+     - ship-design
+
+Design slots occupy a high block (``DESIGN_ID_BASE = 1024``) kept clear of the
+installation/auto ids, mirroring the original's separate ``item_type`` 4
+(custom design slot). An order submits the *semantic* form (``{ "item": {
+"kind": "factory" }, "count": 16 }``, see ``docs/orders/engine_api.rst``); the
+engine resolves ``kind`` to the id above when it writes the queue.
+
 Ship Construction
 -----------------
 

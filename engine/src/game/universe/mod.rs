@@ -165,6 +165,7 @@ fn generate_planet(
         population: 0,
         factories: 0,
         mines: 0,
+        build_queue: Vec::new(),
     };
     (static_, state)
 }

@@ -36,7 +36,7 @@ use crate::game::state::GameState;
 // file. `PlanetIntel` is untagged: a client tells observed from unobserved by
 // whether the contents fields are present. See `docs/adr/0003`.
 pub use crate::game::objects::generated::turn_file::{
-    PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView,
+    BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView,
 };
 
 /// Project a `PlayerView` for `player_id` from the host-side `GameState`.
@@ -96,6 +96,22 @@ fn compute_value(s: &PlanetState, race: Option<&Race>) -> i32 {
     planet_habitability(&is_immune, &hab_low, &hab_high, &hab_center, &planet_hab) as i32
 }
 
+/// Project the host-side production queue into the turn-file `BuildItem`
+/// wire shape. Emitted only for owned planets (production is private); the
+/// `estimated-years-to-complete` projection is deferred until the cost/output
+/// model lands, so it is left absent here.
+fn build_queue_view(s: &PlanetState) -> Vec<BuildItem> {
+    s.build_queue
+        .iter()
+        .map(|bi| BuildItem {
+            build_object_id: bi.build_object_id,
+            build_quantity: bi.build_quantity,
+            build_progress: Some(bi.build_progress),
+            estimated_years_to_complete: None,
+        })
+        .collect()
+}
+
 /// Decide whether `player_id` can currently observe this planet, and emit
 /// the matching `PlanetIntel` variant.
 ///
@@ -133,6 +149,7 @@ fn intel_for(
             factories: s.factories,
             mines: s.mines,
             value: compute_value(s, race),
+            build_queue: build_queue_view(s),
         }),
         _ => PlanetIntel::Unobserved(PlanetUnobserved {
             id: static_.id,

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "definitions": {
     "planet-unobserved": {
       "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
@@ -57,7 +57,8 @@
         "population",
         "factories",
         "mines",
-        "value"
+        "value",
+        "build-queue"
       ],
       "properties": {
         "id": {
@@ -164,9 +165,55 @@
           "minimum": -45,
           "maximum": 100,
           "format": "int32"
+        },
+        "build-queue": {
+          "description": "The planet's production queue, in build order. Present only for planets the viewing player owns (production is private); empty array when the queue is empty.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/build-item"
+          }
         }
       },
       "title": "PlanetObserved"
+    },
+    "build-item": {
+      "description": "One entry in an owned planet's production queue. build-object-id indexes the buildable registry (GET /model/buildables): 7=factory, 8=mine, 9=defenses, 1024+N=design slot N. See docs/mechanics/production.rst.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build-object-id",
+        "build-quantity"
+      ],
+      "properties": {
+        "build-object-id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "build-quantity": {
+          "description": "Number of this item remaining to build.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "build-progress": {
+          "description": "Percent complete (0..99) of the item at the head of this entry; 0 for a freshly queued item.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99,
+          "format": "uint32"
+        },
+        "estimated-years-to-complete": {
+          "description": "Projected years to finish this entry at the planet's current output. Absent until the cost/output model lands.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "format": "uint32"
+        }
+      },
+      "title": "BuildItem"
     },
     "planet-intel": {
       "description": "A single planet entry in the player's turn file. Untagged on the wire: clients distinguish observed vs. unobserved by the presence of contents fields.",
