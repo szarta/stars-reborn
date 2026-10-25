@@ -36,6 +36,7 @@ SCHEMAS = [
     ("response-game", "universe_file.py"),
     ("response-create-new-game", "create_game.py"),
     ("response-model-ship-hulls", "ship_hulls.py"),
+    ("response-validate-race", "validate_race.py"),
 ]
 
 # datamodel-codegen warns that it does not understand the `uint32` integer

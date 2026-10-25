@@ -33,3 +33,8 @@ pub mod game_state {
     #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
     include!(concat!(env!("OUT_DIR"), "/game_state_types.rs"));
 }
+
+pub mod validate_race {
+    #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
+    include!(concat!(env!("OUT_DIR"), "/validate_race_types.rs"));
+}

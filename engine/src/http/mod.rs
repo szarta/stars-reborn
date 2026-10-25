@@ -33,7 +33,7 @@ use axum::{
     routing::{get, post, put},
     Json, Router,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::game::objects::{
@@ -221,19 +221,32 @@ async fn model_schemas() -> impl IntoResponse {
 // Race design handlers
 // ---------------------------------------------------------------------------
 
-#[derive(Serialize)]
-struct RaceValidateResponse {
-    advantage_points: i32,
-    valid: bool,
+/// POST /race/validate
+///
+/// Request body is a bare `Race` (schemas/request-validate-race.json). Response
+/// is GENERATED from schemas/response-validate-race.json; the
+/// `validate_race_schema_contract` test validates this output against it.
+async fn race_validate(Json(race): Json<Race>) -> impl IntoResponse {
+    Json(validate_race_response(&race))
 }
 
-/// POST /race/validate
-async fn race_validate(Json(race): Json<Race>) -> impl IntoResponse {
-    let points = advantage_points(&race);
-    Json(RaceValidateResponse {
+/// Build the POST /race/validate response for a race. Shape is the single
+/// source of truth schemas/response-validate-race.json.
+pub fn validate_race_response(race: &Race) -> RaceValidateResponse {
+    let points = advantage_points(race);
+    let valid = points >= 0;
+    RaceValidateResponse {
         advantage_points: points,
-        valid: points >= 0,
-    })
+        valid,
+        failure_reason: if valid {
+            None
+        } else {
+            Some(format!(
+                "race overspends its advantage-point budget by {}",
+                -points
+            ))
+        },
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -279,6 +292,7 @@ struct CreateGameRequest {
 // `CreateGameResponse` / `CreatedGame` are GENERATED from
 // `schemas/response-create-new-game.json` at build time (see `build.rs`).
 use crate::game::objects::generated::create_game::{CreateGameResponse, CreatedGame};
+use crate::game::objects::generated::validate_race::RaceValidateResponse;
 
 // ---------------------------------------------------------------------------
 // Universe file response types  (.xy equivalent — public, same for all players)

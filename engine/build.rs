@@ -19,6 +19,7 @@ const SCHEMAS: &[(&str, &str)] = &[
     ("response-turn-file", "turn_file_types.rs"),
     ("response-game", "universe_file_types.rs"),
     ("response-create-new-game", "create_game_types.rs"),
+    ("response-validate-race", "validate_race_types.rs"),
     // Host-side authoritative game state (game.json / .sr save). References
     // race.json; the bundler below resolves that cross-file ref for typify.
     ("game-state", "game_state_types.rs"),

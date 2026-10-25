@@ -1,16 +1,7 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/request-validate-race.json",
-  "description": "The payload required to validate a race.",
-  "version": "0.0.1",
-  "definitions": {},
-  "additionalProperties": false,
-  "required": [
-    "race"
-  ],
-  "properties": {
-    "race": {
-      "$ref": "race.json#/definitions/race"
-    }
-  }
+  "version": "0.1.0",
+  "description": "Request body for POST /race/validate: the race design to validate. The body is a bare Race object (see race.json); the engine deserializes it directly.",
+  "$ref": "race.json#/definitions/race"
 }

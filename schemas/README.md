@@ -43,13 +43,20 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > `json!` — replacing that with the generated typed producer is a tracked
 > follow-up.
 >
+> The POST /race/validate contract is reconciled (draft-07) and
+> contract-tested both ways: `request-validate-race.json` is a bare `Race`
+> (a `$ref` to race.json, matching the engine), and `response-validate-race.json`
+> is `{advantage-points, valid, failure-reason?}` — the engine now serializes
+> the generated `RaceValidateResponse` type, and client pydantic types are
+> generated (`validate_race.py`).
+>
 > Not yet converted:
 >
-> - `request-validate-race.json`, `response-validate-race.json`,
->   `request-create-new-game.json` — these describe a richer intended API than
->   the engine currently implements (e.g. structured validation failures, full
->   game-setup options), so converting them is an API-design decision, not a
->   mechanical reconciliation.
+> - `request-create-new-game.json` — kept as the **design target**: it
+>   describes the full New Game dialog (victory conditions, galaxy clumping,
+>   play flags, universe params) while the engine parses only
+>   name/players/size/density today. It is converted and wired when the engine
+>   grows to consume those options, not flattened down to the current stub.
 > - `universe.json`, `player.json`, `planet.json`, `battle.json`, `turn.json` —
 >   the original draft-04 sketches of the full game model (fleets, wormholes,
 >   minefields, salvage, mineral packets, combat). The host-state _subset_ the

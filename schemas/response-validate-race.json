@@ -1,23 +1,28 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-validate-race.json",
-  "description": "The payload response to validate a race.",
-  "version": "0.0.1",
-  "definitions": {},
+  "version": "0.1.0",
+  "description": "Response to POST /race/validate: the race's advantage-point balance and whether it is a legal design.",
+  "title": "RaceValidateResponse",
+  "type": "object",
   "additionalProperties": false,
   "required": [
-    "request-is-valid"
+    "advantage-points",
+    "valid"
   ],
   "properties": {
-    "request-is-valid": {
-      "type": "boolean"
+    "advantage-points": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Leftover advantage points. A legal race has a value >= 0; the race wizard shows this as the live point counter."
     },
-    "race-is-valid": {
-      "type": "boolean"
+    "valid": {
+      "type": "boolean",
+      "description": "True when the race is legal (advantage-points >= 0)."
     },
     "failure-reason": {
       "type": "string",
-      "maxLength": 1024
+      "description": "Human-readable reason the race is invalid. Present only when valid is false."
     }
   }
 }
