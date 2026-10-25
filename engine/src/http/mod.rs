@@ -150,6 +150,13 @@ async fn model_race_traits() -> impl IntoResponse {
 ///
 /// Response shape: stars-reborn-schemas/response-model-ship-hulls.json.
 async fn model_ship_hulls() -> impl IntoResponse {
+    Json(ship_hulls_response())
+}
+
+/// Build the `GET /model/ships/hulls` response body. The shape is the single
+/// source of truth `schemas/response-model-ship-hulls.json`; the
+/// `ship_hulls_schema_contract` test validates this output against it.
+pub fn ship_hulls_response() -> Value {
     let hulls: Vec<Value> = ship_hull_catalog()
         .into_iter()
         .map(|h| {
@@ -200,7 +207,7 @@ async fn model_ship_hulls() -> impl IntoResponse {
             obj
         })
         .collect();
-    Json(json!({ "hulls": hulls }))
+    json!({ "hulls": hulls })
 }
 
 async fn model_schemas() -> impl IntoResponse {

@@ -35,11 +35,16 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > infrastructure the remaining interdependent schemas (fleets, wormholes, etc.)
 > will reuse as they are added.
 >
+> `response-model-ship-hulls.json` (GET /model/ships/hulls) and the `tech.json`
+> leaf defs it references (both up-converted to draft-07) are reconciled to the
+> engine's live output and guarded by a Rust contract test
+> (`engine/tests/ship_hulls_schema_contract.rs`); client pydantic types are
+> generated (`ship_hulls.py`). The engine still hand-builds the response with
+> `json!` — replacing that with the generated typed producer is a tracked
+> follow-up.
+>
 > Not yet converted:
 >
-> - `tech.json` and `response-model-ship-hulls.json` — the engine hand-builds
->   the hull catalog with `json!` and the types don't derive `Serialize`, so
->   they need a typed producer first.
 > - `request-validate-race.json`, `response-validate-race.json`,
 >   `request-create-new-game.json` — these describe a richer intended API than
 >   the engine currently implements (e.g. structured validation failures, full
