@@ -405,6 +405,20 @@ minimum separation drops below the normal 20 ly floor, consistent with planets
 being drawn together past normal spacing. The clone must implement clumping as
 an actual clustering step, not a no-op.
 
+**Second effect — effective density drops one level.** Independently of the
+clustering, turning Galaxy Clumping on yields a universe with the planet count
+and surface density of the *next sparser* setting: Normal → Sparse, Dense →
+Normal, Sparse → below Sparse. The generated universe records the *reduced*
+density (so a clumped game's stored density differs from the density the player
+selected). Reproduced three independent ways: the counterexample pair above;
+automator runs across sizes; and a hand-built control game — Medium / Normal
+with clumping on produced a Medium / **Sparse** universe (288 planets, the
+Medium/Sparse count ``floor((1200/10)² · 2.0 / 100)``, not the 360 of
+Medium/Normal) that is also clustered (Clark–Evans R ≈ 0.54). The clone must
+apply this one-level density reduction when clumping is enabled. The mechanism
+behind the drop (fewer seed points, or the clustering transform consuming
+planets) is not yet established.
+
 .. todo:: Exact clumping algorithm — number of clumps, clump radius, and how planets are grouped — from same-seed clump/no-clump pairs (the ``-a`` automated path does not apply clumping) and/or decompile.
 
 Open Questions
