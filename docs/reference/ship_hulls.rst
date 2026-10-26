@@ -1,12 +1,15 @@
 Ship Hull Reference
 ===================
 
-All hull data sourced from the Python engine ``factory.py``.  Needs oracle
-verification against ``stars.exe``.
+Hull stats and slot layouts are verified against the original game's Ship
+Designer and Tech Browser hull views.  The engine's ship-hull catalog is the
+source of truth and serves per-slot grid positions over ``GET
+/model/ships/hulls``; this page is the human-readable reference.
 
 Tech requirements: ``C`` = Construction. Costs: ``[Ir, Bo, Ge, R]``.  Slot
 notation: ``Engines(n)`` = up to *n* engine parts per slot.  See
-:doc:`../mechanics/ship_design` for slot type definitions.
+:doc:`../mechanics/ship_design` for slot type definitions and the slot-layout
+grid convention.
 
 .. note::
 
@@ -90,7 +93,7 @@ Scouts and Light Combat
      - 0
      - Engines(5), Weapons(6), Weapons(6), Weapons(8), Weapons(8), Armor(8),
        Electrical(4), Electrical(4), Protection(4), Protection(4),
-       GeneralPurpose(1), WeaponShield(5), WeaponShield(5)
+       GeneralPurpose(2), WeaponShield(5), WeaponShield(5)
 
 Freighters
 ----------
@@ -182,8 +185,7 @@ Multi-Purpose / Armed Freighters
      - 2500
      - 1000
      - Engines(4), Protection(2), Protection(2), GeneralPurpose(3),
-       GeneralPurpose(3), Electrical(1), MineElectMech(2), ElectMech(2),
-       Scanners(2)
+       GeneralPurpose(3), MineElectMech(2), ElectMech(2), Scanners(2)
 
 Colony Ships
 ------------
@@ -321,7 +323,7 @@ for recommended designs by LRT combination.
      - 0
      - 850
      - 0
-     - Engines(1), MiningRobots(4), MiningRobots(4), MiningRobots(1),
+     - Engines(3), MiningRobots(4), MiningRobots(4), MiningRobots(1),
        MiningRobots(1), ArmorScannerElectMech(2)
    * - Ultra Miner
      - C14

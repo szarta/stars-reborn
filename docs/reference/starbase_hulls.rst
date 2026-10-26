@@ -1,7 +1,11 @@
 Starbase Hull Reference
 =======================
 
-All data from the Python engine ``factory.py``. Needs oracle verification.
+Slot counts and layouts are verified against the original game's Ship Designer
+/ Tech Browser hull views. Starbases are not yet part of the engine's hull
+model (``HullCategory`` covers ship hulls only), so this page is their source
+of truth until a starbase catalog is added; the per-slot grid positions below
+are ready to port into it.
 
 **Availability restrictions (from in-game help):**
 
@@ -95,8 +99,60 @@ Dock Capacity Notes
    ``[0,0,0,0,0,0]``). The original game may require some base tech to build
    it despite zero research requirements.
 
-.. todo::
+Slot Layout
+-----------
 
-   Confirm exact slot counts for all hulls against oracle. The expanded slot
-   notation (e.g., Weapons(16)×4 for Ultra Station's 6 weapon slots) needs
-   verification.
+Per-slot grid positions, verified against the Ship Designer "Available Hull
+Types" view. Coordinates ``(row, col)`` use the same half-box grid as ship
+hulls (see :doc:`../mechanics/ship_design`): origin top-left, one slot box =
+two units.  The central dock disc (maximum buildable ship mass) is **not** a
+slot.
+
+Orbital Fort — a cross; here the centre *is* a slot:
+
+- ``(0, 2)`` Weapons(12)
+- ``(2, 0)`` Protection(12) · ``(2, 2)`` OrbitalElect(1) · ``(2, 4)``
+  Protection(12)
+- ``(4, 2)`` Weapons(12)
+
+Space Dock — an octagonal ring around the dock:
+
+- ``(0, 3)`` Weapons(16)
+- ``(1, 1)`` OrbitalElect(1) · ``(1, 5)`` Electrical(2)
+- ``(3, 0)`` Protection(24) · ``(3, 6)`` Weapons(16)
+- ``(5, 1)`` Weapons(16) · ``(5, 5)`` Electrical(2)
+- ``(6, 3)`` Shields(24)
+
+Space Station — a staggered cross:
+
+- ``(0, 3)`` Shields(16) · ``(0, 5)`` Weapons(16)
+- ``(2, 4)`` Electrical(3)
+- ``(3, 0)`` Weapons(16) · ``(3, 8)`` Protection(16)
+- ``(4, 2)`` OrbitalElect(1) · ``(4, 6)`` OrbitalElect(1)
+- ``(5, 0)`` Protection(16) · ``(5, 8)`` Weapons(16)
+- ``(6, 4)`` Electrical(3)
+- ``(8, 3)`` Weapons(16) · ``(8, 5)`` Shields(16)
+
+Ultra Station — a staggered cross:
+
+- ``(0, 3)`` Weapons(16) · ``(0, 5)`` Electrical(3)
+- ``(2, 2)`` Protection(20) · ``(2, 4)`` OrbitalElect(1) · ``(2, 6)``
+  Shields(20)
+- ``(3, 0)`` Weapons(16) · ``(3, 8)`` Weapons(16)
+- ``(4, 2)`` Electrical(3) · ``(4, 6)`` Electrical(3)
+- ``(5, 0)`` Weapons(16) · ``(5, 8)`` Weapons(16)
+- ``(6, 2)`` Shields(20) · ``(6, 4)`` OrbitalElect(1) · ``(6, 6)``
+  Protection(20)
+- ``(8, 3)`` Electrical(3) · ``(8, 5)`` Weapons(16)
+
+Death Star — a pinwheel:
+
+- ``(0, 2)`` Weapons(32) · ``(0, 6)`` Electrical(4)
+- ``(1, 4)`` OrbitalElect(1)
+- ``(2, 0)`` Electrical(4) · ``(2, 2)`` Protection(20) · ``(2, 6)`` Shields(30)
+  · ``(2, 8)`` Weapons(32)
+- ``(4, 1)`` Electrical(4) · ``(4, 7)`` Electrical(4)
+- ``(6, 0)`` Weapons(32) · ``(6, 2)`` Shields(30) · ``(6, 6)`` Protection(20) ·
+  ``(6, 8)`` Electrical(4)
+- ``(7, 4)`` OrbitalElect(1)
+- ``(8, 2)`` Electrical(4) · ``(8, 6)`` Weapons(32)

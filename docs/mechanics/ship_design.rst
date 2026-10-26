@@ -247,6 +247,21 @@ For beam warships, aim for battle speed **≥ 1¾** squares/round (target 2 or
 carry Maneuvering Jets or Battle Computers — this limits its effectiveness as a
 beam platform.  See :doc:`combat` for the battle speed formula.
 
+Slot Layout Grid
+----------------
+
+Each hull slot carries a grid ``position`` (``row``, ``col``) describing where
+it sits in the Ship Designer's 2D layout — a horizontal row for small ships, a
+cruciform for warships, and a ring or pinwheel for starbases.  The engine
+serves these positions over ``GET /model/ships/hulls`` so a client can render
+the designer faithfully.
+
+Convention: the unit is **half a slot box**, and the origin ``(0, 0)`` is the
+top-left of the hull's slot cluster.  Adjacent boxes are therefore two units
+apart on an axis, and a box staggered by half a box (as warship rows are) lands
+on an odd coordinate.  Positions are verified against the original game's Ship
+Designer and Tech Browser hull views.
+
 Hull Reference
 --------------
 

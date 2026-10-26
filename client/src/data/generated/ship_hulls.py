@@ -118,7 +118,7 @@ class HullRequirement(RootModel[HullRequirement1 | None]):
 
 class SlotPosition(BaseModel):
     """
-    Grid coordinates in the Ship Designer layout. Until task #83 captures original game layouts, these are placeholders (single-row arrangement).
+    Grid coordinates of the slot in the Ship Designer layout, matching the original game. The unit is half a slot box; the origin is the top-left of the hull's slot cluster.
     """
 
     model_config = ConfigDict(
