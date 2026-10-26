@@ -121,9 +121,9 @@ Empirical validation (R5.1)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Verified against an in-game F10 screen at year 2420 in a 16-player game
-(``stars-reborn-research/original/normally_played_game``).  Player 1 (AR race
-"Timmune") with 4 planets, 1 starbase, 16 unarmed ships, tech 6/0/1/4/3/3 (sum
-17), and 311 annual resources scored exactly:
+(``stars-reborn-research/experiments/normally_played_game``).  Player 1 (AR
+race "Timmune") with 4 planets, 1 starbase, 16 unarmed ships, tech 6/0/1/4/3/3
+(sum 17), and 311 annual resources scored exactly:
 
 .. code-block:: text
 
@@ -182,14 +182,13 @@ JOAT/HE/SS/PP/IS/AR, planet counts from 1 to 73, escort counts up to 60, and
 tech levels up to 10.
 
 Per-class validation scripts:
-``stars-reborn-research/reverse-engineering/scripts/score_calc.py`` (single
-player) and ``validate_score.py`` (multi-player, takes an F10 ground-truth
-JSON).
+``stars-reborn-research/re/scripts/score_calc.py`` (single player) and
+``validate_score.py`` (multi-player, takes an F10 ground-truth JSON).
 
 Capital-ship harmonic mean (confirmed year 2504)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A fourth snapshot at year 2504 (``stars-reborn-research/original/try2``,
+A fourth snapshot at year 2504 (``stars-reborn-research/experiments/try2``,
 6-player game) closed the last open cell.  Two players held capital ships:
 
 * **P1 Timmune (AR)** — 1 capital ship, 5 planets → ``floor(8 × 1 × 5 / (1 +
@@ -248,8 +247,8 @@ can achieve victory at the same time (with the same or different conditions)")
 Simultaneous winners (confirmed R5.2)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Verified with a 2-human-player game
-(``stars-reborn-research/original/long-2p-game``) configured with a single
+Verified with a 2-human-player game (the ``long-2p-game`` game in the research
+game-store, ``experiments/games/store.sqlite``) configured with a single
 condition (Tech L8 in 2 fields), ``min_years = 100``, and both players given
 JOAT + Generalized Research so they would both cross the threshold on the same
 turn.  The two players never met in-game.
@@ -315,10 +314,10 @@ engine does not enforce it.
 Year-N condition (confirmed R5.2)
 ---------------------------------
 
-The "Has highest score after N years" condition was tested in
-``stars-reborn-research/original/900_turns`` (2-human game,
-``highest_score_year = 900``, all other conditions disabled, ``min_years =
-100``).  The host was advanced to turn 898 (year 3298), then individual turns
+The "Has highest score after N years" condition was tested in the ``900_turns``
+game in the research game-store (``experiments/games/store.sqlite``; 2-human
+game, ``highest_score_year = 900``, all other conditions disabled, ``min_years
+= 100``).  The host was advanced to turn 898 (year 3298), then individual turns
 were generated via ``stars.exe -gN``.
 
 * **Turn 900 (year 3300)** — Player 1 was declared winner; both players

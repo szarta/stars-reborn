@@ -110,7 +110,7 @@ as starting points for new players.  These are bundled from
 
 **Source:** Decoded from original ``stars.exe`` default ``.r1`` files
 (2026-04-22).  Full details in
-``stars-reborn-research/docs/findings/default_race_values.rst``.
+``stars-reborn-research/knowledge/findings/default_race_values.rst``.
 
 Hab values: 0–100 index (``0xFF`` = immune).  Temperature: ``°C = (idx−50)×4``.
 Radiation: direct mR/yr.  Research cost: ``N``\=Normal, ``E``\=Expensive,

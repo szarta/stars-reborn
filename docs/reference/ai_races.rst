@@ -72,13 +72,13 @@ Assignment rules:
   Automitrons, Robotills, Cybertrons, Macinti) in the Custom Game dialog.
   These are internal archetypes and never appear as in-game names.  Even when
   all 16 player slots in a game share a single AI template, none of the 16
-  retains the template name — confirmed 2026-04-25 via
-  ``stars-reborn-research/original/all_ai_players_standard_robotill/`` (16
-  Standard-tier Robotill AIs; all 16 received distinct pool names, "Robotill"
-  never appeared).  This is the same mechanism the engine uses for human-player
-  name collisions (see :ref:`name-collision-resolution` below); AI templates
-  always trigger reassignment because their archetype labels are never valid
-  in-game names.
+  retains the template name — confirmed 2026-04-25 via the
+  ``all_ai_players_standard_robotill`` game in the research game-store
+  (``experiments/games/store.sqlite``) (16 Standard-tier Robotill AIs; all 16
+  received distinct pool names, "Robotill" never appeared).  This is the same
+  mechanism the engine uses for human-player name collisions (see
+  :ref:`name-collision-resolution` below); AI templates always trigger
+  reassignment because their archetype labels are never valid in-game names.
 
 Difficulty and PRT
 ------------------

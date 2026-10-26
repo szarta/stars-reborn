@@ -26,7 +26,7 @@ The FUN tables below have been validated three ways:
 
 1. **In-game tech-browser graph** — Brandon's original gnuplot reproduction of
    the per-engine fuel-usage chart matches the in-game graph for every engine
-   (see ``stars-reborn-research/original/screencaps/tech_browser/`` for the
+   (see ``stars-reborn-research/experiments/screencaps/tech_browser/`` for the
    canonical screencap of Settler's Delight as a worked example).
 2. **FreeStars rules** (``MyModRules.xml``) — every FUN value matches when
    FreeStars's fractional notation is multiplied by 100. (FreeStars stores

@@ -280,10 +280,10 @@ against an effective cap of zero, and dies off rapidly.
 
 **Warp acceleration deaths (AR-specific).** AR colonists in transit suffer
 losses each turn — message 193: "Due to the rigors of warp acceleration, X of
-your colonists on Y have died." Confirmed AR-specific in
-``research/original/transport_test`` (Wine save). Non-AR races do **not** incur
-this loss when transporting colonists. The exact per-turn rate as a function of
-warp speed is still open.
+your colonists on Y have died." Confirmed AR-specific in the ``transport_test``
+game in the research game-store (``experiments/games/store.sqlite``; Wine
+save).  Non-AR races do **not** incur this loss when transporting colonists.
+The exact per-turn rate as a function of warp speed is still open.
 
 .. todo:: Document the exact AR warp-acceleration death rate (per-turn
    fraction as a function of warp speed).

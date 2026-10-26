@@ -648,12 +648,12 @@ Open Questions
    - **Mine generation** (auto-mining from orbit): ``sqrt(population) / 10``
      mines per year, which then mine the planet automatically.
 
-   See ``stars-reborn-research/docs/findings/gamefaqs_faq_race_mechanics.rst``.
+   See ``stars-reborn-research/knowledge/findings/gamefaqs_faq_race_mechanics.rst``.
 
 .. todo:: WM ship cost reduction: exact percentage? Speed bonus?
    GameFAQs FAQ v1.11 says: all **weapons** cost 25% less to build (not ships
    generally); battle movement bonus is **½ square per round**.  Community source
    only — oracle verification needed before closing this TODO.
-   See ``stars-reborn-research/docs/findings/gamefaqs_faq_race_mechanics.rst``.
+   See ``stars-reborn-research/knowledge/findings/gamefaqs_faq_race_mechanics.rst``.
 
 .. todo:: IT secondary starting planet — confirm it is absent in Tiny universes.

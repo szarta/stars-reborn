@@ -11,7 +11,7 @@ Turn Resolution Order
    trust.  Core ordering from McBride is treated as authoritative (equivalent
    to the strategy guide).  Individual steps still benefit from oracle
    confirmation — see
-   ``stars-reborn-research/docs/open_questions/turn_resolution_order.rst``.
+   ``stars-reborn-research/knowledge/open_questions/turn_resolution_order.rst``.
 
 Each year, the |original| engine processes events in the following order.
 |project| must reproduce this sequence exactly for behavioral fidelity.
@@ -158,4 +158,4 @@ Notes
    - **Newly-launched packets reaching destination same turn** (Phase 6 sub-step;
      needs oracle confirmation of exact range cutoff).
 
-   See ``stars-reborn-research/docs/open_questions/turn_resolution_order.rst``.
+   See ``stars-reborn-research/knowledge/open_questions/turn_resolution_order.rst``.

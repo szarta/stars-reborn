@@ -199,7 +199,7 @@ Where ``cloak_percent`` is the fleet's total cloaking percentage.
    research open question.*
 
 .. todo:: Confirm cloaking detection formula via oracle test. See
-   ``stars-reborn-research/docs/open_questions/cloaking_detection_formula.rst``.
+   ``stars-reborn-research/knowledge/open_questions/cloaking_detection_formula.rst``.
 
 Cloak Percentage Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

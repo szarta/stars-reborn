@@ -5,7 +5,7 @@ Default game parameters for the simple New Game path.
 
 All confirmed values are from the original Stars! client.
 The Advanced Game path lets the player override any of these.
-See stars-reborn-research/docs/findings/new_game_defaults.rst.
+See stars-reborn-research/knowledge/findings/new_game_defaults.rst.
 """
 
 from __future__ import annotations
@@ -100,7 +100,7 @@ class PlanetData:
 # This is a fixed lookup table in the original — NOT randomly generated.
 # Confirmed: all Easy entries; Standard/Small.
 # Remaining cells (Standard Tiny/Med/Large/Huge; all Harder; all Expert) are unknown.
-# See stars-reborn-research/docs/findings/new_game_defaults.rst.
+# See stars-reborn-research/knowledge/findings/new_game_defaults.rst.
 GAME_NAME_TABLE: dict[tuple[str, str], str] = {
     ("easy", "tiny"): "Shooting Fish in a Barrel",
     ("easy", "small"): "A Walk in the Park",
