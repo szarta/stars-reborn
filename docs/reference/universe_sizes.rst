@@ -79,3 +79,6 @@ Game Options
 
 **Galaxy Clumping**
    Clusters or clumps star systems, allowing for faster initial expansion.
+   Confirmed to materially cluster planet placement (median nearest-neighbour
+   distance roughly halves versus the default). See
+   :doc:`../mechanics/universe_generation`.

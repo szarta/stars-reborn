@@ -135,7 +135,9 @@ Planet Placement
   the constraint is relaxed and the planet is placed unconstrained (prevents
   infinite loops at high density).
 
-.. todo:: Verify whether original |original| uses any clustering ("Galaxy Clumping" option).
+The above describes placement with Galaxy Clumping **off**. When the "Galaxy
+Clumping" new-game option is on, the original |original| clusters the planets
+(see :ref:`galaxy-clumping` below).
 
 Planet Names
 ------------
@@ -274,8 +276,8 @@ Design* article recommends sliding only the radiation window for free advantage
 points.
 
 Source: Alan L. Kolaga's per-click distribution table (charts captured at
-``stars-reborn-research/web_captures/arglos/charts/``), confirmed against
-40,614 independently observed planets in :ref:`hab-distribution-finding`.
+``stars-reborn-research/sources/web/arglos/charts/``), confirmed against 40,614
+independently observed planets in :ref:`hab-distribution-finding`.
 
 Mineral Generation
 ------------------
@@ -369,11 +371,45 @@ When a homeworld is assigned to a player's race:
 3. **Starting population:** see :doc:`population_growth`
 4. **Starting infrastructure:** factories and mines from race parameters
 
+.. _galaxy-clumping:
+
+Galaxy Clumping
+---------------
+
+The "Galaxy Clumping" universe option **clusters the planets**. Comparing two
+otherwise-identical Small/Sparse universes (128 planets) that differ only in
+the clumping flag, the clumped universe is strongly clustered while the default
+is approximately uniform:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 20 20 20
+
+   * - Metric (128 planets, 800×800 ly)
+     - median nearest-neighbour
+     - min separation
+     - Clark–Evans R
+   * - Clumping off (default)
+     - 31 ly
+     - 12 ly
+     - ≈ 1.04 (uniform)
+   * - Clumping on
+     - 13 ly
+     - 9 ly
+     - ≈ 0.59 (clustered)
+
+Observed mechanism: planets are first placed with the normal spacing (uniform +
+minimum-distance rejection sampling, above), then groups of planets are pulled
+together into clumps — so clumping is a post-placement transformation. The
+minimum separation drops below the normal 20 ly floor, consistent with planets
+being drawn together past normal spacing. The clone must implement clumping as
+an actual clustering step, not a no-op.
+
+.. todo:: Exact clumping algorithm — number of clumps, clump radius, and how planets are grouped — from same-seed clump/no-clump pairs (the ``-a`` automated path does not apply clumping) and/or decompile.
+
 Open Questions
 --------------
 
 .. todo:: Packed density factor (cannot measure headlessly; Large/Packed count unknown)
-
-.. todo:: Whether "Galaxy Clumping" uses a spatial Poisson process or simple clustering
 
 .. todo:: Whether mineral concentrations have a minimum guaranteed per homeworld
