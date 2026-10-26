@@ -1,0 +1,801 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-model-technologies.json",
+  "version": "0.1.0",
+  "description": "Response shape for GET /model/technologies — the full technology tree of installable ship/starbase components plus non-installable planetary and orbital technologies. Ship and starbase *hulls* are NOT included here; they have their own catalog at GET /model/ships/hulls (response-model-ship-hulls.json). GET /model/technologies/{id} returns a single '#/definitions/tech-item'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "technologies"
+  ],
+  "properties": {
+    "technologies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/tech-item"
+      }
+    }
+  },
+  "definitions": {
+    "tech-item": {
+      "description": "One technology item. Common fields apply to every category; the 'properties' object carries the category-specific stats. The 'allOf' below pins 'properties' to the definition matching 'category' (if/then on the category value) — a reader keys off 'category' to know which 'props-*' shape to expect.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slug",
+        "name",
+        "category",
+        "requirement",
+        "cost",
+        "tech-requirements",
+        "properties"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "engines"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-engine"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "weapons"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-weapon"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "armor"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-armor"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "shields"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-shield"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "bombs"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-bomb"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "electrical"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-electrical"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "mechanical"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-mechanical"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "mine-layers"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-mine-layer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "mining-robots"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-mining-robot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "scanners"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-scanner"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "orbital"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-orbital"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "planetary"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/definitions/props-planetary"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "$ref": "tech.json#/definitions/parts-id"
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Stable machine identifier; safe for URLs, filenames, and asset lookups."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name as shown in the original game (e.g. 'Long Hump 6', 'Phased Sapper', 'Croby Sharmor')."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional human-readable blurb for the Technology Browser detail pane. Design target; the engine does not yet carry per-item descriptions."
+        },
+        "category": {
+          "$ref": "#/definitions/tech-category"
+        },
+        "requirement": {
+          "$ref": "#/definitions/trait-requirement"
+        },
+        "mass": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Mass in kT. Present only for ship/starbase-installable parts; absent for non-installable planetary and orbital technologies (planetary scanners, planetary defenses, terraforming)."
+        },
+        "cost": {
+          "$ref": "tech.json#/definitions/mineral-cost"
+        },
+        "tech-requirements": {
+          "$ref": "tech.json#/definitions/tech-requirements"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Reserved. Icon identifier, added once the hull/component icon convention lands (task #88). Omitted until then; see docs/schemas/index.rst."
+        },
+        "properties": {
+          "description": "Category-specific stats. The 'allOf' if/then clauses above constrain this object to the 'props-*' definition matching 'category'.",
+          "type": "object"
+        }
+      }
+    },
+    "tech-category": {
+      "description": "Component category, used by the Technology Browser category list and the Ship Designer component picker. Mirrors the slot categories a part can occupy; 'planetary' and 'orbital' items are not ship-installable.",
+      "enum": [
+        "armor",
+        "shields",
+        "weapons",
+        "bombs",
+        "electrical",
+        "engines",
+        "mechanical",
+        "mine-layers",
+        "mining-robots",
+        "orbital",
+        "planetary",
+        "scanners"
+      ]
+    },
+    "trait-requirement": {
+      "description": "Trait gating. null = available to every race with the tech levels. Otherwise an object naming the gate(s): 'prt' restricts to races with one of the listed Primary Racial Traits; 'lrt' requires ALL listed Lesser Racial Traits; 'mystery-trader' true means the item is obtainable only through a Mystery Trader exchange. Typically at most one gate is set.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "prt": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "race.json#/definitions/prt"
+              }
+            },
+            "lrt": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "race.json#/definitions/lrt"
+              }
+            },
+            "mystery-trader": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "props-engine": {
+      "description": "Engines. fuel-usage is mg consumed per light-year at each warp 0–10 (index = warp).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel-usage",
+        "battle-speed",
+        "warp10-travel",
+        "last-free-warp"
+      ],
+      "properties": {
+        "fuel-usage": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "battle-speed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Battle speed rating in half-steps (e.g. 10 = speed 5.0)."
+        },
+        "warp10-travel": {
+          "type": "boolean",
+          "description": "Whether the engine can safely travel at warp 10."
+        },
+        "last-free-warp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Highest warp with zero fuel cost (ram-scoop characteristic)."
+        },
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent (Enigma Pulsar only)."
+        },
+        "battle-speed-modifier": {
+          "type": "number",
+          "description": "Additive battle-speed modifier (Enigma Pulsar: +0.25)."
+        }
+      }
+    },
+    "props-weapon": {
+      "description": "Beam weapons and torpedoes/missiles. 'kind' selects which optional fields apply: beams carry 'spread'/'shields-only'; torpedoes carry 'accuracy'.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "power",
+        "range",
+        "initiative"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "beam",
+            "torpedo"
+          ]
+        },
+        "power": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Range in battle squares."
+        },
+        "initiative": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "spread": {
+          "type": "boolean",
+          "description": "Beam only: hits all targets in range simultaneously (sapper/gatling behaviour)."
+        },
+        "shields-only": {
+          "type": "boolean",
+          "description": "Beam only: damages shields but cannot damage armor (shield sappers)."
+        },
+        "accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Torpedo only: base hit probability (0.0–1.0) before ECM/computer modifiers."
+        }
+      }
+    },
+    "props-armor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "armor-value"
+      ],
+      "properties": {
+        "armor-value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Armor damage points added to the ship."
+        },
+        "shield-value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Shield points this piece also provides (e.g. Fielded Kelarium)."
+        },
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent (e.g. Depleted Neutronium)."
+        }
+      }
+    },
+    "props-shield": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shield-value"
+      ],
+      "properties": {
+        "shield-value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Shield damage points added to the ship."
+        },
+        "armor-value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Armor points this shield also provides (e.g. Croby Sharmor)."
+        },
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent (e.g. Shadow Shield)."
+        },
+        "jamming": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Torpedo-jamming bonus percent (e.g. Langston Shell)."
+        },
+        "scanner-basic-range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ship-scanner basic range in ly, if the part also scans (Langston Shell)."
+        },
+        "scanner-penetrating-range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ship-scanner penetrating range in ly, if the part also scans (Langston Shell)."
+        }
+      }
+    },
+    "props-bomb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "colonist-kill-percent",
+        "minimum-colonists-killed",
+        "buildings-destroyed",
+        "smart"
+      ],
+      "properties": {
+        "colonist-kill-percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of colonists killed per bomb (e.g. 0.012 = 1.2%)."
+        },
+        "minimum-colonists-killed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Floor on colonists killed when the percentage would kill fewer."
+        },
+        "buildings-destroyed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Installations destroyed per bomb."
+        },
+        "smart": {
+          "type": "boolean",
+          "description": "Smart bombs bypass planetary defenses more effectively."
+        }
+      }
+    },
+    "props-electrical": {
+      "description": "Electrical parts: battle computers, jammers, capacitors, cloaks, energy dampeners, tachyon detectors, and MT electrical pods.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent."
+        },
+        "torpedo-accuracy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Torpedo accuracy bonus percent (battle computers)."
+        },
+        "initiative": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Combat initiative bonus (battle computers)."
+        },
+        "jamming": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Torpedo miss-chance bonus percent (jammers)."
+        },
+        "beam-damage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Beam-weapon power bonus percent (capacitors)."
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fuel capacity added (Anti-Matter Generator)."
+        },
+        "fuel-per-year": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fuel produced per year (Anti-Matter Generator)."
+        },
+        "battle-speed-modifier": {
+          "type": "number",
+          "description": "Additive battle-speed modifier (Multi-Function Pod: +0.25)."
+        },
+        "energy-dampener": {
+          "type": "boolean",
+          "description": "Dampens enemy energy weapons."
+        },
+        "tachyon-detector": {
+          "type": "boolean",
+          "description": "Detects cloaked ships."
+        }
+      }
+    },
+    "props-mechanical": {
+      "description": "Mechanical parts: cargo pods, fuel tanks, maneuvering jets, overthrusters, beam deflectors, colonization/jump-gate modules.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cargo": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cargo capacity added (cargo pods)."
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fuel capacity added (fuel tanks)."
+        },
+        "battle-speed-modifier": {
+          "type": "number",
+          "description": "Additive battle-speed modifier (maneuvering jets: +0.25, overthruster: +0.5)."
+        },
+        "beam-reduction": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Beam-damage reduction percent (beam deflector)."
+        },
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent (Multi-Cargo Pod)."
+        },
+        "armor-value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Armor points added (Multi-Cargo Pod)."
+        },
+        "jump-gate": {
+          "type": "boolean",
+          "description": "Acts as a one-way jump gate (IT races)."
+        }
+      }
+    },
+    "props-mine-layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mines-per-year",
+        "mine-type"
+      ],
+      "properties": {
+        "mines-per-year": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mine-type": {
+          "enum": [
+            "normal",
+            "heavy",
+            "speed"
+          ]
+        },
+        "min-safe-warp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Highest warp safe through this field type."
+        },
+        "hit-chance-per-ly": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Probability of hitting a mine per light-year travelled over-warp."
+        },
+        "damage-ship-no-ram-scoop": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "damage-ship-ram-scoop": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min-damage-fleet-no-ram-scoop": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min-damage-fleet-ram-scoop": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "props-mining-robot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mining-value"
+      ],
+      "properties": {
+        "mining-value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "kT of each mineral extracted per year per robot."
+        },
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent (Alien Miner)."
+        },
+        "jamming": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Jamming bonus percent (Alien Miner)."
+        },
+        "battle-speed-modifier": {
+          "type": "number",
+          "description": "Additive battle-speed modifier (Alien Miner: +0.125)."
+        }
+      }
+    },
+    "props-scanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basic-range",
+        "penetrating-range"
+      ],
+      "properties": {
+        "basic-range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Normal scan range in ly."
+        },
+        "penetrating-range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Penetrating (planet-surface) scan range in ly."
+        },
+        "cloaking": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cloaking bonus percent (Chameleon Scanner)."
+        }
+      }
+    },
+    "props-orbital": {
+      "description": "Orbital structures installable only on starbases: stargates and mass drivers. 'kind' selects which fields apply.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "stargate",
+            "mass-driver"
+          ]
+        },
+        "safe-mass": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Stargate: max ship mass (kT) transferable safely; null = unlimited."
+        },
+        "safe-range": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Stargate: max transfer distance (ly) safely; null = unlimited."
+        },
+        "warp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16,
+          "description": "Mass driver: mineral-packet launch velocity (warp)."
+        }
+      }
+    },
+    "props-planetary": {
+      "description": "Non-installable planetary technologies: planetary scanners, planetary defenses, and terraforming. 'kind' selects which fields apply.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "scanner",
+            "defense",
+            "terraforming"
+          ]
+        },
+        "basic-range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Planetary scanner: normal scan range in ly."
+        },
+        "penetrating-range": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Planetary scanner: penetrating scan range in ly."
+        },
+        "base-coverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Planetary defense: per-defense kill probability against a single bomb (0.0–1.0)."
+        },
+        "gravity": {
+          "type": "integer",
+          "description": "Terraforming: max hab units shiftable per year on the gravity axis."
+        },
+        "temperature": {
+          "type": "integer",
+          "description": "Terraforming: max hab units shiftable per year on the temperature axis."
+        },
+        "radiation": {
+          "type": "integer",
+          "description": "Terraforming: max hab units shiftable per year on the radiation axis."
+        }
+      }
+    }
+  }
+}

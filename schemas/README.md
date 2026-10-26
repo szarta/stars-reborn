@@ -43,6 +43,22 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > `json!` — replacing that with the generated typed producer is a tracked
 > follow-up.
 >
+> `response-model-technologies.json` (GET /model/technologies, task #85) is
+> authored draft-07 and references `tech.json` (ids, cost, tech-requirements)
+> and `race.json` (prt/lrt enums for trait gating). It is the **design target**
+> for the full component tree — every installable ship/starbase part plus the
+> non-installable planetary/orbital techs — with per-category `properties`
+> selected by an if/then discriminator on `category`. It is **not yet wired to
+> a producer**: the engine handler returns 501, there is no component data
+> catalog yet (only hulls have one), and it is in neither codegen allowlist
+> (`engine/build.rs`, `scripts/generate_types.py`), so no Rust or client types
+> are generated from it. A schema-validity guard test
+> (`engine/tests/technologies_schema_contract.rs`) compiles it and checks
+> representative items. Wiring the real producer — the ~300-item catalog with
+> oracle-verified values, the `/model/technologies` + `/{id}` handlers, a
+> real wire-contract test, generated client types, and the `icon` field once
+> the icon convention (task #88) lands — is a tracked follow-up.
+>
 > `GET /model/buildables` (the production-queue buildable registry, task #93) is
 > likewise hand-built with `json!` in `engine/src/http/mod.rs`
 > (`buildables_response`) and covered by a unit test, but has **no schema file
@@ -88,6 +104,7 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 | `race.json`                          | Race definition: PRT, LRTs, economy parameters, hab ranges, tech costs                                    |
 | `tech.json`                          | Shared tech-item types: ids, mineral costs, tech-level requirements, slot-type enum                       |
 | `response-model-ship-hulls.json`     | API response for `GET /model/ships/hulls`: full ship-hull catalog                                         |
+| `response-model-technologies.json`   | API response for `GET /model/technologies`: full component tree (parts + planetary/orbital techs)         |
 | `turn.json`                          | Turn input/output wrapper: player orders in, game state out                                               |
 | `universe.json`                      | Universe snapshot: all planets, all fleets, all players                                                   |
 | `request-create-new-game.json`       | API request to create a new game                                                                          |

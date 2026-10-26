@@ -350,6 +350,20 @@ Response shapes for these endpoints live in ``stars-reborn-schemas``:
 - ``/model/ships/hulls`` → ``response-model-ship-hulls.json`` (id, slug, name,
   category, trait gating, mass/armor/init, fuel/cargo capacity, cost, tech
   requirements, and slot list with layout-grid positions).
+- ``/model/technologies`` → ``response-model-technologies.json`` (the full
+  component tree: every installable ship/starbase part plus non-installable
+  planetary and orbital technologies). Each item carries id, slug, name,
+  ``category`` (one of armor, shields, weapons, bombs, electrical, engines,
+  mechanical, mine-layers, mining-robots, orbital, planetary, scanners), trait
+  gating (PRT / LRT / Mystery Trader), cost, tech requirements, and a
+  category-specific ``properties`` object (armor dp, shield dp, weapon stats,
+  engine fuel curve, scanner ranges, and so on). ``GET
+  /model/technologies/{id}`` returns a single such item. Hulls are *not*
+  included here — they are a separate catalog (``/model/ships/hulls``). An
+  ``icon`` identifier is reserved on each item and populated once the icon
+  convention lands (task #88). The engine producer (the ~300-item catalog with
+  oracle-verified values, wired handlers, and client types) is a tracked
+  follow-up; the handler returns 501 until then.
 
 Game API
 ~~~~~~~~

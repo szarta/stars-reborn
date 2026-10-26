@@ -42,5 +42,11 @@ descriptive catalog; the files themselves are authoritative in that repo.
        :doc:`../new_game/new_game_request`
    * - ``response-create-tutorial-game.json``
      - API response for tutorial game creation
+   * - ``response-model-technologies.json``
+     - ``GET /model/technologies`` response: the full component tree (every
+       installable ship/starbase part plus planetary and orbital techs) with
+       per-category stats, trait gating, cost, and tech requirements; see
+       :doc:`../architecture`. The ``icon`` field is reserved pending the icon
+       convention (task #88)
    * - ``response-validate-race.json``
      - API response for race validation
