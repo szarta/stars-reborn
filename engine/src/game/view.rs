@@ -67,6 +67,10 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         player_id,
         homeworld_id: player.and_then(|p| p.homeworld_id),
         planets,
+        // The engine does not model ship designs yet (tracked separately); a
+        // player's turn file carries only their own designs, so emit an empty
+        // list until the design model lands. See docs/mechanics/ship_design.rst.
+        ship_designs: vec![],
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "$id": "http://www.stars-reborn.com/schemas/player.json",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "definitions": {
     "player-id": {
       "type": "integer",
@@ -43,6 +43,13 @@
           "type": "array",
           "items": {
             "$ref": "tech.json#/definitions/ship-hull-id"
+          }
+        },
+        "ship-designs": {
+          "description": "The player's active ship and starbase designs (max 16 ship + 10 starbase).",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ship-design"
           }
         },
         "research": {
@@ -126,6 +133,77 @@
               }
             }
           }
+        }
+      }
+    },
+    "slot-assignment": {
+      "description": "One filled hull slot in a ship design.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot-index",
+        "part-id",
+        "count"
+      ],
+      "properties": {
+        "slot-index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "part-id": {
+          "$ref": "tech.json#/definitions/parts-id"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      }
+    },
+    "ship-design": {
+      "description": "A ship or starbase design owned by the player. See docs/mechanics/ship_design.rst and response-turn-file.json (the wired per-player view).",
+      "type": "object",
+      "required": [
+        "slot",
+        "kind",
+        "name",
+        "hull-id",
+        "slot-assignments",
+        "built-count"
+      ],
+      "properties": {
+        "slot": {
+          "description": "Design slot index (ship 0-15, starbase 0-9). Production queue references a ship design as build-object-id 1024+slot.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "kind": {
+          "enum": [
+            "ship",
+            "starbase"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "hull-id": {
+          "description": "ship-hull id when kind=ship, starbase-hull id when kind=starbase.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "slot-assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/slot-assignment"
+          }
+        },
+        "built-count": {
+          "description": "Ships of this design currently in existence; > 0 locks the slot and disables editing.",
+          "type": "integer",
+          "minimum": 0
         }
       }
     }

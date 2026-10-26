@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "definitions": {
     "planet-unobserved": {
       "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
@@ -215,6 +215,95 @@
       },
       "title": "BuildItem"
     },
+    "slot-assignment": {
+      "description": "One filled hull slot in a ship design: which component sits in which slot, and how many.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot-index",
+        "part-id",
+        "count"
+      ],
+      "properties": {
+        "slot-index": {
+          "description": "Index into the hull's slots array (GET /model/ships/hulls). Identifies which physical slot is filled.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "part-id": {
+          "description": "Component installed in this slot; indexes the technology catalog (GET /model/technologies).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "count": {
+          "description": "How many of the part occupy this slot; bounded by the hull slot's max-count.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "format": "uint32"
+        }
+      },
+      "title": "SlotAssignment"
+    },
+    "ship-design": {
+      "description": "A ship or starbase design owned by the viewing player. Drives the Ship Designer Existing Designs view and the production queue (a build-item with build-object-id 1024+slot refers to the ship design in that slot). See docs/mechanics/ship_design.rst.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "kind",
+        "name",
+        "hull-id",
+        "slot-assignments",
+        "built-count"
+      ],
+      "properties": {
+        "slot": {
+          "description": "Design slot index. Ship designs occupy slots 0-15, starbase designs 0-9 in a parallel space (disambiguated by kind). Production queue items reference a ship design as build-object-id 1024+slot.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "format": "uint32"
+        },
+        "kind": {
+          "description": "Whether this is a ship or a starbase design; selects whether hull-id is a ship-hull or starbase-hull id.",
+          "enum": [
+            "ship",
+            "starbase"
+          ]
+        },
+        "name": {
+          "description": "Player-assigned design name shown in the Existing Designs list.",
+          "type": "string"
+        },
+        "hull-id": {
+          "description": "Hull this design is built on. A ship-hull id (GET /model/ships/hulls) when kind=ship, a starbase-hull id when kind=starbase.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "slot-assignments": {
+          "description": "Filled slots. Empty slots are omitted. A complete ship design fills at least its required engine slot.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/slot-assignment"
+          }
+        },
+        "built-count": {
+          "description": "Number of ships of this design currently in existence across the player's fleets. Drives the 'N of N' badge; when > 0 the design cannot be edited (its slot is locked until the last ship is gone).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        }
+      },
+      "title": "ShipDesign"
+    },
     "planet-intel": {
       "description": "A single planet entry in the player's turn file. Untagged on the wire: clients distinguish observed vs. unobserved by the presence of contents fields.",
       "oneOf": [
@@ -235,7 +324,8 @@
     "game-id",
     "game-name",
     "player-id",
-    "planets"
+    "planets",
+    "ship-designs"
   ],
   "properties": {
     "year": {
@@ -268,6 +358,13 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/planet-intel"
+      }
+    },
+    "ship-designs": {
+      "description": "The viewing player's own ship and starbase designs. Always the player's own designs (never another player's). Empty until the engine models designs.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ship-design"
       }
     }
   },

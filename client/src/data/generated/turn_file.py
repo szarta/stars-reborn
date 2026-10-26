@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field, RootModel, conint
 
 
@@ -41,6 +43,75 @@ class BuildItem(BaseModel):
         None,
         alias="estimated-years-to-complete",
         description="Projected years to finish this entry at the planet's current output. Absent until the cost/output model lands.",
+    )
+
+
+class SlotAssignment(BaseModel):
+    """
+    One filled hull slot in a ship design: which component sits in which slot, and how many.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    slot_index: conint(ge=0, le=255) = Field(
+        ...,
+        alias="slot-index",
+        description="Index into the hull's slots array (GET /model/ships/hulls). Identifies which physical slot is filled.",
+    )
+    part_id: conint(ge=0, le=65535) = Field(
+        ...,
+        alias="part-id",
+        description="Component installed in this slot; indexes the technology catalog (GET /model/technologies).",
+    )
+    count: conint(ge=1, le=16) = Field(
+        ...,
+        description="How many of the part occupy this slot; bounded by the hull slot's max-count.",
+    )
+
+
+class Kind(Enum):
+    """
+    Whether this is a ship or a starbase design; selects whether hull-id is a ship-hull or starbase-hull id.
+    """
+
+    ship = "ship"
+    starbase = "starbase"
+
+
+class ShipDesign(BaseModel):
+    """
+    A ship or starbase design owned by the viewing player. Drives the Ship Designer Existing Designs view and the production queue (a build-item with build-object-id 1024+slot refers to the ship design in that slot). See docs/mechanics/ship_design.rst.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    slot: conint(ge=0, le=15) = Field(
+        ...,
+        description="Design slot index. Ship designs occupy slots 0-15, starbase designs 0-9 in a parallel space (disambiguated by kind). Production queue items reference a ship design as build-object-id 1024+slot.",
+    )
+    kind: Kind = Field(
+        ...,
+        description="Whether this is a ship or a starbase design; selects whether hull-id is a ship-hull or starbase-hull id.",
+    )
+    name: str = Field(
+        ..., description="Player-assigned design name shown in the Existing Designs list."
+    )
+    hull_id: conint(ge=0, le=255) = Field(
+        ...,
+        alias="hull-id",
+        description="Hull this design is built on. A ship-hull id (GET /model/ships/hulls) when kind=ship, a starbase-hull id when kind=starbase.",
+    )
+    slot_assignments: list[SlotAssignment] = Field(
+        ...,
+        alias="slot-assignments",
+        description="Filled slots. Empty slots are omitted. A complete ship design fills at least its required engine slot.",
+    )
+    built_count: conint(ge=0, le=4294967295) = Field(
+        ...,
+        alias="built-count",
+        description="Number of ships of this design currently in existence across the player's fleets. Drives the 'N of N' badge; when > 0 the design cannot be edited (its slot is locked until the last ship is gone).",
     )
 
 
@@ -121,4 +192,9 @@ class PlayerView(BaseModel):
     planets: list[PlanetIntel] = Field(
         ...,
         description="Every planet in the universe, sorted by id. Each entry is either observed (full contents) or unobserved (identity only).",
+    )
+    ship_designs: list[ShipDesign] = Field(
+        ...,
+        alias="ship-designs",
+        description="The viewing player's own ship and starbase designs. Always the player's own designs (never another player's). Empty until the engine models designs.",
     )

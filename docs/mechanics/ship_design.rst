@@ -262,6 +262,29 @@ apart on an axis, and a box staggered by half a box (as warship rows are) lands
 on an odd coordinate.  Positions are verified against the original game's Ship
 Designer and Tech Browser hull views.
 
+Wire Representation
+-------------------
+
+A player's designs travel in their per-player turn file (the ``.m`` equivalent)
+as a ``ship-designs`` array; the shape is defined by the ``ship-design``
+definition in ``response-turn-file.json`` (and mirrored in ``player.json``).
+Each entry carries:
+
+- ``slot`` — the design slot index (ships 0–15, starbases 0–9). The production
+  queue refers to a ship design by ``build-object-id = 1024 + slot`` (see
+  :doc:`production`).
+- ``kind`` — ``ship`` or ``starbase``; selects whether ``hull-id`` is a
+  ship-hull or starbase-hull id.
+- ``name`` and ``hull-id``.
+- ``slot-assignments`` — the filled slots, each a ``slot-index`` → ``part-id``
+  + ``count`` (empty slots are omitted).
+- ``built-count`` — ships of this design currently in existence. It drives the
+  "N of N" badge and, when greater than zero, locks the slot so the design
+  cannot be edited until the last ship is gone (see `Design Limits`_).
+
+A turn file carries only the viewing player's own designs. The engine does not
+model designs yet, so it currently emits an empty list.
+
 Hull Reference
 --------------
 

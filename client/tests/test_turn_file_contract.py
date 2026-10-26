@@ -17,13 +17,29 @@ sys.path.insert(0, str(REPO / "client" / "src"))
 from data.generated.turn_file import PlanetObserved, PlanetUnobserved, PlayerView  # noqa: E402
 
 # Ground truth as the engine serializes it (see game/view.rs), with one
-# observed planet (owned homeworld) and one unobserved planet.
+# observed planet (owned homeworld) and one unobserved planet. The engine emits
+# an empty ship-designs list today (designs are not modeled yet); the one design
+# here is a representative example to exercise the ShipDesign/SlotAssignment
+# wire shape.
 TURN_FILE = {
     "year": 2400,
     "game-id": "11111111-1111-4111-8111-111111111111",
     "game-name": "Contract Test",
     "player-id": 0,
     "homeworld-id": 1,
+    "ship-designs": [
+        {
+            "slot": 0,
+            "kind": "ship",
+            "name": "Santa Maria",
+            "hull-id": 11,
+            "slot-assignments": [
+                {"slot-index": 0, "part-id": 60, "count": 1},
+                {"slot-index": 1, "part-id": 70, "count": 1},
+            ],
+            "built-count": 3,
+        }
+    ],
     "planets": [
         {
             "id": 1,
@@ -46,6 +62,7 @@ TURN_FILE = {
             "factories": 10,
             "mines": 10,
             "value": 100,
+            "build-queue": [{"build-object-id": 7, "build-quantity": 5}],
         },
         {"id": 2, "name": "Quixote", "x": 365, "y": 298},
     ],
@@ -73,6 +90,15 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert observed.value == 100
     assert unobserved.name == "Quixote"
 
+    assert len(view.ship_designs) == 1
+    design = view.ship_designs[0]
+    assert design.name == "Santa Maria"
+    assert design.kind.value == "ship"
+    assert design.built_count == 3
+    assert len(design.slot_assignments) == 2
+    assert design.slot_assignments[0].part_id == 60
+
     # Round-trip back to kebab-case wire JSON and re-validate against the schema.
-    redumped = view.model_dump(by_alias=True, exclude_none=True)
+    # mode="json" renders enums (e.g. ship-design kind) as their wire values.
+    redumped = view.model_dump(mode="json", by_alias=True, exclude_none=True)
     jsonschema.validate(redumped, _schema())
