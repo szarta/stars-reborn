@@ -59,7 +59,13 @@ To change the contract, edit the schema; then rebuild (Rust) and run
 - The schema has to be wire-accurate, not aspirational. Enriching it (e.g.
   string `maxLength`, which `typify` would turn into Rust newtypes) is a
   deliberate choice weighed against the type churn it causes, not a free
-  annotation.
+  annotation. In particular, a string `pattern` makes `typify` emit a
+  validating newtype backed by the `regress` regex crate — a new engine runtime
+  dependency. The convention is to _not_ pay that for a field the engine emits
+  from a fixed catalog and the contract test already validates: drop the
+  constraint from the generated type and keep it as prose in the field
+  `description` (as `ship-hull.slug` does). Rust-side enforcement is the
+  deliberate opt-in — add `regress` to the engine deps then.
 - A new schema is wired in by adding it to the `SCHEMAS` list in `build.rs`
   and/or `scripts/generate_types.py` and giving it a contract test. Not every
   schema needs both sides (`game-state.json` is host-only, so Rust only).
