@@ -129,11 +129,34 @@ Planet Placement
 ----------------
 
 - Planets are placed within a rectangular region of ``dim × dim`` light years.
-- **Minimum inter-planet distance: 20 light years.**
-- Placement algorithm: rejection sampling (attempt random position; retry if
-  too close to any existing planet). After a fixed number of failed attempts,
-  the constraint is relaxed and the planet is placed unconstrained (prevents
-  infinite loops at high density).
+- **Minimum inter-planet separation: 12 light years, Euclidean.** A pair is too
+  close when ``dx² + dy² ≤ 144`` (``= 12²``), so every surviving pair is
+  strictly more than 12 ly apart — on the integer coordinate grid the closest
+  observed separation is ``√145 ≈ 12.04`` ly. The 12 is a hardcoded constant:
+  it does **not** vary with universe size or density (those set only ``dim``
+  and the planet count).
+- Placement algorithm — *overgenerate, cull, trim* (not per-candidate retry):
+
+  1. Generate ``target + ⌈target/7⌉`` candidate positions (capped at 999), each
+     drawn uniformly at random within the region.
+  2. Sort candidates by ``x`` and sweep once, comparing each to later
+     candidates within a 12-ly ``x``/``y`` window; mark the later planet of any
+     pair failing the ``dx² + dy² ≤ 144`` test for removal.
+  3. If that removed fewer than the ``⌈target/7⌉`` surplus, randomly remove
+     more until exactly ``target`` remain. (There is no constraint-relaxation
+     step and no infinite-loop risk: culling is a single pass, not a retry
+     loop.)
+
+.. note::
+
+   Earlier drafts of this page recorded a **20 ly** minimum from an interim
+   estimate. The value is 12 ly (Euclidean), confirmed by Ghidra decompile of
+   the placement routine ``FUN_1078_0136`` in ``stars.exe`` (the min-distance
+   constant ``1120:00f4 = 12`` is read only there and never written). This also
+   explains the oracle corpus's "no pair closer than ~14 ly Manhattan": a
+   Euclidean floor just above 12 ly implies, but is not identical to, that
+   Manhattan shadow. See
+   ``stars-reborn-research/knowledge/findings/universe_generation_planet_placement.rst``.
 
 The above describes placement with Galaxy Clumping **off**. When the "Galaxy
 Clumping" new-game option is on, the original |original| clusters the planets
@@ -399,11 +422,13 @@ is approximately uniform:
      - ≈ 0.59 (clustered)
 
 Observed mechanism: planets are first placed with the normal spacing (uniform +
-minimum-distance rejection sampling, above), then groups of planets are pulled
-together into clumps — so clumping is a post-placement transformation. The
-minimum separation drops below the normal 20 ly floor, consistent with planets
-being drawn together past normal spacing. The clone must implement clumping as
-an actual clustering step, not a no-op.
+minimum-distance cull, above), then groups of planets are pulled together into
+clumps — so clumping is a post-placement transformation. The minimum separation
+drops below the normal 12 ly floor, consistent with planets being drawn
+together past normal spacing. The clone must implement clumping as an actual
+clustering step, not a no-op. (The decompiled placement routine
+``FUN_1078_0136`` contains this clump pass inline, gated on the clumping flag,
+pulling each near-neighbour pair together in bands keyed on squared distance.)
 
 **Second effect — effective density drops one level.** Independently of the
 clustering, turning Galaxy Clumping on yields a universe with the planet count
