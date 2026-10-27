@@ -256,7 +256,32 @@ game-start time; it is not itself a difficulty level.
    ranges, pop efficiency, factory/mine rates, growth %, research costs).
    Source: ``ai_games/{1,2}/`` corpus, 2026-04-23.
 
-.. todo::
+Computer Players Form Alliances
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Determine whether "Computer Players Form Alliances" (game option) changes
-   AI targeting logic or just a global preference weight.
+This new-game option changes **AI target selection** — not a global preference
+weight, and not a diplomatic-agreement subsystem. Confirmed by Ghidra decompile
+of ``stars.exe``:
+
+- The option is game-settings **bit 4** (``0x10``) of the flags word, cross-
+  confirmed against the community ``starsapi`` file-format decode (which labels
+  the same bit ``Computer Alliances``).
+- The flag is read **only** in the AI turn-generation code, where it is passed
+  into the AI's nearest-target routines (``FUN_1090_1ffe`` /
+  ``FUN_1090_61de``).  There it acts as a hard **eligibility filter**: when the
+  option is on, a candidate target is excluded if its owner carries the "allied
+  / non-hostile" status marker, so computer players stop selecting one another
+  as targets and concentrate on non-allied (human) targets.
+- Nothing writes a treaty or relations structure off this flag; it rides the
+  same per-owner friendly/allied marker the general relations system already
+  uses (the one that lets any two mutually-Friendly players co-orbit, pass
+  without attacking, and show as friendly). So the effect is "AIs don't attack
+  each other," expressed through existing targeting machinery rather than a new
+  diplomacy engine.
+
+For the implementation: model it as a per-decision targeting filter in the AI,
+gated on this option, that drops allied-owned worlds/fleets from the AI's
+candidate target set. See the research finding
+``universe_generation_planet_placement.rst`` sibling
+``ai_computer_alliances.rst`` for the decompile provenance and the open
+sub-question on the exact owner/friendly status bit.
