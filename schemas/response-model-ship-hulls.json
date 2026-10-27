@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-model-ship-hulls.json",
   "version": "0.1.0",
+  "title": "ShipHullsResponse",
   "description": "Response shape for GET /model/ships/hulls — full ship-hull catalog.",
   "type": "object",
   "additionalProperties": false,
@@ -41,8 +42,7 @@
         },
         "slug": {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "description": "Stable machine identifier; safe for URLs, filenames, and asset lookups."
+          "description": "Stable machine identifier (lower-snake: ^[a-z][a-z0-9_]*$); safe for URLs, filenames, and asset lookups. Engine-emitted from a fixed catalog and validated by the ship-hulls contract test, so the constraint is documented here rather than enforced as a generated newtype (see docs/adr/0003 on weighing pattern constraints against type churn)."
         },
         "name": {
           "type": "string",
@@ -52,7 +52,15 @@
           "$ref": "#/definitions/hull-category"
         },
         "requirement": {
-          "$ref": "#/definitions/hull-requirement"
+          "description": "Trait gating, or null when available to all races.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/hull-requirement"
+            }
+          ]
         },
         "mass": {
           "type": "integer",
@@ -115,18 +123,12 @@
       ]
     },
     "hull-requirement": {
-      "description": "Trait gating: null = available to all races. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange.",
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "enum": [
-            "AR",
-            "ARM",
-            "MT"
-          ]
-        }
+      "description": "Trait gate restricting which races may build a hull. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange. See the owning property for the null (available-to-all) case.",
+      "type": "string",
+      "enum": [
+        "AR",
+        "ARM",
+        "MT"
       ]
     },
     "hull-slot": {

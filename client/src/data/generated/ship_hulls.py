@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, conint, constr
+from pydantic import BaseModel, ConfigDict, Field, RootModel, conint
 
 
 class ShipHullId(RootModel[conint(ge=0, le=255)]):
@@ -99,21 +99,14 @@ class HullCategory(Enum):
     ultra = "ultra"
 
 
-class HullRequirement1(Enum):
+class HullRequirement(StrEnum):
     """
-    Trait gating: null = available to all races. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange.
+    Trait gate restricting which races may build a hull. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange. See the owning property for the null (available-to-all) case.
     """
 
     AR = "AR"
     ARM = "ARM"
     MT = "MT"
-
-
-class HullRequirement(RootModel[HullRequirement1 | None]):
-    root: HullRequirement1 | None = Field(
-        ...,
-        description="Trait gating: null = available to all races. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange.",
-    )
 
 
 class SlotPosition(BaseModel):
@@ -144,15 +137,18 @@ class ShipHull(BaseModel):
         extra="forbid",
     )
     id: ShipHullId
-    slug: constr(pattern=r"^[a-z][a-z0-9_]*$") = Field(
-        ..., description="Stable machine identifier; safe for URLs, filenames, and asset lookups."
+    slug: str = Field(
+        ...,
+        description="Stable machine identifier (lower-snake: ^[a-z][a-z0-9_]*$); safe for URLs, filenames, and asset lookups. Engine-emitted from a fixed catalog and validated by the ship-hulls contract test, so the constraint is documented here rather than enforced as a generated newtype (see docs/adr/0003 on weighing pattern constraints against type churn).",
     )
     name: str = Field(
         ...,
         description="Display name as shown in the original game (e.g. 'Battle Cruiser', 'B-17 Bomber').",
     )
     category: HullCategory
-    requirement: HullRequirement | None
+    requirement: HullRequirement | None = Field(
+        ..., description="Trait gating, or null when available to all races."
+    )
     mass: conint(ge=0)
     armor: conint(ge=0)
     initiative: conint(ge=0, le=255)
@@ -173,7 +169,7 @@ class ShipHull(BaseModel):
     )
 
 
-class Model(BaseModel):
+class ShipHullsResponse(BaseModel):
     """
     Response shape for GET /model/ships/hulls — full ship-hull catalog.
     """

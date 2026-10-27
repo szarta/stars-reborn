@@ -40,6 +40,7 @@ use serde_json::{json, Value};
 use crate::game::objects::buildable::{
     design_build_object_id, Category, DESIGN_SLOTS, FIXED_BUILDABLES,
 };
+use crate::game::objects::generated::ship_hulls as wire;
 use crate::game::objects::{
     advantage_points::advantage_points,
     player::{Player, TechLevels},
@@ -48,6 +49,7 @@ use crate::game::objects::{
     ship_hull_catalog::{
         hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
     },
+    technology::{ShipHull, TechSlot},
 };
 use crate::game::orders::{apply_set_production_queue, OrderError, ProductionItemInput};
 use crate::game::state::GameState;
@@ -159,61 +161,71 @@ async fn model_ship_hulls() -> impl IntoResponse {
     Json(ship_hulls_response())
 }
 
-/// Build the `GET /model/ships/hulls` response body. The shape is the single
-/// source of truth `schemas/response-model-ship-hulls.json`; the
-/// `ship_hulls_schema_contract` test validates this output against it.
-pub fn ship_hulls_response() -> Value {
-    let hulls: Vec<Value> = ship_hull_catalog()
-        .into_iter()
-        .map(|h| {
-            let slots: Vec<Value> = h
-                .slots
-                .iter()
-                .map(|s| {
-                    json!({
-                        "slot-type": slot_type_slug(s.slot_type)
-                            .expect("catalog slots use only canonical slot types"),
-                        "max-count": s.max_count,
-                        "position": {"row": s.position.row, "col": s.position.col},
-                    })
-                })
-                .collect();
-            let mut obj = json!({
-                "id": h.id,
-                "slug": h.slug,
-                "name": h.name,
-                "category": hull_category_slug(h.category),
-                "requirement": h.requirement.map(hull_requirement_slug),
-                "mass": h.mass,
-                "armor": h.armor,
-                "initiative": h.initiative,
-                "fuel-capacity": h.fuel_capacity,
-                "cargo-capacity": h.cargo_capacity,
-                "cost": {
-                    "ironium": h.cost.ironium,
-                    "boranium": h.cost.boranium,
-                    "germanium": h.cost.germanium,
-                    "resources": h.cost.resources,
-                },
-                "tech-requirements": {
-                    "energy": h.requirements.energy,
-                    "weapons": h.requirements.weapons,
-                    "propulsion": h.requirements.propulsion,
-                    "construction": h.requirements.construction,
-                    "electronics": h.requirements.electronics,
-                    "biotechnology": h.requirements.bio,
-                },
-                "slots": slots,
-            });
-            if let (Some(rpy), Some(pct)) = (h.fuel_regen_per_year, h.fuel_regen_percent) {
-                let m = obj.as_object_mut().unwrap();
-                m.insert("fuel-regen-per-year".to_string(), json!(rpy));
-                m.insert("fuel-regen-percent".to_string(), json!(pct));
-            }
-            obj
-        })
-        .collect();
-    json!({ "hulls": hulls })
+/// Build the `GET /model/ships/hulls` response. The shape is GENERATED from the
+/// single source of truth `schemas/response-model-ship-hulls.json` (see
+/// `build.rs`); this maps the internal catalog into that wire type, and the
+/// `ship_hulls_schema_contract` test validates the serialized output against the
+/// schema. The slug helpers bridge the internal domain enums to the generated
+/// wire enums through their canonical slug (the generated enums' `TryFrom<&str>`
+/// accepts exactly those slugs), keeping the domain→wire mapping defined once.
+pub fn ship_hulls_response() -> wire::ShipHullsResponse {
+    wire::ShipHullsResponse {
+        hulls: ship_hull_catalog().into_iter().map(hull_to_wire).collect(),
+    }
+}
+
+/// Map one internal `ShipHull` to its generated wire shape.
+fn hull_to_wire(h: ShipHull) -> wire::ShipHull {
+    wire::ShipHull {
+        id: h.id.into(),
+        slug: h.slug.to_string(),
+        name: h.name.to_string(),
+        category: wire::HullCategory::try_from(hull_category_slug(h.category))
+            .expect("catalog hull category is a canonical slug"),
+        requirement: h.requirement.map(|r| {
+            wire::HullRequirement::try_from(hull_requirement_slug(r))
+                .expect("catalog hull requirement is a canonical slug")
+        }),
+        mass: h.mass.into(),
+        armor: h.armor.into(),
+        initiative: h.initiative,
+        fuel_capacity: h.fuel_capacity.into(),
+        cargo_capacity: h.cargo_capacity.into(),
+        cost: wire::MineralCost {
+            ironium: h.cost.ironium.into(),
+            boranium: h.cost.boranium.into(),
+            germanium: h.cost.germanium.into(),
+            resources: h.cost.resources.into(),
+        },
+        tech_requirements: wire::TechRequirements {
+            energy: i64::from(h.requirements.energy).into(),
+            weapons: i64::from(h.requirements.weapons).into(),
+            propulsion: i64::from(h.requirements.propulsion).into(),
+            construction: i64::from(h.requirements.construction).into(),
+            electronics: i64::from(h.requirements.electronics).into(),
+            biotechnology: i64::from(h.requirements.bio).into(),
+        },
+        slots: h.slots.iter().map(slot_to_wire).collect(),
+        // Both fuel-regen fields are set together on Fuel Transport hulls and
+        // absent (skipped) elsewhere — see the schema.
+        fuel_regen_per_year: h.fuel_regen_per_year.map(u64::from),
+        fuel_regen_percent: h.fuel_regen_percent.map(i64::from),
+    }
+}
+
+/// Map one internal hull slot to its generated wire shape.
+fn slot_to_wire(s: &TechSlot) -> wire::HullSlot {
+    let slug = slot_type_slug(s.slot_type).expect("catalog slots use only canonical slot types");
+    wire::HullSlot {
+        slot_type: wire::SlotType::try_from(slug)
+            .expect("slot-type slug is a canonical wire value"),
+        max_count: std::num::NonZeroU64::new(u64::from(s.max_count))
+            .expect("hull slot max_count is >= 1"),
+        position: wire::SlotPosition {
+            row: s.position.row.into(),
+            col: s.position.col.into(),
+        },
+    }
 }
 
 /// GET /model/buildables — the production-queue buildable registry.

@@ -57,7 +57,7 @@ fn ship_hulls_response_matches_the_schema() {
     let schema = ship_hulls_schema();
     let validator = jsonschema::validator_for(&schema).expect("compile ship-hulls schema");
 
-    let instance = ship_hulls_response();
+    let instance = serde_json::to_value(ship_hulls_response()).expect("serialize ship-hulls");
     let errors: Vec<String> = validator
         .iter_errors(&instance)
         .map(|e| e.to_string())

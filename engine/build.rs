@@ -20,6 +20,9 @@ const SCHEMAS: &[(&str, &str)] = &[
     ("response-game", "universe_file_types.rs"),
     ("response-create-new-game", "create_game_types.rs"),
     ("response-validate-race", "validate_race_types.rs"),
+    // GET /model/ships/hulls catalog. References tech.json (cost,
+    // tech-requirements, slot-type, id); the bundler resolves that for typify.
+    ("response-model-ship-hulls", "ship_hulls_types.rs"),
     // Host-side authoritative game state (game.json / .sr save). References
     // race.json; the bundler below resolves that cross-file ref for typify.
     ("game-state", "game_state_types.rs"),
