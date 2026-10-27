@@ -4,7 +4,7 @@ agree on the wire shape the engine produces.
 Canonical race payloads (captured from the engine's serializer) are validated
 against schemas/race.json with jsonschema AND parsed through the generated
 model. If the schema, the generated model, or the engine wire format ever drift
-apart, this test fails. This is the Python half of the task #110 anti-drift
+apart, this test fails. This is the Python half of the Race anti-drift
 guard (the Rust half is engine/tests/race_schema_contract.rs).
 """
 

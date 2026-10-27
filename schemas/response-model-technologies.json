@@ -261,7 +261,7 @@
         },
         "icon": {
           "type": "string",
-          "description": "Reserved. Icon identifier, added once the hull/component icon convention lands (task #88). Omitted until then; see docs/schemas/index.rst."
+          "description": "Reserved. Icon identifier, added once the hull/component icon convention lands. Omitted until then; see docs/schemas/index.rst."
         },
         "properties": {
           "description": "Category-specific stats. The 'allOf' if/then clauses above constrain this object to the 'props-*' definition matching 'category'.",

@@ -1,7 +1,6 @@
 // Contract test: the public universe file (.xy equivalent) the engine
 // serializes must validate against schemas/response-game.json, the source of
-// truth the UniverseResponse/UniversePlanet wire types are generated from
-// (task #115).
+// truth the UniverseResponse/UniversePlanet wire types are generated from.
 
 use stars_engine::game::objects::generated::universe_file::{UniversePlanet, UniverseResponse};
 use stars_engine::game::universe::generate_universe;

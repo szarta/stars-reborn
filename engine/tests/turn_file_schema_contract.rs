@@ -1,7 +1,7 @@
 // Contract test: the per-player turn file the engine serializes must validate
 // against schemas/response-turn-file.json (the source of truth the PlayerView
 // wire types are generated from). If the engine output and the schema ever
-// disagree, this fails — the anti-drift guard for the turn file (task #115).
+// disagree, this fails — the anti-drift guard for the turn file.
 
 use stars_engine::game::objects::player::{Player, TechLevels};
 use stars_engine::game::objects::race_defaults::humanoid;

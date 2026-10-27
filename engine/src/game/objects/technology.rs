@@ -85,7 +85,7 @@ bitflags::bitflags! {
 }
 
 /// Grid coordinates for a slot in the Ship Designer layout.
-/// Until task #83 captures real per-hull layouts, all ship hulls use a
+/// Until real per-hull layouts are captured, all ship hulls use a
 /// placeholder single-row arrangement (row=0, col=slot index).
 #[derive(Debug, Clone, Copy)]
 pub struct SlotPosition {

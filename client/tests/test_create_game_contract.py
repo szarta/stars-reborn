@@ -1,6 +1,6 @@
 """Contract test: the generated CreateGameResponse model and
 schemas/response-create-new-game.json must agree on the create-game response
-wire shape the engine produces (task #115)."""
+wire shape the engine produces."""
 
 from __future__ import annotations
 

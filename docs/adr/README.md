@@ -36,3 +36,5 @@ file has:
   artifacts](0002-develop-in-a-monorepo-publish-separate-artifacts.md)
 - [0003: Generate the wire types from the JSON Schema source of
   truth](0003-generate-wire-types-from-json-schema.md)
+- [0004: Keep task ids and internal tracking out of public
+  artifacts](0004-keep-task-ids-out-of-public-artifacts.md)

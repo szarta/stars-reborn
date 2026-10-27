@@ -1,7 +1,7 @@
 // Contract test: every race the engine serializes must validate against
 // schemas/race.json (the single source of truth the wire types are generated
 // from). If the engine and the schema ever disagree on the Race wire shape,
-// this test fails — that is the anti-drift guard for task #110.
+// this test fails — that is the anti-drift guard for the Race wire contract.
 
 use serde_json::{json, Value};
 use stars_engine::game::objects::race_defaults;

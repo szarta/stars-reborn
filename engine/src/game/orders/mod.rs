@@ -4,8 +4,8 @@
 // (schemas/request-submit-orders.json) into these types and calls into here;
 // all validation and state mutation lives in this module, not in http.
 //
-// This slice implements the production-queue order (`planet.set_production_queue`,
-// task #93). Other order kinds in the schema are not yet applied — the engine
+// This slice implements the production-queue order (`planet.set_production_queue`).
+// Other order kinds in the schema are not yet applied — the engine
 // rejects them explicitly rather than silently accepting a no-op, so a client
 // is never told an order succeeded when nothing happened. They land as their
 // own engine slices.

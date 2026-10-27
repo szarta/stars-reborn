@@ -1,6 +1,6 @@
 """Contract test: the generated PlayerView model and
 schemas/response-turn-file.json must agree on the per-player turn-file wire
-shape the engine produces (task #115; Rust half is
+shape the engine produces (Rust half is
 engine/tests/turn_file_schema_contract.rs)."""
 
 from __future__ import annotations

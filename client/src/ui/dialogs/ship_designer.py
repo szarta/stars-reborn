@@ -25,7 +25,7 @@ stars-reborn-research/original/screencaps/ship_designer/):
 This is a skeleton: hull/component data and design persistence are not
 wired up yet. Existing-design/hull/enemy/component lists use placeholder
 content to validate layout. The Components view is stubbed pending the
-Technology Browser (todo #81), which provides component icons and
+Technology Browser, which provides component icons and
 filter logic that the Ship Designer will reuse.
 
 :author: Brandon Arrendondo

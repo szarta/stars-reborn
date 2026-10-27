@@ -1,6 +1,6 @@
 """Contract test: the generated UniverseResponse model and
 schemas/response-game.json must agree on the public universe-file wire shape
-the engine produces (task #115; Rust half is
+the engine produces (Rust half is
 engine/tests/universe_file_schema_contract.rs)."""
 
 from __future__ import annotations

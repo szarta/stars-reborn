@@ -1,5 +1,5 @@
 // Contract test: the create-game response the engine serializes must validate
-// against schemas/response-create-new-game.json (task #115).
+// against schemas/response-create-new-game.json.
 
 use stars_engine::game::objects::generated::create_game::{CreateGameResponse, CreatedGame};
 

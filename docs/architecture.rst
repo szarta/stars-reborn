@@ -361,7 +361,7 @@ Response shapes for these endpoints live in ``stars-reborn-schemas``:
   /model/technologies/{id}`` returns a single such item. Hulls are *not*
   included here — they are a separate catalog (``/model/ships/hulls``). An
   ``icon`` identifier is reserved on each item and populated once the icon
-  convention lands (task #88). The engine producer (the ~300-item catalog with
+  convention lands. The engine producer (the ~300-item catalog with
   oracle-verified values, wired handlers, and client types) is a tracked
   follow-up; the handler returns 501 until then.
 

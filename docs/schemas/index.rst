@@ -47,6 +47,6 @@ descriptive catalog; the files themselves are authoritative in that repo.
        installable ship/starbase part plus planetary and orbital techs) with
        per-category stats, trait gating, cost, and tech requirements; see
        :doc:`../architecture`. The ``icon`` field is reserved pending the icon
-       convention (task #88)
+       convention
    * - ``response-validate-race.json``
      - API response for race validation
