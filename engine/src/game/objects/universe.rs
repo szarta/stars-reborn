@@ -7,22 +7,14 @@
 // each planet. Mutable per-game planet state lives in `GameState::planet_states`,
 // not here.
 
-use std::collections::HashMap;
+// The `Universe` TYPE is GENERATED from `schemas/game-state.json` (see
+// `build.rs`) and re-exported here so existing `objects::universe::Universe`
+// paths keep resolving. To change the wire contract — field names, the planet
+// map's key/value shape — edit the schema, never this file. See
+// `docs/adr/0003`. Behavior (the methods below) stays hand-written here.
+pub use super::generated::game_state::Universe;
 
 use super::planet::PlanetStatic;
-
-/// The static, shared map for a game.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Universe {
-    /// Universe size constant (0=Tiny … 4=Huge)
-    pub size: u32,
-    /// Side length of the square boundary in light years
-    pub width: u32,
-    pub height: u32,
-    /// All planets, keyed by planet id (1-indexed). Identity + position only;
-    /// see `GameState::planet_states` for hab/ownership/population/etc.
-    pub planets: HashMap<u32, PlanetStatic>,
-}
 
 impl Universe {
     /// Return planet count.

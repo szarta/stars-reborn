@@ -29,6 +29,7 @@
         "planet_states": {
           "type": "object",
           "description": "Mutable per-planet ground truth, keyed by planet id (stringified u32).",
+          "x-rust-map-key": "uint32",
           "additionalProperties": {
             "$ref": "#/definitions/planet-state"
           }
@@ -74,6 +75,7 @@
         "planets": {
           "type": "object",
           "description": "All planets, keyed by planet id (stringified u32).",
+          "x-rust-map-key": "uint32",
           "additionalProperties": {
             "$ref": "#/definitions/planet-static"
           }
@@ -297,7 +299,12 @@
         },
         "race": {
           "description": "Full race definition. Optional: pre-existing games may have been persisted without it; new games always set it, and per-player view derivation requires it.",
-          "$ref": "race.json#/definitions/race"
+          "$ref": "race.json#/definitions/race",
+          "x-rust-type": {
+            "crate": "stars-engine",
+            "version": "*",
+            "path": "stars_engine::game::objects::race::Race"
+          }
         }
       }
     }

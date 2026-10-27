@@ -8,22 +8,11 @@
 // from `GameState` through a single choke point (see game/view.rs once
 // PlayerView lands).
 
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-
-use crate::game::objects::{planet::PlanetState, player::Player, universe::Universe};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GameState {
-    /// UUID v4 string — the engine's canonical identifier for this game.
-    pub id: String,
-    pub name: String,
-    /// Static, shared map data (.xy-equivalent).
-    pub universe: Universe,
-    /// Mutable per-planet state, keyed by planet id. Host-only ground truth;
-    /// reach this through PlayerView when serving a per-player turn file.
-    pub planet_states: HashMap<u32, PlanetState>,
-    pub players: Vec<Player>,
-    pub year: u32,
-}
+// The `GameState` TYPE is GENERATED from `schemas/game-state.json` (see
+// `build.rs`) — the single source of truth for the host-state wire shape — and
+// re-exported here so existing `game::state::GameState` paths keep resolving.
+// Its component types (`Universe`, `PlanetState`, `Player`, …) are generated
+// from the same schema and re-exported from their hand-written modules, which
+// carry the behavior. To change the shape edit the schema, never this file.
+// See `docs/adr/0003`.
+pub use crate::game::objects::generated::game_state::GameState;

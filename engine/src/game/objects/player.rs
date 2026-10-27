@@ -7,30 +7,28 @@
 //
 // See stars-reborn-design/docs/architecture.rst (Game Object Model)
 
-use serde::{Deserialize, Serialize};
+// The `Player` and `TechLevels` TYPES are GENERATED from
+// `schemas/game-state.json` (see `build.rs`) and re-exported here so existing
+// `objects::player::*` paths keep resolving. `Player::race` reuses the canonical
+// `objects::race::Race` (the schema's cross-file `$ref` is redirected to that
+// one generated type via `x-rust-type`, not copied). To change the wire contract
+// edit the schema, never this file. See `docs/adr/0003`.
+pub use super::generated::game_state::{Player, TechLevels};
 
-use super::race::Race;
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct TechLevels {
-    pub energy: u32,
-    pub weapons: u32,
-    pub propulsion: u32,
-    pub construction: u32,
-    pub electronics: u32,
-    pub biotechnology: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Player {
-    pub id: u32,
-    pub race_name: String,
-    pub homeworld_id: Option<u32>,
-    pub tech: TechLevels,
-    /// Full race definition. Optional for backwards compatibility — pre-existing
-    /// games may have been persisted without this field. New games always set
-    /// it; per-player view derivation (planet value, scanner ranges, etc.)
-    /// requires it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub race: Option<Race>,
+/// All-zero tech levels — the starting point before any research is applied.
+///
+/// `TechLevels` has no intrinsic default in the schema (every field is
+/// required), so the `Default` the engine relies on is provided here as
+/// hand-written behavior rather than a derive.
+impl Default for TechLevels {
+    fn default() -> Self {
+        Self {
+            energy: 0,
+            weapons: 0,
+            propulsion: 0,
+            construction: 0,
+            electronics: 0,
+            biotechnology: 0,
+        }
+    }
 }

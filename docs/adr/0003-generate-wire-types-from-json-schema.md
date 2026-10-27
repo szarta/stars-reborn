@@ -69,6 +69,16 @@ To change the contract, edit the schema; then rebuild (Rust) and run
   definitions into one self-contained schema (rewriting refs local) before
   generating. This is how interdependent schemas — the host-state model and,
   later, its fleet/wormhole/combat sub-objects — are generated as one cluster.
+  A shared shape that already has a hand-written Rust home is _redirected_, not
+  re-generated: an `x-rust-type` sibling on the `$ref` makes the bundler skip
+  inlining that file and typify emit the existing type (e.g. the host-state
+  `player.race` reuses `objects::race::Race` instead of a second generated
+  `Race`), so each shared object is generated once. typify emits an absolute
+  path, so the engine root carries `extern crate self as stars_engine;` for it
+  to resolve internally. A map keyed by a stringified integer carries an
+  `x-rust-map-key` hint that the bundler expands to `propertyNames` for typify,
+  yielding a `u32` key instead of `String` without changing the (always
+  string-keyed) JSON wire shape.
 - `race.json` is the pilot. The remaining schemas (universe, turn, battle, …)
   are converted the same way as they gain typed producers/consumers; some are
   assembled ad hoc today and have no typed struct yet.

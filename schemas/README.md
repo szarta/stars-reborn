@@ -35,6 +35,23 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > infrastructure the remaining interdependent schemas (fleets, wormholes, etc.)
 > will reuse as they are added.
 >
+> A cross-file `$ref` to a shape that already has a hand-written Rust home is
+> _redirected_ rather than re-generated: adding an `x-rust-type` sibling to the
+> `$ref` (as `player.race` does, pointing at `crate::game::objects::race::Race`)
+> makes `build.rs` skip inlining that file and emit the existing type, so a
+> shared object such as `Race` is generated exactly once and merely re-used by
+> `game_state_types.rs`. The on-disk schema keeps the `$ref` so validators still
+> resolve the shape; the engine root carries `extern crate self as stars_engine;`
+> so typify's absolute `::stars_engine::…` path resolves from inside the engine.
+>
+> A map whose JSON keys are stringified integers (e.g. `planet_states`,
+> `universe.planets`, keyed by planet id) carries the `x-rust-map-key: "uint32"`
+> generation hint, which `build.rs` expands into a `propertyNames` schema for
+> typify so the generated key type is `u32` rather than `String`. serde
+> round-trips the integer key through the string JSON key, so the wire shape is
+> unchanged; a literal `propertyNames: {type: integer}` is deliberately avoided
+> because object keys are always strings and it would fail validation.
+>
 > `response-model-ship-hulls.json` (GET /model/ships/hulls) and the `tech.json`
 > leaf defs it references (both up-converted to draft-07) are reconciled to the
 > engine's live output and guarded by a Rust contract test
