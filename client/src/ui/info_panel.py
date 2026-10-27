@@ -59,6 +59,61 @@ def _next_owned_id(planets, player_id, current_id, direction):
     return ids[idx]
 
 
+def build_buildables_map(response):
+    """Index a ``GET /model/buildables`` response by numeric build-object-id.
+
+    Returns ``{id: {"name", "kind", "category", "design_slot"}}``. Clients read
+    this registry from the engine rather than hardcoding the id→name mapping.
+    """
+    out: dict[int, dict] = {}
+    for b in (response or {}).get("buildables", []):
+        try:
+            oid = int(b["build-object-id"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        out[oid] = {
+            "name": b.get("name", f"Buildable {oid}"),
+            "kind": b.get("kind"),
+            "category": b.get("category"),
+            "design_slot": b.get("design-slot"),
+        }
+    return out
+
+
+def _queue_row_label(entry, buildables):
+    """Human-readable list row for one production-queue entry: quantity, name,
+    and (for the item in progress) its percent-complete contribution."""
+    oid = entry.get("build_object_id")
+    qty = entry.get("build_quantity", 0)
+    meta = buildables.get(oid) if buildables else None
+    name = meta["name"] if meta else f"Buildable {oid}"
+    label = f"{qty} {name}"
+    progress = entry.get("build_progress") or 0
+    if progress:
+        label += f"  ({progress}%)"
+    return label
+
+
+def order_items_from_entries(entries, buildables):
+    """Convert working queue entries into ``planet.set_production_queue`` order
+    items (``{"item": {"kind"[, "design_slot"]}, "count"}``), resolving each
+    build-object-id back to its semantic kind via the buildable registry.
+
+    Entries whose id is unknown to the registry are dropped — the engine would
+    reject them, and the registry is the authority on what is buildable.
+    """
+    items = []
+    for e in entries:
+        meta = buildables.get(e.get("build_object_id")) if buildables else None
+        if not meta or not meta.get("kind"):
+            continue
+        item = {"kind": meta["kind"]}
+        if meta.get("design_slot") is not None:
+            item["design_slot"] = meta["design_slot"]
+        items.append({"item": item, "count": e.get("build_quantity", 0)})
+    return items
+
+
 # ── Section title bar with collapse arrow ─────────────────────────────────
 
 
@@ -356,19 +411,139 @@ class _FleetsInOrbitSection(_SectionPane):
 
 
 class _ProductionSection(_SectionPane):
-    """Production queue for the selected planet."""
+    """Production queue for the selected planet.
+
+    Shows the queue from the engine's per-player turn file (present only for
+    owned planets) and lets the player remove/reorder entries. Each edit
+    re-emits ``queue_changed(planet_id, order_items)`` so the host can submit
+    the whole new queue to the engine. Adding an item needs the buildable
+    picker, which is a separate task — ``add_item_requested`` is the hook for it.
+    """
+
+    # (planet_id, order-item list) — the full queue after an edit, ready to
+    # PUT as a planet.set_production_queue order.
+    queue_changed = Signal(int, list)
+    # planet_id — the Add button; the item-picker dialog is a deferred child task.
+    add_item_requested = Signal(int)
+
+    _EMPTY_PLACEHOLDER = "--- Queue is Empty ---"
 
     def __init__(self, parent=None):
         super().__init__("Production", parent)
 
+        self._buildables: dict[int, dict] = {}
+        self._planet = None
+        self._owned = False
+        self._editable = False
+        # Working copy of the queue; entries are the snake-keyed dicts carried
+        # on PlanetData.build_queue.
+        self._entries: list[dict] = []
+
         self._queue = QListWidget()
         self._queue.setMinimumHeight(70)
-        self._queue.addItem("--- Queue is Empty ---")
+        self._queue.currentRowChanged.connect(lambda _: self._refresh_buttons())
+
+        self._add_btn = QPushButton("Add")
+        self._remove_btn = QPushButton("Remove")
+        self._up_btn = QPushButton("Up")
+        self._down_btn = QPushButton("Down")
+        self._add_btn.clicked.connect(self._on_add)
+        self._remove_btn.clicked.connect(self._on_remove)
+        self._up_btn.clicked.connect(lambda: self._on_move(-1))
+        self._down_btn.clicked.connect(lambda: self._on_move(1))
+
+        btn_row = QBoxLayout(QBoxLayout.Direction.LeftToRight)
+        btn_row.setContentsMargins(0, 0, 0, 0)
+        btn_row.setSpacing(2)
+        for b in (self._add_btn, self._remove_btn, self._up_btn, self._down_btn):
+            btn_row.addWidget(b)
 
         col = QBoxLayout(QBoxLayout.Direction.TopToBottom)
         col.setContentsMargins(4, 4, 4, 4)
         col.addWidget(self._queue)
+        col.addLayout(btn_row)
         self.set_content_layout(col)
+
+        self._render()
+
+    def set_buildables(self, mapping):
+        """Install the build-object-id → metadata map (see build_buildables_map).
+        Re-renders so queue rows show real names once it arrives."""
+        self._buildables = mapping or {}
+        self._render()
+
+    def set_editable(self, editable: bool):
+        """Enable the edit controls. Off when there is no engine to submit to
+        (e.g. a locally loaded turn file)."""
+        self._editable = bool(editable)
+        self._refresh_buttons()
+
+    def update_planet(self, planet, player=None):
+        self._planet = planet
+        queue = getattr(planet, "build_queue", None) if planet is not None else None
+        self._owned = queue is not None
+        self._entries = [dict(e) for e in (queue or [])]
+        self._render()
+
+    # ── rendering / state ────────────────────────────────────────────────
+    def _render(self):
+        self._queue.clear()
+        if self._entries:
+            for e in self._entries:
+                self._queue.addItem(_queue_row_label(e, self._buildables))
+        else:
+            self._queue.addItem(self._EMPTY_PLACEHOLDER)
+        self._refresh_buttons()
+
+    def _selected_index(self) -> int:
+        """Current row, or -1 when nothing real is selected."""
+        if not self._entries:
+            return -1
+        row = self._queue.currentRow()
+        return row if 0 <= row < len(self._entries) else -1
+
+    def _refresh_buttons(self):
+        can_edit = self._editable and self._owned
+        idx = self._selected_index()
+        has_sel = idx >= 0
+        self._add_btn.setEnabled(can_edit)
+        self._remove_btn.setEnabled(can_edit and has_sel)
+        self._up_btn.setEnabled(can_edit and has_sel and idx > 0)
+        self._down_btn.setEnabled(can_edit and has_sel and idx < len(self._entries) - 1)
+
+    # ── edit handlers ────────────────────────────────────────────────────
+    def _on_add(self):
+        if self._planet is not None:
+            self.add_item_requested.emit(self._planet.id)
+
+    def _on_remove(self):
+        idx = self._selected_index()
+        if idx < 0:
+            return
+        del self._entries[idx]
+        self._commit(min(idx, len(self._entries) - 1))
+
+    def _on_move(self, delta: int):
+        idx = self._selected_index()
+        if idx < 0:
+            return
+        new = idx + delta
+        if not (0 <= new < len(self._entries)):
+            return
+        self._entries[idx], self._entries[new] = self._entries[new], self._entries[idx]
+        self._commit(new)
+
+    def _commit(self, select_row: int):
+        """Re-render after an edit, restore the selection, mirror the change
+        onto the planet model, and emit the new queue for submission."""
+        self._render()
+        if 0 <= select_row < len(self._entries):
+            self._queue.setCurrentRow(select_row)
+        if self._planet is not None:
+            self._planet.build_queue = [dict(e) for e in self._entries]
+            self.queue_changed.emit(
+                self._planet.id, order_items_from_entries(self._entries, self._buildables)
+            )
 
 
 # ── Column 2: Route To ────────────────────────────────────────────────────
@@ -509,6 +684,10 @@ class LeftPanel(QWidget):
 
     # Emitted with a planet id when Prev/Next picks a new world to navigate to.
     planet_nav_requested = Signal(int)
+    # Forwarded from the Production section: (planet_id, order-item list) after a
+    # queue edit, and the planet_id of an Add request (picker is a child task).
+    queue_changed = Signal(int, list)
+    add_item_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -540,6 +719,8 @@ class LeftPanel(QWidget):
         # ── Column 2 ──────────────────────────────────────────────────────
         self._fleets = _FleetsInOrbitSection()
         self._production = _ProductionSection()
+        self._production.queue_changed.connect(self.queue_changed)
+        self._production.add_item_requested.connect(self.add_item_requested)
         self._route = _RouteSection()
         self._starbase = _StarbaseSection()
 
@@ -586,11 +767,20 @@ class LeftPanel(QWidget):
         self._planets = list(planets)
         self._player_id = player_id
 
+    def set_buildables(self, mapping):
+        """Forward the buildable registry to the Production section."""
+        self._production.set_buildables(mapping)
+
+    def set_production_editable(self, editable: bool):
+        """Enable production-queue editing (off when there is no engine)."""
+        self._production.set_editable(editable)
+
     def update_planet(self, planet, player=None):
         self._current_planet = planet
         self._planet_header.update_planet(planet)
         self._minerals.update_planet(planet, player)
         self._status.update_planet(planet, player)
+        self._production.update_planet(planet, player)
 
     def _on_nav(self, direction: int):
         """Prev/Next clicked: pick the adjacent owned world and ask the host to

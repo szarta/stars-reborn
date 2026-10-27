@@ -18,6 +18,9 @@ Layout
 
 from __future__ import annotations
 
+import logging
+
+import requests
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QActionGroup, QIcon, QKeySequence
 from PySide6.QtWidgets import (
@@ -36,9 +39,11 @@ from PySide6.QtWidgets import (
 )
 
 from ..rendering.enumerations import NeverSeenPlanet, PlanetView, ResourcePaths, ZoomLevel
-from .info_panel import LeftPanel
+from .info_panel import LeftPanel, build_buildables_map
 from .planet_summary import PlanetSummaryWidget
 from .space_map import SpaceMap
+
+log = logging.getLogger(__name__)
 
 _TOOLBAR_ICON_SIZE = QSize(24, 24)
 
@@ -88,6 +93,8 @@ class MainWindow(QMainWindow):
         game_year: int = 2400,
         game_name: str = "New Game",
         player=None,
+        engine_url: str | None = None,
+        game_id: str | None = None,
     ):
         super().__init__()
         self._planets = list(planets)
@@ -97,6 +104,10 @@ class MainWindow(QMainWindow):
         self._game_year = game_year
         self._game_name = game_name
         self._player = player
+        # Engine connection for order submission; None when a turn file was
+        # loaded locally (offline) — production editing stays read-only then.
+        self._engine_url = engine_url.rstrip("/") if engine_url else None
+        self._game_id = game_id
         self._view_opts = _ViewOptions()
         # Two-slot target model — see SpaceMap docstring.
         # _selected_planet always tracks the primary target (used by the
@@ -111,6 +122,7 @@ class MainWindow(QMainWindow):
         self._init_toolbar()
         self._init_status_bar()
         self._load_universe()
+        self._init_production()
 
     # ── setup ───────────────────────────────────────────────────────────────
 
@@ -123,6 +135,8 @@ class MainWindow(QMainWindow):
         self._left_panel.set_year(self._game_year)
         self._left_panel.set_universe(self._planets, self._player_id)
         self._left_panel.planet_nav_requested.connect(self._on_planet_nav)
+        self._left_panel.queue_changed.connect(self._on_production_queue_changed)
+        self._left_panel.add_item_requested.connect(self._on_add_production_item)
 
         # Space map (absolute pixel-per-ly scale; scroll area provides panning).
         self._space_map = SpaceMap()
@@ -541,6 +555,58 @@ class MainWindow(QMainWindow):
 
     def _on_hover_world(self, wx: int, wy: int):
         self._planet_summary.update_hover_coords(wx, wy)
+
+    # ── production queue ─────────────────────────────────────────────────────
+    def _init_production(self):
+        """Fetch the buildable registry from the engine and enable queue editing.
+
+        Offline (a locally loaded turn file, no engine URL) the section stays
+        read-only, since there is nowhere to submit orders.
+        """
+        if not self._engine_url:
+            self._left_panel.set_production_editable(False)
+            return
+        try:
+            resp = requests.get(f"{self._engine_url}/model/buildables", timeout=15)
+            resp.raise_for_status()
+            self._left_panel.set_buildables(build_buildables_map(resp.json()))
+            self._left_panel.set_production_editable(True)
+        except requests.exceptions.RequestException as exc:
+            log.warning("Could not load /model/buildables: %s", exc)
+            self._left_panel.set_production_editable(False)
+
+    def _on_production_queue_changed(self, planet_id: int, items: list):
+        """A queue edit: submit the planet's whole new queue to the engine."""
+        if not self._engine_url or self._game_id is None:
+            return
+        body = {
+            "player_id": self._player_id,
+            "turn_year": self._game_year,
+            "orders": [
+                {
+                    "kind": "planet.set_production_queue",
+                    "planet_id": planet_id,
+                    "items": items,
+                }
+            ],
+        }
+        url = (
+            f"{self._engine_url}/games/{self._game_id}"
+            f"/turns/{self._game_year}/orders/{self._player_id}"
+        )
+        try:
+            resp = requests.put(url, json=body, timeout=15)
+            resp.raise_for_status()
+            self.statusBar().showMessage("Production order submitted.", 3000)
+        except requests.exceptions.RequestException as exc:
+            log.error("Production order submission failed: %s", exc)
+            self.statusBar().showMessage(f"Production order failed: {exc}", 5000)
+
+    def _on_add_production_item(self, planet_id: int):
+        """Add button — the buildable picker dialog is a separate task (#140)."""
+        self.statusBar().showMessage(
+            "Add to production — item picker dialog not yet implemented.", 4000
+        )
 
     # ── toolbar / menu handlers ─────────────────────────────────────────────
 

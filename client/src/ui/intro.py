@@ -224,6 +224,8 @@ class IntroUI(QDialog):
             player_id=turn["player-id"],
             game_year=turn["year"],
             game_name=game_name,
+            engine_url=self._engine_url,
+            game_id=game_id,
         )
         self._main_window.show()
         self.hide()

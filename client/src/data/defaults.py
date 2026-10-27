@@ -10,7 +10,7 @@ See stars-reborn-research/knowledge/findings/new_game_defaults.rst.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -60,6 +60,12 @@ class PlanetData:
     # against the viewing player's race. None for never-observed planets.
     value: int | None = None
 
+    # Production queue — present (a list, possibly empty) only for planets the
+    # viewing player owns; ``None`` for unowned/unobserved planets, since the
+    # engine emits build-queue only for owned planets (production is private).
+    # Each entry: {"build_object_id", "build_quantity", "build_progress"}.
+    build_queue: list[dict] | None = field(default=None)
+
     @classmethod
     def from_turn_planet(cls, p: dict) -> PlanetData:
         """Build a ``PlanetData`` from one entry in the engine's PlayerView.
@@ -93,7 +99,23 @@ class PlanetData:
             factories=p.get("factories", 0),
             mines=p.get("mines", 0),
             value=p.get("value"),
+            build_queue=cls._queue_from_wire(p.get("build-queue")),
         )
+
+    @staticmethod
+    def _queue_from_wire(items) -> list[dict] | None:
+        """Normalize the wire ``build-queue`` (kebab keys) into snake-keyed
+        entries. ``None`` when the key is absent (an unowned planet)."""
+        if items is None:
+            return None
+        return [
+            {
+                "build_object_id": it["build-object-id"],
+                "build_quantity": it.get("build-quantity", 0),
+                "build_progress": it.get("build-progress") or 0,
+            }
+            for it in items
+        ]
 
 
 # Default game name keyed on (difficulty, universe_size).
