@@ -13,7 +13,7 @@ from __future__ import annotations
 import glob
 import math
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QBoxLayout,
@@ -37,6 +37,26 @@ def _getattr_safe(obj, *attrs, default=None):
         if hasattr(obj, attr):
             return getattr(obj, attr)
     return default
+
+
+def _next_owned_id(planets, player_id, current_id, direction):
+    """Return the id of the next planet owned by ``player_id`` relative to
+    ``current_id``, stepping in ``direction`` (+1 forward, -1 back) and wrapping
+    at both ends.
+
+    Owned worlds are ordered by id so navigation is deterministic. If
+    ``current_id`` is not among the owned worlds, navigation starts at the first
+    owned world (forward) or the last (back). Returns ``None`` when the player
+    owns no worlds.
+    """
+    ids = sorted(p.id for p in planets if getattr(p, "owner", None) == player_id)
+    if not ids:
+        return None
+    if current_id in ids:
+        idx = (ids.index(current_id) + direction) % len(ids)
+    else:
+        idx = 0 if direction > 0 else len(ids) - 1
+    return ids[idx]
 
 
 # ── Section title bar with collapse arrow ─────────────────────────────────
@@ -110,6 +130,9 @@ class _SectionPane(QWidget):
 class _PlanetHeaderSection(_SectionPane):
     """Planet name (title bar) + planet image + Prev/Next navigation."""
 
+    # Emitted with +1 (Next) or -1 (Prev) when the player clicks a nav button.
+    nav_requested = Signal(int)
+
     def __init__(self, parent=None):
         super().__init__("", parent)
         self._planet_files = sorted(glob.glob(f"{ResourcePaths.PlanetsPath}/*.png"))
@@ -123,6 +146,8 @@ class _PlanetHeaderSection(_SectionPane):
 
         self._prev_btn = QPushButton("Prev")
         self._next_btn = QPushButton("Next")
+        self._prev_btn.clicked.connect(lambda: self.nav_requested.emit(-1))
+        self._next_btn.clicked.connect(lambda: self.nav_requested.emit(1))
 
         btn_col = QBoxLayout(QBoxLayout.Direction.TopToBottom)
         btn_col.addWidget(self._prev_btn)
@@ -476,7 +501,14 @@ class LeftPanel(QWidget):
 
     Two adjacent section columns fill the top area; a messages pane sits below.
     Call update_planet(planet, player) whenever selection changes.
+
+    Prev/Next in the planet header cycle through the active player's owned
+    worlds; the resulting planet id is re-emitted via ``planet_nav_requested``
+    so the host can update the map selection and the other panes in step.
     """
+
+    # Emitted with a planet id when Prev/Next picks a new world to navigate to.
+    planet_nav_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -484,8 +516,14 @@ class LeftPanel(QWidget):
         self.setMinimumWidth(360)
         self.setMaximumWidth(520)
 
+        # Universe context for Prev/Next navigation; populated by set_universe().
+        self._planets: list = []
+        self._player_id = None
+        self._current_planet = None
+
         # ── Column 1 ──────────────────────────────────────────────────────
         self._planet_header = _PlanetHeaderSection()
+        self._planet_header.nav_requested.connect(self._on_nav)
         self._minerals = _MineralsSection()
         self._status = _StatusSection()
 
@@ -542,10 +580,25 @@ class LeftPanel(QWidget):
         main.addWidget(self._splitter)
         self.setLayout(main)
 
+    def set_universe(self, planets, player_id):
+        """Give the panel the full planets list and the active player id so
+        Prev/Next can cycle through that player's owned worlds."""
+        self._planets = list(planets)
+        self._player_id = player_id
+
     def update_planet(self, planet, player=None):
+        self._current_planet = planet
         self._planet_header.update_planet(planet)
         self._minerals.update_planet(planet, player)
         self._status.update_planet(planet, player)
+
+    def _on_nav(self, direction: int):
+        """Prev/Next clicked: pick the adjacent owned world and ask the host to
+        select it."""
+        current_id = getattr(self._current_planet, "id", None)
+        pid = _next_owned_id(self._planets, self._player_id, current_id, direction)
+        if pid is not None:
+            self.planet_nav_requested.emit(pid)
 
     def set_year(self, year: int):
         self._messages.set_year(year)

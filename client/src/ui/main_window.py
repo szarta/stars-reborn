@@ -121,6 +121,8 @@ class MainWindow(QMainWindow):
         # Left command panel
         self._left_panel = LeftPanel()
         self._left_panel.set_year(self._game_year)
+        self._left_panel.set_universe(self._planets, self._player_id)
+        self._left_panel.planet_nav_requested.connect(self._on_planet_nav)
 
         # Space map (absolute pixel-per-ly scale; scroll area provides panning).
         self._space_map = SpaceMap()
@@ -520,6 +522,22 @@ class MainWindow(QMainWindow):
             self._left_panel.update_planet(planet, self._player)
             self._planet_summary.set_primary_target(planet)
             self._selected_planet = planet
+
+    def _on_planet_nav(self, pid: int):
+        """Prev/Next in the planet header: fully select the chosen owned world —
+        both target slots, both panes, and recentre the map on it."""
+        planet = next((p for p in self._planets if p.id == pid), None)
+        if planet is None:
+            return
+        self._primary_id = pid
+        self._secondary_id = pid
+        self._selected_planet = planet
+        self._space_map.set_primary_target(pid)
+        self._space_map.set_secondary_target(pid)
+        self._left_panel.update_planet(planet, self._player)
+        self._planet_summary.set_primary_target(planet)
+        self._planet_summary.update_planet(planet, self._player)
+        self._center_scroll_on_planet(pid)
 
     def _on_hover_world(self, wx: int, wy: int):
         self._planet_summary.update_hover_coords(wx, wy)
