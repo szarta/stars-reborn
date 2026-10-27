@@ -550,10 +550,27 @@ class _ProductionSection(_SectionPane):
 
 
 class _RouteSection(_SectionPane):
-    """Route destination + Change/Clear/Route buttons."""
+    """Planet "Route To" destination + Change/Clear/Route buttons.
+
+    The route destination is always a planet (clicking empty space or any object
+    snaps to the nearest planet — confirmed against the original game; see
+    knowledge/findings/route_to.rst). Change/Clear emit requests that the host
+    turns into a ``planet.set_route_target`` order. The Route button routes the
+    selected fleet to this destination — a fleet order deferred to task #141.
+    """
+
+    change_requested = Signal(int)  # planet_id — begin picking a route target
+    clear_requested = Signal(int)  # planet_id — clear the route
+    route_requested = Signal(int)  # planet_id — route selected fleet (deferred)
 
     def __init__(self, parent=None):
         super().__init__("Route To", parent)
+
+        self._planet = None
+        self._owned = False
+        self._editable = False
+        self._names: dict[int, str] = {}
+        self._player_id = None
 
         dest_row = QBoxLayout(QBoxLayout.Direction.LeftToRight)
         dest_row.addWidget(QLabel("Route to"))
@@ -561,11 +578,18 @@ class _RouteSection(_SectionPane):
         self._dest_label = QLabel("none")
         dest_row.addWidget(self._dest_label)
 
+        self._change_btn = QPushButton("Change")
+        self._clear_btn = QPushButton("Clear")
+        self._route_btn = QPushButton("Route")
+        self._change_btn.clicked.connect(self._on_change)
+        self._clear_btn.clicked.connect(self._on_clear)
+        self._route_btn.clicked.connect(self._on_route)
+
         btn_row = QBoxLayout(QBoxLayout.Direction.LeftToRight)
-        btn_row.addWidget(QPushButton("Change"))
-        btn_row.addWidget(QPushButton("Clear"))
+        btn_row.addWidget(self._change_btn)
+        btn_row.addWidget(self._clear_btn)
         btn_row.addStretch(1)
-        btn_row.addWidget(QPushButton("Route"))
+        btn_row.addWidget(self._route_btn)
 
         col = QBoxLayout(QBoxLayout.Direction.TopToBottom)
         col.setContentsMargins(4, 4, 4, 4)
@@ -573,6 +597,46 @@ class _RouteSection(_SectionPane):
         col.addLayout(dest_row)
         col.addLayout(btn_row)
         self.set_content_layout(col)
+
+        self._refresh_buttons()
+
+    def set_universe(self, planets, player_id):
+        """Store an id → name map (to show a route target by name) and the
+        active player id (to tell which planets the player can route)."""
+        self._names = {p.id: getattr(p, "name", str(p.id)) for p in planets}
+        self._player_id = player_id
+
+    def set_editable(self, editable: bool):
+        self._editable = bool(editable)
+        self._refresh_buttons()
+
+    def update_planet(self, planet, player=None):
+        self._planet = planet
+        target = getattr(planet, "route_target", None) if planet is not None else None
+        self._owned = planet is not None and getattr(planet, "owner", None) == self._player_id
+        self._dest_label.setText(self._names.get(target, "none") if target is not None else "none")
+        self._refresh_buttons()
+
+    def _refresh_buttons(self):
+        can_edit = self._editable and self._owned
+        self._change_btn.setEnabled(can_edit)
+        has_route = (
+            self._planet is not None and getattr(self._planet, "route_target", None) is not None
+        )
+        self._clear_btn.setEnabled(can_edit and has_route)
+        self._route_btn.setEnabled(can_edit and has_route)
+
+    def _on_change(self):
+        if self._planet is not None:
+            self.change_requested.emit(self._planet.id)
+
+    def _on_clear(self):
+        if self._planet is not None:
+            self.clear_requested.emit(self._planet.id)
+
+    def _on_route(self):
+        if self._planet is not None:
+            self.route_requested.emit(self._planet.id)
 
 
 # ── Column 2: Starbase ────────────────────────────────────────────────────
@@ -688,6 +752,10 @@ class LeftPanel(QWidget):
     # queue edit, and the planet_id of an Add request (picker is a child task).
     queue_changed = Signal(int, list)
     add_item_requested = Signal(int)
+    # Forwarded from the Route To section.
+    route_change_requested = Signal(int)
+    route_clear_requested = Signal(int)
+    route_fleet_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -722,6 +790,9 @@ class LeftPanel(QWidget):
         self._production.queue_changed.connect(self.queue_changed)
         self._production.add_item_requested.connect(self.add_item_requested)
         self._route = _RouteSection()
+        self._route.change_requested.connect(self.route_change_requested)
+        self._route.clear_requested.connect(self.route_clear_requested)
+        self._route.route_requested.connect(self.route_fleet_requested)
         self._starbase = _StarbaseSection()
 
         col2 = QWidget()
@@ -763,9 +834,11 @@ class LeftPanel(QWidget):
 
     def set_universe(self, planets, player_id):
         """Give the panel the full planets list and the active player id so
-        Prev/Next can cycle through that player's owned worlds."""
+        Prev/Next can cycle through that player's owned worlds and the Route
+        section can resolve/own targets."""
         self._planets = list(planets)
         self._player_id = player_id
+        self._route.set_universe(self._planets, player_id)
 
     def set_buildables(self, mapping):
         """Forward the buildable registry to the Production section."""
@@ -775,12 +848,17 @@ class LeftPanel(QWidget):
         """Enable production-queue editing (off when there is no engine)."""
         self._production.set_editable(editable)
 
+    def set_route_editable(self, editable: bool):
+        """Enable route editing (off when there is no engine to submit to)."""
+        self._route.set_editable(editable)
+
     def update_planet(self, planet, player=None):
         self._current_planet = planet
         self._planet_header.update_planet(planet)
         self._minerals.update_planet(planet, player)
         self._status.update_planet(planet, player)
         self._production.update_planet(planet, player)
+        self._route.update_planet(planet, player)
 
     def _on_nav(self, direction: int):
         """Prev/Next clicked: pick the adjacent owned world and ask the host to

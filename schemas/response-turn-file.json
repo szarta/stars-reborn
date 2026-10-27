@@ -172,6 +172,14 @@
           "items": {
             "$ref": "#/definitions/build-item"
           }
+        },
+        "route-target": {
+          "description": "Planet id this owned planet routes arriving fleets to (the \"Route To\" destination), or null for no route. Present only for owned planets, since routing is private to the owner.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32"
         }
       },
       "title": "PlanetObserved"

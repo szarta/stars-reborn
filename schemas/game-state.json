@@ -197,6 +197,14 @@
           "items": {
             "$ref": "#/definitions/build-item"
           }
+        },
+        "route_target": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "description": "Planet id that arriving route-flagged fleets are forwarded to, or null for no route (the planet's \"Route To\" destination). Absent on pre-existing saves predating routing; treated as null."
         }
       }
     },

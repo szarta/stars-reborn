@@ -162,6 +162,11 @@ class PlanetObserved(BaseModel):
         alias="build-queue",
         description="The planet's production queue, in build order. Present only for planets the viewing player owns (production is private); empty array when the queue is empty.",
     )
+    route_target: int | None = Field(
+        None,
+        alias="route-target",
+        description='Planet id this owned planet routes arriving fleets to (the "Route To" destination), or null for no route. Present only for owned planets, since routing is private to the owner.',
+    )
 
 
 class PlanetIntel(RootModel[PlanetObserved | PlanetUnobserved]):

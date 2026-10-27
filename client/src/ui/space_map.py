@@ -93,6 +93,7 @@ class SpaceMap(QWidget):
     """QPainter-based interactive star map (absolute scale; scrollable host)."""
 
     planet_selected = Signal(int)  # emits planet id on left-click
+    map_clicked = Signal(float, float)  # emits (world_x, world_y) on every left-click
     hover_world = Signal(int, int)  # emits (world_x, world_y) on mouse move
     zoom_step = Signal(int)  # +1 = zoom in one preset, -1 = zoom out
 
@@ -237,6 +238,11 @@ class SpaceMap(QWidget):
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
+            wx, wy = self._screen_to_world(event.pos().x(), event.pos().y())
+            # Raw click (any location) first, so modes like route-target setting
+            # can snap an empty-space click to the nearest planet; then the
+            # planet hit-test for normal selection.
+            self.map_clicked.emit(wx, wy)
             pid = self._planet_at(event.pos().x(), event.pos().y())
             if pid is not None:
                 self.planet_selected.emit(pid)

@@ -766,8 +766,7 @@
       "additionalProperties": false,
       "required": [
         "kind",
-        "planet_id",
-        "target_planet_id"
+        "planet_id"
       ],
       "properties": {
         "kind": {
@@ -779,7 +778,15 @@
           "$ref": "#/definitions/planet_id"
         },
         "target_planet_id": {
-          "$ref": "#/definitions/planet_id"
+          "description": "Planet to route arriving fleets to. null or omitted clears the route.",
+          "oneOf": [
+            {
+              "$ref": "#/definitions/planet_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },

@@ -154,6 +154,7 @@ fn intel_for(
             mines: s.mines,
             value: compute_value(s, race),
             build_queue: build_queue_view(s),
+            route_target: s.route_target,
         }),
         _ => PlanetIntel::Unobserved(PlanetUnobserved {
             id: static_.id,

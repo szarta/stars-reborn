@@ -51,7 +51,9 @@ use crate::game::objects::{
     },
     technology::{ShipHull, TechSlot},
 };
-use crate::game::orders::{apply_set_production_queue, OrderError, ProductionItemInput};
+use crate::game::orders::{
+    apply_set_production_queue, apply_set_route_target, OrderError, ProductionItemInput,
+};
 use crate::game::state::GameState;
 use crate::game::universe::generate_universe;
 use crate::game::view::player_view;
@@ -702,6 +704,15 @@ struct SetProductionQueueOrder {
     items: Vec<ProductionItemInput>,
 }
 
+/// The `planet.set_route_target` order payload (minus its `kind` tag). A null or
+/// absent `target_planet_id` clears the route.
+#[derive(Deserialize)]
+struct SetRouteTargetOrder {
+    planet_id: u32,
+    #[serde(default)]
+    target_planet_id: Option<u32>,
+}
+
 /// Map an `OrderError` from the game layer to an HTTP response.
 fn order_error_response(e: OrderError) -> axum::response::Response {
     let (status, msg) = match e {
@@ -713,6 +724,10 @@ fn order_error_response(e: OrderError) -> axum::response::Response {
         OrderError::UnknownBuildable => (
             StatusCode::BAD_REQUEST,
             "order names an unknown buildable".to_string(),
+        ),
+        OrderError::RouteTargetNotFound(id) => (
+            StatusCode::NOT_FOUND,
+            format!("route target planet {id} not found"),
         ),
     };
     (status, Json(json!({"error": msg}))).into_response()
@@ -783,6 +798,26 @@ async fn submit_orders(
                 };
                 if let Err(e) =
                     apply_set_production_queue(game, pid, parsed.planet_id, &parsed.items)
+                {
+                    return order_error_response(e);
+                }
+                orders_applied += 1;
+            }
+            "planet.set_route_target" => {
+                let parsed: SetRouteTargetOrder = match serde_json::from_value(order.clone()) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({
+                                "error": format!("invalid planet.set_route_target order: {e}"),
+                            })),
+                        )
+                            .into_response()
+                    }
+                };
+                if let Err(e) =
+                    apply_set_route_target(game, pid, parsed.planet_id, parsed.target_planet_id)
                 {
                     return order_error_response(e);
                 }

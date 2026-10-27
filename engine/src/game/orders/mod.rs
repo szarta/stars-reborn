@@ -4,7 +4,8 @@
 // (schemas/request-submit-orders.json) into these types and calls into here;
 // all validation and state mutation lives in this module, not in http.
 //
-// This slice implements the production-queue order (`planet.set_production_queue`).
+// This slice implements the production-queue order (`planet.set_production_queue`)
+// and the route-to order (`planet.set_route_target`).
 // Other order kinds in the schema are not yet applied — the engine
 // rejects them explicitly rather than silently accepting a no-op, so a client
 // is never told an order succeeded when nothing happened. They land as their
@@ -79,6 +80,8 @@ pub enum OrderError {
     PlanetNotOwned(u32),
     /// An item named no valid buildable (e.g. design slot out of range).
     UnknownBuildable,
+    /// A route order named a target planet that does not exist.
+    RouteTargetNotFound(u32),
 }
 
 /// Apply a `planet.set_production_queue` order: replace the entire production
@@ -118,6 +121,38 @@ pub fn apply_set_production_queue(
     }
 
     planet.build_queue = queue;
+    Ok(())
+}
+
+/// Apply a `planet.set_route_target` order: set (or, with `target = None`,
+/// clear) the planet's "Route To" destination.
+///
+/// The submitting player must own `planet_id`. A non-null `target` must name an
+/// existing planet (any planet may be a route destination, owned or not); it is
+/// validated before anything is written so a bad target leaves the route
+/// unchanged.
+pub fn apply_set_route_target(
+    game: &mut GameState,
+    player_id: u32,
+    planet_id: u32,
+    target: Option<u32>,
+) -> Result<(), OrderError> {
+    if let Some(t) = target {
+        if !game.planet_states.contains_key(&t) {
+            return Err(OrderError::RouteTargetNotFound(t));
+        }
+    }
+
+    let planet = game
+        .planet_states
+        .get_mut(&planet_id)
+        .ok_or(OrderError::PlanetNotFound(planet_id))?;
+
+    if planet.owner != Some(player_id) {
+        return Err(OrderError::PlanetNotOwned(planet_id));
+    }
+
+    planet.route_target = target;
     Ok(())
 }
 
@@ -226,5 +261,49 @@ mod tests {
         // prior queue is preserved
         assert_eq!(game.planet_states[&hw].build_queue.len(), 1);
         assert_eq!(game.planet_states[&hw].build_queue[0].build_object_id, 8);
+    }
+
+    /// Any planet id present in the game other than `hw`.
+    fn other_planet(game: &GameState, hw: u32) -> u32 {
+        *game
+            .planet_states
+            .keys()
+            .find(|&&id| id != hw)
+            .expect("universe has a second planet")
+    }
+
+    #[test]
+    fn sets_and_clears_route_target() {
+        let (mut game, hw) = one_player_game();
+        let target = other_planet(&game, hw);
+
+        apply_set_route_target(&mut game, 0, hw, Some(target)).unwrap();
+        assert_eq!(game.planet_states[&hw].route_target, Some(target));
+
+        // None clears it.
+        apply_set_route_target(&mut game, 0, hw, None).unwrap();
+        assert_eq!(game.planet_states[&hw].route_target, None);
+    }
+
+    #[test]
+    fn rejects_route_on_unowned_planet() {
+        let (mut game, hw) = one_player_game();
+        let target = other_planet(&game, hw);
+        let err = apply_set_route_target(&mut game, 2, hw, Some(target)).unwrap_err();
+        assert_eq!(err, OrderError::PlanetNotOwned(hw));
+        assert_eq!(game.planet_states[&hw].route_target, None);
+    }
+
+    #[test]
+    fn rejects_nonexistent_route_target_atomically() {
+        let (mut game, hw) = one_player_game();
+        let target = other_planet(&game, hw);
+        apply_set_route_target(&mut game, 0, hw, Some(target)).unwrap();
+
+        let missing = 9999;
+        let err = apply_set_route_target(&mut game, 0, hw, Some(missing)).unwrap_err();
+        assert_eq!(err, OrderError::RouteTargetNotFound(missing));
+        // prior route is preserved
+        assert_eq!(game.planet_states[&hw].route_target, Some(target));
     }
 }

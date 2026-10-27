@@ -63,6 +63,7 @@ TURN_FILE = {
             "mines": 10,
             "value": 100,
             "build-queue": [{"build-object-id": 7, "build-quantity": 5}],
+            "route-target": 2,
         },
         {"id": 2, "name": "Quixote", "x": 365, "y": 298},
     ],
@@ -88,6 +89,7 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert isinstance(unobserved, PlanetUnobserved)
     assert observed.name == "Neptune"
     assert observed.value == 100
+    assert observed.route_target == 2
     assert unobserved.name == "Quixote"
 
     assert len(view.ship_designs) == 1

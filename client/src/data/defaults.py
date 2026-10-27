@@ -66,6 +66,10 @@ class PlanetData:
     # Each entry: {"build_object_id", "build_quantity", "build_progress"}.
     build_queue: list[dict] | None = field(default=None)
 
+    # "Route To" destination: planet id arriving route-flagged fleets are sent
+    # to, or None for no route. Emitted only for owned planets.
+    route_target: int | None = None
+
     @classmethod
     def from_turn_planet(cls, p: dict) -> PlanetData:
         """Build a ``PlanetData`` from one entry in the engine's PlayerView.
@@ -100,6 +104,7 @@ class PlanetData:
             mines=p.get("mines", 0),
             value=p.get("value"),
             build_queue=cls._queue_from_wire(p.get("build-queue")),
+            route_target=p.get("route-target"),
         )
 
     @staticmethod

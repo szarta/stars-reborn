@@ -166,6 +166,7 @@ fn generate_planet(
         factories: 0,
         mines: 0,
         build_queue: Vec::new(),
+        route_target: None,
     };
     (static_, state)
 }

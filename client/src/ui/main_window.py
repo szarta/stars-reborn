@@ -116,13 +116,16 @@ class MainWindow(QMainWindow):
         self._primary_id: int | None = None
         self._secondary_id: int | None = None
         self._selected_planet = None
+        # When set, the next map click picks the route target for this planet id
+        # (snapped to the nearest planet) instead of selecting a planet.
+        self._awaiting_route_target: int | None = None
 
         self._init_ui()
         self._init_menu()
         self._init_toolbar()
         self._init_status_bar()
         self._load_universe()
-        self._init_production()
+        self._init_orders()
 
     # ── setup ───────────────────────────────────────────────────────────────
 
@@ -137,10 +140,14 @@ class MainWindow(QMainWindow):
         self._left_panel.planet_nav_requested.connect(self._on_planet_nav)
         self._left_panel.queue_changed.connect(self._on_production_queue_changed)
         self._left_panel.add_item_requested.connect(self._on_add_production_item)
+        self._left_panel.route_change_requested.connect(self._on_route_change)
+        self._left_panel.route_clear_requested.connect(self._on_route_clear)
+        self._left_panel.route_fleet_requested.connect(self._on_route_fleet)
 
         # Space map (absolute pixel-per-ly scale; scroll area provides panning).
         self._space_map = SpaceMap()
         self._space_map.planet_selected.connect(self._on_planet_selected)
+        self._space_map.map_clicked.connect(self._on_map_clicked)
         self._space_map.hover_world.connect(self._on_hover_world)
         self._space_map.zoom_step.connect(self._on_wheel_zoom)
 
@@ -520,6 +527,10 @@ class MainWindow(QMainWindow):
         the small arrow). Promotes to primary when this planet was already
         the secondary target — i.e. the user has clicked it a second time.
         """
+        # While picking a route target, the click is consumed by _on_map_clicked.
+        if self._awaiting_route_target is not None:
+            return
+
         planet = next((p for p in self._planets if p.id == pid), None)
         if planet is None:
             return
@@ -556,39 +567,37 @@ class MainWindow(QMainWindow):
     def _on_hover_world(self, wx: int, wy: int):
         self._planet_summary.update_hover_coords(wx, wy)
 
-    # ── production queue ─────────────────────────────────────────────────────
-    def _init_production(self):
-        """Fetch the buildable registry from the engine and enable queue editing.
+    # ── order submission (production + route) ────────────────────────────────
+    def _init_orders(self):
+        """Enable the order-editing sections and fetch any registries they need.
 
-        Offline (a locally loaded turn file, no engine URL) the section stays
-        read-only, since there is nowhere to submit orders.
+        Route editing only needs an engine to submit to; production editing also
+        needs the buildable registry. Offline (a locally loaded turn file, no
+        engine URL) both stay read-only, since there is nowhere to submit orders.
         """
-        if not self._engine_url:
-            self._left_panel.set_production_editable(False)
-            return
-        try:
-            resp = requests.get(f"{self._engine_url}/model/buildables", timeout=15)
-            resp.raise_for_status()
-            self._left_panel.set_buildables(build_buildables_map(resp.json()))
-            self._left_panel.set_production_editable(True)
-        except requests.exceptions.RequestException as exc:
-            log.warning("Could not load /model/buildables: %s", exc)
-            self._left_panel.set_production_editable(False)
+        orders_ok = bool(self._engine_url and self._game_id)
+        self._left_panel.set_route_editable(orders_ok)
 
-    def _on_production_queue_changed(self, planet_id: int, items: list):
-        """A queue edit: submit the planet's whole new queue to the engine."""
+        buildables_ok = False
+        if self._engine_url:
+            try:
+                resp = requests.get(f"{self._engine_url}/model/buildables", timeout=15)
+                resp.raise_for_status()
+                self._left_panel.set_buildables(build_buildables_map(resp.json()))
+                buildables_ok = True
+            except requests.exceptions.RequestException as exc:
+                log.warning("Could not load /model/buildables: %s", exc)
+        self._left_panel.set_production_editable(orders_ok and buildables_ok)
+
+    def _submit_orders(self, orders: list) -> bool:
+        """PUT a list of orders to the engine's orders choke point. Returns True
+        on success; logs and shows a status message on failure."""
         if not self._engine_url or self._game_id is None:
-            return
+            return False
         body = {
             "player_id": self._player_id,
             "turn_year": self._game_year,
-            "orders": [
-                {
-                    "kind": "planet.set_production_queue",
-                    "planet_id": planet_id,
-                    "items": items,
-                }
-            ],
+            "orders": orders,
         }
         url = (
             f"{self._engine_url}/games/{self._game_id}"
@@ -597,16 +606,82 @@ class MainWindow(QMainWindow):
         try:
             resp = requests.put(url, json=body, timeout=15)
             resp.raise_for_status()
-            self.statusBar().showMessage("Production order submitted.", 3000)
+            return True
         except requests.exceptions.RequestException as exc:
-            log.error("Production order submission failed: %s", exc)
-            self.statusBar().showMessage(f"Production order failed: {exc}", 5000)
+            log.error("Order submission failed: %s", exc)
+            self.statusBar().showMessage(f"Order submission failed: {exc}", 5000)
+            return False
+
+    def _on_production_queue_changed(self, planet_id: int, items: list):
+        """A queue edit: submit the planet's whole new queue to the engine."""
+        order = {"kind": "planet.set_production_queue", "planet_id": planet_id, "items": items}
+        if self._submit_orders([order]):
+            self.statusBar().showMessage("Production order submitted.", 3000)
 
     def _on_add_production_item(self, planet_id: int):
         """Add button — the buildable picker dialog is a separate task (#140)."""
         self.statusBar().showMessage(
             "Add to production — item picker dialog not yet implemented.", 4000
         )
+
+    # ── route to ─────────────────────────────────────────────────────────────
+    def _on_route_change(self, planet_id: int):
+        """Change clicked: enter route-target mode. The next map click picks the
+        destination, snapped to the nearest planet."""
+        if not self._engine_url or self._game_id is None:
+            return
+        self._awaiting_route_target = planet_id
+        self.setCursor(Qt.CrossCursor)
+        self.statusBar().showMessage(
+            "Click a destination on the map — the route snaps to the nearest planet."
+        )
+
+    def _on_route_clear(self, planet_id: int):
+        self._submit_route_target(planet_id, None)
+
+    def _on_route_fleet(self, planet_id: int):
+        """Route button — routes the selected fleet; a fleet order deferred (#141)."""
+        self.statusBar().showMessage("Route fleet — fleet routing not yet implemented.", 4000)
+
+    def _on_map_clicked(self, wx: float, wy: float):
+        """Handle a raw map click while picking a route target."""
+        if self._awaiting_route_target is None:
+            return
+        planet_id = self._awaiting_route_target
+        self._awaiting_route_target = None
+        self.unsetCursor()
+        nearest = self._nearest_planet(wx, wy)
+        if nearest is None:
+            return
+        self._submit_route_target(planet_id, nearest.id)
+
+    def _nearest_planet(self, wx: float, wy: float):
+        """The planet nearest (Euclidean) to a world-space point, or None."""
+        return min(
+            self._planets,
+            key=lambda p: (p.x - wx) ** 2 + (p.y - wy) ** 2,
+            default=None,
+        )
+
+    def _submit_route_target(self, planet_id: int, target: int | None):
+        """Submit a planet.set_route_target order (target None clears the route)
+        and refresh the Route display on success."""
+        order = {"kind": "planet.set_route_target", "planet_id": planet_id}
+        if target is not None:
+            order["target_planet_id"] = target
+        if not self._submit_orders([order]):
+            return
+        planet = next((p for p in self._planets if p.id == planet_id), None)
+        if planet is not None:
+            planet.route_target = target
+            # Refresh the panel if this planet is the one on display.
+            if self._primary_id == planet_id:
+                self._left_panel.update_planet(planet, self._player)
+        if target is None:
+            self.statusBar().showMessage("Route cleared.", 3000)
+        else:
+            name = next((p.name for p in self._planets if p.id == target), str(target))
+            self.statusBar().showMessage(f"Route set to {name}.", 3000)
 
     # ── toolbar / menu handlers ─────────────────────────────────────────────
 
