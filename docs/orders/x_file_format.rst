@@ -141,11 +141,13 @@ unknown.
      - 2 B
      -
    * - 35
-     - **Unknown** — planet packet target / planet flag?
-     - ❓
+     - Planet change (route / packet target / planet flag)
+     - ⚠️
      - 6 B
-     - Bytes 0–1 = ``planet_idx`` matching the next type-29 in file order;
-       remaining 4 bytes vary by player input.
+     - ``PLANET_CHANGE`` in the community registry.  Structure decoded: bytes
+       0–1 = ``planet_idx`` (matches the next type-29 in file order), bytes 2–3
+       = a packed destination field, bytes 4–5 always ``00 00``.  Exact bytes
+       2–3 encoding still open.  See below.
    * - 37
      - Fleets merge
      - ✅
@@ -492,30 +494,129 @@ Type 2 (8 B) — *fleet-create / new-fleet metadata*
    fleet from a fleet-split or scoop-from-cargo action and assigns its initial
    id.
 
-Type 35 (6 B) — *planet packet target / planet flag*
-   Bytes 0–1 are a ``planet_idx`` that matches the planet of the next
-   ``production_queue_change`` record in file order.  Bytes 2–5 vary: AI
-   samples carry ``01 00 00 00``; human samples carry larger values (e.g. ``26
-   25 00 00``).  Hypothesis: mineral-packet destination set by the player on a
-   planet with a mass driver.
+Type 35 (6 B) — ``PLANET_CHANGE`` (planet route / packet target / flag)
+   The general per-planet order-change block; named ``PLANET_CHANGE`` in the
+   community registry (its ``starsapi`` decoder is an empty stub, so the block
+   was named but never decoded there).  Structure confirmed from the corpus
+   (118 records across the standalone games; ≈59 unique after ``backup/``
+   de-duplication):
+
+   .. code-block:: text
+
+      b0–b1   planet_idx     (LE uint16; matches the next production_queue_change)
+      b2–b3   destination     (LE uint16; packed reference, see below)
+      b4–b5   always 0x00 0x00
+
+   Bytes 2–3 are a **packed destination reference**, not a flag, a raw planet
+   id, or a raw coordinate:
+
+   - ``0x0000`` / ``0x0001`` = default/empty; otherwise a value in the
+     ``0x13xx``–``0x3exx`` family, low byte essentially always even.
+   - The same value (``0x200a``) recurs for three *different* subject planets —
+     a shared destination, not a per-planet attribute.
+   - Values reach ``0x3e1c`` ≈ 15,900, far above the largest planet id (~800–
+     1000, even on a Huge map) or coordinate (~2000), ruling out a raw id or
+     coordinate; no clean low-bit slice yields an in-range index either.
+
+   Leading hypotheses for the encoding: a coarse ``(x, y)`` destination point
+   (byte 2 ≈ X, byte 3 ≈ Y scaled to a byte), or a packed index + type/flag.
+   The three candidate actions — mass-driver packet destination, planet route
+   target, and the "contribute leftover resources to research" toggle — are all
+   plausible ``PLANET_CHANGE`` payloads; the shared-value evidence favours a
+   destination over the research flag.  Full analysis:
+   ``stars-reborn-research/knowledge/findings/planet_change_block.rst``.
+   Definitive encoding pending an oracle diff with a known action.
+
+Community Block-Type Registry
+-----------------------------
+
+The community ``starsapi`` project enumerates every |original| block type
+(0–46) in ``BlockType.java`` (sourced from the starsautohost wiki
+*Technical_Information* page).  That registry names several opcodes we had not
+decoded, which turns "unknown opcode" into "known opcode, payload undecoded"
+for most of the actions below.  The names are the community's; payload decoding
+is still ours to confirm by oracle.
+
+Order-relevant block types from the registry and their status here:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 8 36 14 42
+
+   * - Type
+     - Registry name
+     - Status
+     - Notes
+   * - 1
+     - ``MANUAL_SMALL_LOAD_UNLOAD_TASK``
+     - ✅
+     - Decoded as manual cargo transfer.
+   * - 2
+     - ``MANUAL_MEDIUM_LOAD_UNLOAD_TASK``
+     - ⚠️ conflict
+     - Our corpus decode reads type-2 as *fleet depart orbit* (26 records,
+       ``b4`` = 0x12/0x21).  The registry names it a medium cargo task.
+       Reconcile by oracle — the two may be distinct uses of the same opcode,
+       or one naming is wrong.
+   * - 25
+     - ``MANUAL_LARGE_LOAD_UNLOAD_TASK``
+     - ❌ unsampled
+     - Large-cargo variant of type-1; not seen in the corpus.
+   * - 35
+     - ``PLANET_CHANGE``
+     - ⚠️
+     - Planet route target / packet target / research-contribute toggle.  See
+       above.
+   * - 36
+     - ``CHANGE_PASSWORD``
+     - ❌ unsampled
+     -
+   * - 38
+     - ``PLAYERS_RELATION_CHANGE``
+     - ❌ unsampled
+     - Set friend / enemy / neutral.
+   * - 40
+     - ``MESSAGE``
+     - ❌ unsampled
+     - In-game player-to-player messages.
+   * - 46
+     - ``SAVE_AND_SUBMIT``
+     - ❌ unsampled
+     - Marks the turn as submitted.
+
+Block types the registry lists that are game-state or file-structure records
+rather than player orders — e.g. 6 ``PLAYER``, 7 ``PLANETS``, 8
+``FILE_HEADER``, 12 ``EVENTS``, 13 ``PLANET``, 16 ``FLEET``, 26 ``DESIGN``, 28
+``PRODUCTION_QUEUE``, 45 ``PLAYER_SCORES`` — are out of scope here.
 
 Suspected Missing Record Types
 ------------------------------
 
-The following player actions are part of |original|'s rules but produce no
-records in our current corpus, either because the games we sampled did not use
-the feature, or because we have not yet identified the opcode:
+Cross-referenced against the registry above, the player actions we had not yet
+seen split into *identified* (opcode known, payload decode pending oracle) and
+*accounted for by an existing mechanism*:
 
-- Mineral packet launch (manual one-shot from a mass driver)
-- Stargate / wormhole gating order (likely encoded as a waypoint task)
-- Planet rename
-- Planet route-to target (separate from the per-fleet route waypoint task)
-- Auto-build / starbase-mass-driver target setting
-- Player-relations changes (set friend/enemy/neutral)
-- Game messages (chat / send-to-player)
-- Designate research-only colony / "contribute leftover energy" toggle
+Identified — opcode known, payload decode pending oracle:
 
-Oracle work to confirm each is tracked as separate research tasks.
+- Planet route-to target, auto-build / mass-driver target, and the
+  research-only / "contribute leftover energy" toggle → **type-35
+  ``PLANET_CHANGE``**.
+- Player-relations changes (friend / enemy / neutral) → **type-38
+  ``PLAYERS_RELATION_CHANGE``**.
+- Game messages (chat / send-to-player) → **type-40 ``MESSAGE``**.
+
+Likely not a distinct opcode:
+
+- Mineral packet launch — a packet is queued in the production queue
+  (type-28/29) and auto-launches to the planet's mass-driver target (type-35),
+  so no separate "launch" opcode is expected.
+- Stargate / wormhole gating — encoded as a fleet waypoint task (type-5), not a
+  planet order.
+- Planet rename — the registry has only ``RENAME_FLEET`` (44); planet names are
+  fixed in the original game, so no planet-rename record is expected.
+
+Oracle work to decode each identified payload is tracked as separate research
+tasks.
 
 Determinism and Idempotency
 ---------------------------
