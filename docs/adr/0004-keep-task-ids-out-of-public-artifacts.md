@@ -5,47 +5,87 @@
 ## Context
 
 Stars Reborn is developed in a public monorepo (ADR-0002). Work is tracked in a
-local `todo-sqlite-cli` database whose task ids are meaningful only inside a
-working session: an outside reader of the repo cannot resolve them, and they
-leak internal process into an artifact meant to document the game and its file
-formats.
+local `todo-sqlite-cli` database whose task ids are small integers that mean
+something only inside a working session.
 
-`AGENTS.md` ("Public files") already states the operative rule — task ids and
-task titles do not belong in documentation, ADRs, READMEs, changelogs, source
-comments, test names, or fixtures. What was missing was the recorded _decision_
-and its rationale, so the rule read as arbitrary; in practice ids had crept into
-design docs, schema notes, and contract-test comments. This ADR records the
-decision. `AGENTS.md` remains the single normative statement of the rule — this
-record does not restate its wording (`AGENTS.md`'s "One copy of these rules"
-keeps the rule in one place).
+Those ids had steadily crept into the published tree: design docs, schema
+notes, source comments, and the Rust/Python contract-test docstrings all
+carried parentheticals like "(task #NNN)". Each one is a dangling reference. A
+reader cloning the repo has no access to the private queue, so the number
+resolves to nothing; it dates the artifact to the session that wrote it, and it
+implies a link — an issue, a ticket — that does not exist. The artifact is
+supposed to document the game and its file formats to anyone studying them, and
+a work-queue id serves none of them.
+
+`AGENTS.md` ("Public files") states the operative rule tersely so a contributor
+meets it at the point of work. This ADR is the fuller record: the rule, worked
+examples, and the alternatives that were weighed and rejected, so the decision
+is not re-litigated later without that context.
 
 ## Decision
 
-Public artifacts describe _what_ a thing is and _why_, never _which work item_
-produced it. The operative rule and its exact scope live in `AGENTS.md`
-("Public files").
+Public artifacts — documentation, ADRs, READMEs, changelogs, source comments,
+test names, fixtures, papers — name _what_ a thing is and _why_ it exists, never
+_which work item_ produced it. Task ids and task titles do not appear in them.
 
-Where work still needs tracing:
+Where a trace to the originating work is genuinely needed:
 
-- The `todo-sqlite-cli` database is the tracker, and public files do not
-  reference it by id.
-- A **commit message** may carry a project-qualified id for internal tracing
-  (for example `(stars_reborn 123)`); a commit message is not a public artifact
-  in the sense above.
+- The `todo-sqlite-cli` database is the tracker. Public files never cite it by
+  id.
+- A **commit message** may carry a project-qualified id for internal tracing,
+  for example `(stars_reborn 123)`. A commit message is version-control history,
+  not a published artifact, so the trace lives there.
 - A public file that must point at related, not-yet-done work does so
-  descriptively — "pending the icon convention", "a tracked follow-up" — naming
-  the thing, not the ticket.
+  descriptively: it names the capability, not the ticket.
 
-Existing public files were swept to this rule when it was recorded.
+### Worked examples
+
+Using a placeholder id `#NNN` for illustration:
+
+| Instead of (leaks a task id)             | Write (self-contained)                                   |
+| ---------------------------------------- | -------------------------------------------------------- |
+| `// anti-drift guard for task #NNN`      | `// anti-drift guard for the Race wire contract`         |
+| `the icon field is reserved (task #NNN)` | `the icon field is reserved pending the icon convention` |
+| `Technology Browser (todo #NNN)`         | `Technology Browser`                                     |
+| `Migration status (task #NNN, #NNN).`    | `Migration status.`                                      |
+
+Things that look like task ids but are **not**, and stay as they are, because
+they resolve for any reader: research phase codes (`R0.7`, `R5.2`), external
+issue or forum numbers (e.g. a starsautohost thread number), and
+standards/protocol numbers (an RFC, an HTTP status).
+
+## Alternatives considered
+
+1. **Keep the ids, but make them resolvable** — publish the issue tracker, or
+   mirror the `todo-sqlite-cli` DB into the repo. Rejected: the queue is a
+   local working-session tool, not a product surface; mirroring it is ongoing
+   overhead, and even a resolvable id still dates each artifact to the process
+   that produced it rather than describing the thing.
+
+2. **Allow ids in source comments, forbid them only in prose docs** — treat
+   code comments as "internal". Rejected: the repo is public and (for
+   `stars_file_parser`) a standalone library others read; comments are
+   published too. The split is arbitrary and leaks the same way.
+
+3. **Forbid even descriptive forward-references** — require that a doc say
+   nothing about not-yet-done work. Rejected: a doc legitimately needs to say "X
+   is pending" to be honest about the current state; naming the capability is
+   useful and self-contained. Only the bare ticket number is noise.
+
+The chosen rule keeps ids solely in the tracker and, optionally and
+project-qualified, in commit messages, and makes every published file
+self-contained and descriptive.
 
 ## Consequences
 
-- Reading the repo requires no access to the private work queue; every file is
-  self-contained.
+- The repo reads without any access to the private work queue; every file is
+  self-contained and outlives any one session's numbering.
 - Tracing a line back to its work item goes through `git blame` to the commit
-  message, which is where an id is allowed.
-- A descriptive forward-reference carries less than a ticket link would. That is
-  the intended trade: the artifact outlives any one session's numbering.
-- This is a governance rule, not an engineering constraint. It does not affect
+  message, which is the one place an id is allowed.
+- A descriptive forward-reference carries less than a live ticket link would.
+  That is the accepted trade for a self-contained artifact.
+- This is a governance rule, not an engineering constraint: it does not affect
   the wire contract, the build, or runtime behaviour, and so has no contract
-  test; `AGENTS.md` is the enforcement point.
+  test. `AGENTS.md` ("Public files") is the operative restatement a contributor
+  applies at the point of work and the enforcement point; this ADR is the
+  reasoning behind it.
