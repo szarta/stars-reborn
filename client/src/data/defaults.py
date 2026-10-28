@@ -249,6 +249,20 @@ class ScoreData:
         )
 
 
+def find_planet_matches(planets, query: str) -> list[tuple[int, str]]:
+    """``(id, name)`` for planets whose name matches ``query`` (case-insensitive
+    substring), sorted by name. An empty/blank query matches every planet.
+
+    Find searches all planets, not just observed ones: planet names and
+    positions come from the shared .xy data, so a player can jump to any planet
+    by name even before scanning its contents.
+    """
+    q = (query or "").strip().lower()
+    out = [(p.id, p.name) for p in planets if not q or q in p.name.lower()]
+    out.sort(key=lambda t: t[1])
+    return out
+
+
 def planet_report_rows(planets, player_id) -> list[dict]:
     """Rows for the F3 Planets report: one dict per planet the player can see
     the contents of (observed — ``value`` is set), sorted by name.

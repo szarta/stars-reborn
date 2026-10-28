@@ -824,7 +824,11 @@ class MainWindow(QMainWindow):
         self.close()
 
     def _handle_find(self):
-        self.statusBar().showMessage("Find — not yet implemented.")
+        from .dialogs.find import FindDialog
+
+        dlg = FindDialog(self._planets, parent=self)
+        dlg.planet_activated.connect(self._on_planet_nav)
+        dlg.exec()
 
     def _handle_window_layout_default(self):
         self.statusBar().showMessage("Window Layout: Default — not yet implemented.")
