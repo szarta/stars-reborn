@@ -82,6 +82,9 @@ class MainWindow(QMainWindow):
         Title bar suffix.
     player:
         Full player object (optional, passed to panels for race-aware display).
+    messages:
+        This turn's messages (``MessageData``), shown in the Messages pane.
+        Per-turn — replaced each year and cleared when a new turn is generated.
     """
 
     def __init__(
@@ -95,9 +98,12 @@ class MainWindow(QMainWindow):
         player=None,
         engine_url: str | None = None,
         game_id: str | None = None,
+        messages=(),
     ):
         super().__init__()
         self._planets = list(planets)
+        # This turn's messages (MessageData); per-turn, cleared on generate.
+        self._messages_data = list(messages)
         self._universe_w = universe_w
         self._universe_h = universe_h
         self._player_id = player_id
@@ -139,7 +145,9 @@ class MainWindow(QMainWindow):
         self._left_panel = LeftPanel()
         self._left_panel.set_year(self._game_year)
         self._left_panel.set_universe(self._planets, self._player_id)
+        self._left_panel.set_messages(self._messages_data)
         self._left_panel.planet_nav_requested.connect(self._on_planet_nav)
+        self._left_panel.message_goto_requested.connect(self._on_message_goto)
         self._left_panel.queue_changed.connect(self._on_production_queue_changed)
         self._left_panel.add_item_requested.connect(self._on_add_production_item)
         self._left_panel.route_change_requested.connect(self._on_route_change)
@@ -568,6 +576,21 @@ class MainWindow(QMainWindow):
         self._planet_summary.update_planet(planet, self._player)
         self._center_scroll_on_planet(pid)
 
+    def _on_message_goto(self, obj_id: int):
+        """Goto in the Messages pane: navigate the map to the message's subject.
+
+        The subject is a universe-wide space-object id. Today only planets are
+        modeled and rendered, so a planet subject gets a full select + recentre
+        (exactly as Prev/Next does via ``_on_planet_nav``); any other subject
+        (e.g. a fleet) is a no-op with a hint until fleets are rendered."""
+        if any(p.id == obj_id for p in self._planets):
+            self._on_planet_nav(obj_id)
+        else:
+            self.statusBar().showMessage(
+                "Message subject is not a planet — fleet/location navigation not yet implemented.",
+                4000,
+            )
+
     def _on_hover_world(self, wx: int, wy: int):
         self._planet_summary.update_hover_coords(wx, wy)
 
@@ -828,6 +851,11 @@ class MainWindow(QMainWindow):
         self._year_label.setText(f"Year {self._game_year}")
         self._year_status_label.setText(f"Year {self._game_year}")
         self._left_panel.set_year(self._game_year)
+        # Messages are per-turn and cleared on next-turn. A real turn fetch will
+        # replace them with the new year's messages; until the engine serializes
+        # messages there are none to fetch, so clearing is the whole behavior.
+        self._messages_data = []
+        self._left_panel.set_messages(self._messages_data)
         self.statusBar().showMessage(f"Turn generated — Year {self._game_year}")
 
     def _handle_ship_design(self):

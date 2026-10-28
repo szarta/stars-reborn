@@ -153,6 +153,30 @@ def starbase_has_mass_driver(starbase) -> bool:
     return bool(starbase) and bool(starbase.get("mass_driver"))
 
 
+# ── Messages-pane pure helpers ─────────────────────────────────────────────
+
+
+def visible_messages(messages, hide_unimportant: bool):
+    """The messages shown given the filter state.
+
+    With the player's "hide unimportant messages" filter on, drop every message
+    flagged unimportant; otherwise show all. Importance comes from each
+    message's ``important`` flag (the engine classifies it); a message missing
+    the flag is treated as important, so the filter never hides a message the
+    engine has not explicitly marked unimportant.
+    """
+    if not hide_unimportant:
+        return list(messages)
+    return [m for m in messages if getattr(m, "important", True)]
+
+
+def message_counter_label(year: int, index: int, total: int) -> str:
+    """The "Year: Y   Messages: i of N" counter-bar text. ``index`` is 0-based
+    into the visible list; it is shown 1-based, or 0 when the list is empty."""
+    shown = index + 1 if total else 0
+    return f"Year: {year}   Messages: {shown} of {total}"
+
+
 # ── Section title bar with collapse arrow ─────────────────────────────────
 
 
@@ -807,11 +831,32 @@ class _StarbaseSection(_SectionPane):
 
 
 class _MessagesPane(QWidget):
-    """Year/message counter bar + message text area at the bottom of the left panel."""
+    """Year/message counter bar + message text area at the bottom of the left panel.
+
+    Shows the current turn's messages one at a time. Prev/Next step through the
+    (filtered) list; the filter checkbox hides messages the engine flagged
+    unimportant; Goto emits ``goto_requested`` with the current message's
+    subject (a space-object id) so the host can navigate the map to it.
+
+    Messages are per-turn — ``set_messages`` replaces the whole list, and the
+    host clears it when a new turn is generated. The engine does not serialize
+    messages yet (parallel to the Starbase/Status fields); until it does the
+    turn file carries none and the pane reads "Messages: 0 of 0" / "(No
+    messages)".
+    """
+
+    # Space-object id (a planet or fleet) of the current message's subject.
+    goto_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumHeight(80)
+
+        self._year = 2400
+        self._messages: list = []  # all of this turn's messages
+        self._visible: list = []  # after the importance filter
+        self._index = 0  # 0-based index into _visible
+        self._hide_unimportant = True
 
         top_bar = QFrame()
         top_bar.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
@@ -820,8 +865,9 @@ class _MessagesPane(QWidget):
         self._filter_check.setChecked(True)
         self._filter_check.setFixedSize(18, 18)
         self._filter_check.setToolTip("Hide unimportant messages")
+        self._filter_check.toggled.connect(self._on_filter_toggled)
 
-        self._year_count_label = QLabel("Year: 2400   Messages: 0 of 0")
+        self._year_count_label = QLabel()
 
         self._prev_btn = QPushButton("Prev")
         self._prev_btn.setFixedWidth(36)
@@ -829,6 +875,9 @@ class _MessagesPane(QWidget):
         self._goto_btn.setFixedWidth(36)
         self._next_btn = QPushButton("Next")
         self._next_btn.setFixedWidth(36)
+        self._prev_btn.clicked.connect(lambda: self._step(-1))
+        self._next_btn.clicked.connect(lambda: self._step(1))
+        self._goto_btn.clicked.connect(self._on_goto)
 
         bar_layout = QBoxLayout(QBoxLayout.Direction.LeftToRight)
         bar_layout.setContentsMargins(2, 2, 2, 2)
@@ -840,7 +889,7 @@ class _MessagesPane(QWidget):
         bar_layout.addWidget(self._next_btn)
         top_bar.setLayout(bar_layout)
 
-        self._msg_text = QLabel("(No messages)")
+        self._msg_text = QLabel()
         self._msg_text.setWordWrap(True)
         self._msg_text.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self._msg_text.setContentsMargins(4, 4, 4, 4)
@@ -853,8 +902,53 @@ class _MessagesPane(QWidget):
         main.addWidget(self._msg_text, 1)
         self.setLayout(main)
 
+        self._render()
+
     def set_year(self, year: int):
-        self._year_count_label.setText(f"Year: {year}   Messages: 0 of 0")
+        self._year = year
+        self._render()
+
+    def set_messages(self, messages):
+        """Install this turn's messages (replaces any previous turn's). Resets
+        to the first message and re-applies the current filter."""
+        self._messages = list(messages or [])
+        self._reindex(0)
+
+    # ── state ──────────────────────────────────────────────────────────────
+    def _on_filter_toggled(self, checked: bool):
+        self._hide_unimportant = checked
+        self._reindex(0)
+
+    def _reindex(self, index: int):
+        """Recompute the visible list from the filter and clamp the index."""
+        self._visible = visible_messages(self._messages, self._hide_unimportant)
+        self._index = max(0, min(index, len(self._visible) - 1)) if self._visible else 0
+        self._render()
+
+    def _step(self, delta: int):
+        if not self._visible:
+            return
+        self._index = max(0, min(self._index + delta, len(self._visible) - 1))
+        self._render()
+
+    def _current(self):
+        return self._visible[self._index] if self._visible else None
+
+    def _on_goto(self):
+        msg = self._current()
+        if msg is not None and getattr(msg, "related_object", None) is not None:
+            self.goto_requested.emit(msg.related_object)
+
+    def _render(self):
+        total = len(self._visible)
+        self._year_count_label.setText(message_counter_label(self._year, self._index, total))
+        msg = self._current()
+        self._msg_text.setText(getattr(msg, "text", "") if msg is not None else "(No messages)")
+        self._prev_btn.setEnabled(self._index > 0)
+        self._next_btn.setEnabled(self._index < total - 1)
+        self._goto_btn.setEnabled(
+            msg is not None and getattr(msg, "related_object", None) is not None
+        )
 
 
 # ── Left panel (top-level assembly) ───────────────────────────────────────
@@ -884,6 +978,9 @@ class LeftPanel(QWidget):
     route_fleet_requested = Signal(int)
     # Forwarded from the Starbase section: pick a mass-driver packet destination.
     packet_dest_requested = Signal(int)
+    # Forwarded from the Messages pane: Goto the current message's subject
+    # (a space-object id — planet or fleet).
+    message_goto_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -946,6 +1043,7 @@ class LeftPanel(QWidget):
 
         # ── Messages pane ──────────────────────────────────────────────────
         self._messages = _MessagesPane()
+        self._messages.goto_requested.connect(self.message_goto_requested)
 
         # ── Vertical splitter: columns (top) / messages (bottom) ───────────
         # Original game anchors the messages pane to the bottom at a fixed
@@ -1005,6 +1103,11 @@ class LeftPanel(QWidget):
 
     def set_year(self, year: int):
         self._messages.set_year(year)
+
+    def set_messages(self, messages):
+        """Give the Messages pane this turn's messages (replaces any previous
+        turn's; the host clears them when a new turn is generated)."""
+        self._messages.set_messages(messages)
 
 
 # ── Back-compat alias ──────────────────────────────────────────────────────

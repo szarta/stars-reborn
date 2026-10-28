@@ -35,6 +35,10 @@
         },
         "message-type": {
           "$ref": "#/definitions/turn-message-type"
+        },
+        "important": {
+          "description": "Whether this message survives the player's \"hide unimportant messages\" filter. The engine classifies importance; a client never derives it from message-type. Absent is treated as important (shown).",
+          "type": "boolean"
         }
       }
     },

@@ -25,7 +25,7 @@ import requests
 from PySide6.QtGui import QBrush, QPalette, QPixmap
 from PySide6.QtWidgets import QBoxLayout, QDialog, QFileDialog, QMessageBox, QPushButton
 
-from ..data.defaults import PlanetData, build_new_game_request
+from ..data.defaults import MessageData, PlanetData, build_new_game_request
 from ..data.loader import Language_Map
 from ..data.r1_parser import load_race_file, save_race_json
 from ..rendering.enumerations import ResourcePaths
@@ -214,6 +214,7 @@ class IntroUI(QDialog):
         # Build planet list from the turn file (player's fog-of-war view).
         # Positions come from the turn file; the xy file is saved as-is for the engine to serve.
         planets = [PlanetData.from_turn_planet(p) for p in turn["planets"]]
+        messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
 
         from .main_window import MainWindow
 
@@ -226,6 +227,7 @@ class IntroUI(QDialog):
             game_name=game_name,
             engine_url=self._engine_url,
             game_id=game_id,
+            messages=messages,
         )
         self._main_window.show()
         self.hide()
@@ -266,6 +268,7 @@ class IntroUI(QDialog):
                 log.warning("Could not read %s: %s", xy_path, exc)
 
         planets = [PlanetData.from_turn_planet(p) for p in turn.get("planets", [])]
+        messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
 
         from .main_window import MainWindow
 
@@ -276,6 +279,7 @@ class IntroUI(QDialog):
             player_id=turn.get("player-id", 0),
             game_year=turn.get("year", 2400),
             game_name=game_name,
+            messages=messages,
         )
         self._main_window.show()
         self.hide()
