@@ -230,6 +230,7 @@ class IntroUI(QDialog):
             game_id=game_id,
             messages=messages,
             score=score,
+            race=turn.get("race"),
         )
         self._main_window.show()
         self.hide()
@@ -284,6 +285,7 @@ class IntroUI(QDialog):
             game_name=game_name,
             messages=messages,
             score=score,
+            race=turn.get("race"),
         )
         self._main_window.show()
         self.hide()

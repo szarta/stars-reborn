@@ -3,9 +3,128 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel, conint
+
+
+class PredefinedRace(StrEnum):
+    """
+    The six races shipped with the original game.
+    """
+
+    Humanoid = "Humanoid"
+    Rabbitoid = "Rabbitoid"
+    Insectoid = "Insectoid"
+    Nucleotid = "Nucleotid"
+    Silcanoid = "Silcanoid"
+    Antetheral = "Antetheral"
+
+
+class LeftoverSpend(StrEnum):
+    """
+    How the race designer spent leftover advantage points.
+    """
+
+    surface_minerals = "surface_minerals"
+    mineral_concentrations = "mineral_concentrations"
+    mines = "mines"
+    factories = "factories"
+    defenses = "defenses"
+
+
+class HabAxis(BaseModel):
+    """
+    One habitat axis (gravity, temperature, or radiation). When immune, min/max are absent. min_idx/max_idx carry the raw 0-100 index from the original .r1 file and are authoritative when present.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    immune: bool
+    min: float | None = Field(
+        None,
+        description="Physical lower bound (gravity in g, temperature in degC, radiation in mR/yr).",
+    )
+    max: float | None = Field(None, description="Physical upper bound.")
+    min_idx: conint(ge=0, le=100) | None = Field(
+        None, description="Raw Stars! internal index (0-100). Authoritative when present."
+    )
+    max_idx: conint(ge=0, le=100) | None = Field(
+        None, description="Raw Stars! internal index (0-100). Authoritative when present."
+    )
+
+
+class HabPreferences(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    gravity: HabAxis
+    temperature: HabAxis
+    radiation: HabAxis
+
+
+class Economy(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    resource_production: conint(ge=700, le=2500)
+    factory_production: conint(ge=5, le=15)
+    factory_cost: conint(ge=5, le=25)
+    factory_cheap_germanium: bool
+    colonists_operate_factories: conint(ge=5, le=25)
+    mine_production: conint(ge=5, le=25)
+    mine_cost: conint(ge=2, le=15)
+    colonists_operate_mines: conint(ge=5, le=25)
+    growth_rate: conint(ge=1, le=20)
+
+
+class Prt(StrEnum):
+    """
+    Primary Racial Trait. Exactly one per race. Wire value is the two-to-four-letter abbreviation.
+    """
+
+    HE = "HE"
+    SS = "SS"
+    WM = "WM"
+    CA = "CA"
+    IS = "IS"
+    SD = "SD"
+    PP = "PP"
+    IT = "IT"
+    AR = "AR"
+    JOAT = "JOAT"
+
+
+class Lrt(StrEnum):
+    """
+    Lesser Racial Trait. Zero or more per race. Wire value is the abbreviation.
+    """
+
+    NRE = "NRE"
+    IFE = "IFE"
+    CE = "CE"
+    TT = "TT"
+    OBRM = "OBRM"
+    ARM = "ARM"
+    NAS = "NAS"
+    ISB = "ISB"
+    LSP = "LSP"
+    GR = "GR"
+    BET = "BET"
+    UR = "UR"
+    RS = "RS"
+    MA = "MA"
+
+
+class TechCost(StrEnum):
+    """
+    Per-field research cost multiplier: expensive=175%, normal=100%, cheap=50% of base.
+    """
+
+    expensive = "expensive"
+    normal = "normal"
+    cheap = "cheap"
 
 
 class PlanetUnobserved(BaseModel):
@@ -201,6 +320,22 @@ class TurnScore(BaseModel):
     resource_points: conint(le=4294967295) = Field(..., alias="resource-points")
 
 
+class ResearchCosts(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    energy: TechCost
+    weapons: TechCost
+    propulsion: TechCost
+    construction: TechCost
+    electronics: TechCost
+    biotechnology: TechCost
+    expensive_tech_boost: bool | None = Field(
+        False,
+        description="Fields set to expensive start at a higher tech level. Byte 81 bit 5 in the .r1 payload; costs 180 advantage points regardless of PRT.",
+    )
+
+
 class PlanetObserved(BaseModel):
     """
     A planet the player has observed. Contents fields hold values as of the last scan; years-since-last-scan = 0 means current ground truth, anything higher is stale (see Information Staleness in stars-reborn-design/docs/mechanics/scanning.rst).
@@ -268,6 +403,22 @@ class PlanetIntel(RootModel[PlanetObserved | PlanetUnobserved]):
     )
 
 
+class Race(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    format_version: conint(ge=0)
+    name: str
+    plural_name: str
+    prt: Prt
+    lrts: list[Lrt]
+    hab: HabPreferences
+    economy: Economy
+    research_costs: ResearchCosts
+    leftover_spend: LeftoverSpend | None = "surface_minerals"
+    icon_index: conint(ge=0)
+
+
 class PlayerView(BaseModel):
     """
     Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).
@@ -299,3 +450,7 @@ class PlayerView(BaseModel):
         description="This player's messages for this turn, in display order. Per-turn: regenerated every year, never accumulated. Carries only messages the engine can produce from the state it models today (e.g. an empty production queue); event messages (combat, bombing, colonisation, growth, mining, research, minefields, packets, random events) are added as turn resolution and each mechanic land.",
     )
     score: TurnScore
+    race: Race | None = Field(
+        None,
+        description="The viewing player's own race (PRT, LRTs, hab preferences, economy, research costs). Always the player's own race, never another player's. Absent only when the player has no race (e.g. a phantom/unknown player id).",
+    )

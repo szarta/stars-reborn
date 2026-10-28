@@ -75,6 +75,8 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         ship_designs: vec![],
         messages: turn_messages(state, player_id),
         score: compute_score(state, player_id),
+        // The viewing player's own race (None for a phantom/unknown player id).
+        race: race.cloned(),
     }
 }
 

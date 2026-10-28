@@ -249,6 +249,76 @@ class ScoreData:
         )
 
 
+def _hab_range(axis: dict | None, unit: str) -> str:
+    """Display string for one habitat axis from the race's ``hab`` object:
+    'Immune', or 'lo – hi<unit>'. Falls back to 'n/a' when bounds are absent."""
+    if not axis:
+        return "n/a"
+    if axis.get("immune"):
+        return "Immune"
+    lo, hi = axis.get("min"), axis.get("max")
+    if lo is None or hi is None:
+        return "n/a"
+    return f"{lo:g}{unit} – {hi:g}{unit}"
+
+
+def race_summary(race: dict | None) -> list[tuple[str, list[tuple[str, str]]]]:
+    """A read-only summary of a race (the turn file's ``race`` object, snake-keyed)
+    as ``(section_title, [(label, value), ...])`` groups for the Race view.
+
+    Returns an empty list when there is no race. Pure/Qt-free so it can be unit
+    tested; the dialog only lays the rows out.
+    """
+    if not race:
+        return []
+    hab = race.get("hab") or {}
+    eco = race.get("economy") or {}
+    rc = race.get("research_costs") or {}
+    lrts = race.get("lrts") or []
+
+    identity = [
+        ("Name", str(race.get("name", "—"))),
+        ("Plural", str(race.get("plural_name", "—"))),
+        ("Primary Trait", str(race.get("prt", "—"))),
+        ("Lesser Traits", ", ".join(lrts) if lrts else "None"),
+    ]
+    habitability = [
+        ("Gravity", _hab_range(hab.get("gravity"), "g")),
+        ("Temperature", _hab_range(hab.get("temperature"), "°C")),
+        ("Radiation", _hab_range(hab.get("radiation"), "mR")),
+        (
+            "Growth Rate",
+            f"{eco.get('growth_rate')}%" if eco.get("growth_rate") is not None else "n/a",
+        ),
+    ]
+    economy = [
+        ("Colonists per Resource", str(eco.get("resource_production", "n/a"))),
+        ("Factory Output", str(eco.get("factory_production", "n/a"))),
+        ("Factory Cost", str(eco.get("factory_cost", "n/a"))),
+        ("Operate Factories", str(eco.get("colonists_operate_factories", "n/a"))),
+        ("Mine Output", str(eco.get("mine_production", "n/a"))),
+        ("Mine Cost", str(eco.get("mine_cost", "n/a"))),
+        ("Operate Mines", str(eco.get("colonists_operate_mines", "n/a"))),
+    ]
+    research = [
+        (field.capitalize(), str(rc.get(field, "n/a")))
+        for field in (
+            "energy",
+            "weapons",
+            "propulsion",
+            "construction",
+            "electronics",
+            "biotechnology",
+        )
+    ]
+    return [
+        ("Race", identity),
+        ("Habitability", habitability),
+        ("Economy", economy),
+        ("Research Costs", research),
+    ]
+
+
 def find_planet_matches(planets, query: str) -> list[tuple[int, str]]:
     """``(id, name)`` for planets whose name matches ``query`` (case-insensitive
     substring), sorted by name. An empty/blank query matches every planet.

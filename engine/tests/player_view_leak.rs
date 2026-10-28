@@ -135,6 +135,15 @@ fn phantom_caller_scores_zero() {
 }
 
 #[test]
+fn turn_file_carries_the_viewing_players_own_race() {
+    let game = two_player_game();
+    let race = player_view(&game, PLAYER_0).race.expect("own race present");
+    assert_eq!(race.name, humanoid().name);
+    // A phantom caller with no player has no race.
+    assert!(player_view(&game, 99).race.is_none());
+}
+
+#[test]
 fn opponent_homeworld_is_unobserved() {
     let game = two_player_game();
     let hw1 = game.players[1].homeworld_id.unwrap();

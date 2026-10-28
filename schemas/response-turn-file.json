@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "definitions": {
     "planet-unobserved": {
       "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
@@ -545,6 +545,15 @@
     },
     "score": {
       "$ref": "#/definitions/turn-score"
+    },
+    "race": {
+      "description": "The viewing player's own race (PRT, LRTs, hab preferences, economy, research costs). Always the player's own race, never another player's. Absent only when the player has no race (e.g. a phantom/unknown player id).",
+      "$ref": "race.json#/definitions/race",
+      "x-rust-type": {
+        "crate": "stars-engine",
+        "version": "*",
+        "path": "stars_engine::game::objects::race::Race"
+      }
     }
   },
   "title": "PlayerView"

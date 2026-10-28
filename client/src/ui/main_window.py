@@ -88,6 +88,9 @@ class MainWindow(QMainWindow):
     score:
         The viewing player's F10 score breakdown (``ScoreData``) for this turn,
         shown by the F10 Score dialog; ``None`` when the turn file has no score.
+    race:
+        The viewing player's race (raw turn-file ``race`` dict), shown by the F8
+        Race view; ``None`` when the turn file carries no race.
     """
 
     def __init__(
@@ -103,9 +106,13 @@ class MainWindow(QMainWindow):
         game_id: str | None = None,
         messages=(),
         score=None,
+        race=None,
     ):
         super().__init__()
         self._planets = list(planets)
+        # The viewing player's race (raw turn-file dict), shown by the F8 Race
+        # view, or None when the turn file carries no race.
+        self._race = race
         # This turn's messages (MessageData); per-turn, cleared on generate.
         self._messages_data = list(messages)
         # The viewing player's F10 score breakdown (ScoreData) for this turn,
@@ -843,7 +850,9 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Player Colors — not yet implemented.")
 
     def _handle_race(self):
-        self.statusBar().showMessage("Race view — not yet implemented.")
+        from .dialogs.race_view import RaceViewDialog
+
+        RaceViewDialog(self._race, parent=self).exec()
 
     def _handle_game_params(self):
         self.statusBar().showMessage("Game parameters — not yet implemented.")

@@ -94,11 +94,66 @@ TURN_FILE = {
         "resource-amount": 125,
         "resource-points": 4,
     },
+    "race": {
+        "format_version": 1,
+        "name": "Humanoid",
+        "plural_name": "Humanoids",
+        "prt": "JOAT",
+        "lrts": ["IFE", "NAS"],
+        "hab": {
+            "gravity": {"immune": False, "min": 0.22, "max": 4.4},
+            "temperature": {"immune": False, "min": -140, "max": 140},
+            "radiation": {"immune": True},
+        },
+        "economy": {
+            "resource_production": 1000,
+            "factory_production": 10,
+            "factory_cost": 10,
+            "factory_cheap_germanium": False,
+            "colonists_operate_factories": 10,
+            "mine_production": 10,
+            "mine_cost": 5,
+            "colonists_operate_mines": 10,
+            "growth_rate": 15,
+        },
+        "research_costs": {
+            "energy": "normal",
+            "weapons": "normal",
+            "propulsion": "normal",
+            "construction": "normal",
+            "electronics": "normal",
+            "biotechnology": "normal",
+        },
+        "leftover_spend": "surface_minerals",
+        "icon_index": 0,
+    },
 }
 
 
+def _strip_file_prefixes(node):
+    """Rewrite cross-file ``"$ref": "file.json#/foo"`` to local ``"#/foo"``
+    throughout (mirrors engine/build.rs and the Rust contract test)."""
+    if isinstance(node, dict):
+        ref = node.get("$ref")
+        if isinstance(ref, str) and "#" in ref and not ref.startswith("#"):
+            node["$ref"] = ref[ref.index("#") :]
+        for value in node.values():
+            _strip_file_prefixes(value)
+    elif isinstance(node, list):
+        for value in node:
+            _strip_file_prefixes(value)
+
+
 def _schema() -> dict:
-    return json.loads((REPO / "schemas" / "response-turn-file.json").read_text())
+    """response-turn-file.json with race.json's definitions merged in and the
+    cross-file ``race.json#/...`` ref (PlayerView.race) rewritten local, so the
+    schema resolves offline."""
+    schema = json.loads((REPO / "schemas" / "response-turn-file.json").read_text())
+    race = json.loads((REPO / "schemas" / "race.json").read_text())
+    for name, definition in race["definitions"].items():
+        schema["definitions"].setdefault(name, definition)
+    _strip_file_prefixes(schema)
+    return schema
 
 
 def test_turn_file_validates_against_schema() -> None:
@@ -138,6 +193,10 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert view.score.planet_count == 1
     assert view.score.resource_amount == 125
     assert view.score.resource_points == 4
+
+    assert view.race.name == "Humanoid"
+    assert view.race.prt.value == "JOAT"
+    assert view.race.hab.radiation.immune is True
 
     # Round-trip back to kebab-case wire JSON and re-validate against the schema.
     # mode="json" renders enums (e.g. ship-design kind) as their wire values.
