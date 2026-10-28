@@ -62,10 +62,20 @@ TURN_FILE = {
             "factories": 10,
             "mines": 10,
             "value": 100,
+            "resources-per-year": 125,
             "build-queue": [{"build-object-id": 7, "build-quantity": 5}],
             "route-target": 2,
         },
         {"id": 2, "name": "Quixote", "x": 365, "y": 298},
+    ],
+    "messages": [
+        {
+            "id": 0,
+            "message": "The production queue on Neptune is empty.",
+            "message-type": "PlanetProductionQueueEmpty",
+            "related-object": 1,
+            "important": True,
+        }
     ],
 }
 
@@ -89,6 +99,7 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert isinstance(unobserved, PlanetUnobserved)
     assert observed.name == "Neptune"
     assert observed.value == 100
+    assert observed.resources_per_year == 125
     assert observed.route_target == 2
     assert unobserved.name == "Quixote"
 
@@ -99,6 +110,12 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert design.built_count == 3
     assert len(design.slot_assignments) == 2
     assert design.slot_assignments[0].part_id == 60
+
+    assert len(view.messages) == 1
+    msg = view.messages[0]
+    assert msg.message_type == "PlanetProductionQueueEmpty"
+    assert msg.related_object == 1
+    assert msg.important is True
 
     # Round-trip back to kebab-case wire JSON and re-validate against the schema.
     # mode="json" renders enums (e.g. ship-design kind) as their wire values.

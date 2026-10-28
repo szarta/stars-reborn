@@ -60,6 +60,12 @@ class PlanetData:
     # against the viewing player's race. None for never-observed planets.
     value: int | None = None
 
+    # Resources generated per year — a derived value the engine recomputes each
+    # turn, present only for an owned planet. None for unowned/unobserved
+    # planets and when the engine cannot compute it (e.g. an AR race). The
+    # Status section shows "n/a" while absent.
+    resources_per_year: int | None = None
+
     # Production queue — present (a list, possibly empty) only for planets the
     # viewing player owns; ``None`` for unowned/unobserved planets, since the
     # engine emits build-queue only for owned planets (production is private).
@@ -110,6 +116,7 @@ class PlanetData:
             factories=p.get("factories", 0),
             mines=p.get("mines", 0),
             value=p.get("value"),
+            resources_per_year=p.get("resources-per-year"),
             build_queue=cls._queue_from_wire(p.get("build-queue")),
             route_target=p.get("route-target"),
             starbase=cls._starbase_from_wire(p.get("starbase")),
@@ -146,6 +153,48 @@ class PlanetData:
             }
             for it in items
         ]
+
+
+@dataclass
+class MessageData:
+    """One per-turn message in the player's turn file.
+
+    Mirrors the engine's ``turn-message`` wire shape (the design-target
+    ``schemas/turn.json``): a stable id, the rendered display ``text``, a
+    ``message_type`` tag, and optional references to the space object or battle
+    the message is about. ``related_object`` is a universe-wide space-object id
+    (a planet or fleet) and is the "Goto" subject the Messages pane navigates to.
+
+    ``important`` drives the pane's filter: with the "hide unimportant messages"
+    filter on, messages flagged unimportant are hidden. Importance is a property
+    of the message that the engine classifies — the client never hardcodes a
+    type→importance table (see the data-model invariant in CLAUDE.md). The
+    engine does not serialize messages yet (parallel to the Status/Starbase
+    fields, tasks #54/#142); until it does, the turn file carries no ``messages``
+    and the pane reads empty. ``important`` defaults True so that, once messages
+    arrive, an unclassified message is shown rather than silently hidden.
+    """
+
+    id: int
+    text: str
+    message_type: str | None = None
+    related_object: int | None = None  # space-object-id (planet or fleet)
+    related_battle: int | None = None
+    important: bool = True
+
+    @classmethod
+    def from_turn_message(cls, m: dict) -> MessageData:
+        """Build a ``MessageData`` from one entry in the turn file's
+        ``messages`` array. Wire field names are kebab-case per the project
+        schema convention; absent fields fall back to the dataclass defaults."""
+        return cls(
+            id=m.get("id", 0),
+            text=m.get("message", ""),
+            message_type=m.get("message-type"),
+            related_object=m.get("related-object"),
+            related_battle=m.get("related-battle"),
+            important=m.get("important", True),
+        )
 
 
 # Default game name keyed on (difficulty, universe_size).

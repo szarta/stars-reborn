@@ -115,6 +115,43 @@ class ShipDesign(BaseModel):
     )
 
 
+class TurnMessage(BaseModel):
+    """
+    One message shown in the player's turn for this year. Messages are per-turn (regenerated each year, not accumulated). Mirrors the design-target turn-message shape in schemas/turn.json.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: conint(ge=0, le=65535) = Field(
+        ...,
+        description="Position of this message within this turn's list, 0-based. Stable only within the turn file it appears in.",
+    )
+    message: str = Field(
+        ...,
+        description="The rendered display text. The original client caps a single message at 1024 characters; the engine keeps messages well under that.",
+    )
+    message_type: str = Field(
+        ...,
+        alias="message-type",
+        description="Stable tag for the kind of message (the turn-message-type family in schemas/turn.json), e.g. 'PlanetProductionQueueEmpty'. A client treats it as an opaque tag and never derives importance from it.",
+    )
+    related_object: conint(le=4294967295) | None = Field(
+        None,
+        alias="related-object",
+        description="Universe-wide space-object id (a planet or fleet) this message is about — the client's 'Goto' subject. Absent for a message with no on-map subject.",
+    )
+    related_battle: conint(le=4294967295) | None = Field(
+        None,
+        alias="related-battle",
+        description="Id of the battle this message reports on, when it is a combat message. Absent otherwise.",
+    )
+    important: bool = Field(
+        ...,
+        description="Whether this message survives the player's 'hide unimportant messages' filter. The engine classifies importance; a client never derives it from message-type.",
+    )
+
+
 class PlanetObserved(BaseModel):
     """
     A planet the player has observed. Contents fields hold values as of the last scan; years-since-last-scan = 0 means current ground truth, anything higher is stale (see Information Staleness in stars-reborn-design/docs/mechanics/scanning.rst).
@@ -156,6 +193,11 @@ class PlanetObserved(BaseModel):
     value: conint(ge=-45, le=100) = Field(
         ...,
         description="Planet value computed against the viewing player's race. 0..100 = habitable; negative = red (capped at -45). Different players see different values for the same planet.",
+    )
+    resources_per_year: conint(ge=0, le=4294967295) | None = Field(
+        None,
+        alias="resources-per-year",
+        description="Resources the planet generates per year: floor(population / resource-production) + operated-factories x factory-production (see docs/mechanics/production.rst). A derived value recomputed each turn, present only for a planet the viewing player owns. Absent when the engine cannot compute it (e.g. an Alternate Reality race, whose economy model is not yet implemented).",
     )
     build_queue: list[BuildItem] = Field(
         ...,
@@ -202,4 +244,8 @@ class PlayerView(BaseModel):
         ...,
         alias="ship-designs",
         description="The viewing player's own ship and starbase designs. Always the player's own designs (never another player's). Empty until the engine models designs.",
+    )
+    messages: list[TurnMessage] = Field(
+        ...,
+        description="This player's messages for this turn, in display order. Per-turn: regenerated every year, never accumulated. Carries only messages the engine can produce from the state it models today (e.g. an empty production queue); event messages (combat, bombing, colonisation, growth, mining, research, minefields, packets, random events) are added as turn resolution and each mechanic land.",
     )

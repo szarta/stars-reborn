@@ -100,6 +100,9 @@ fn own_homeworld_is_observed_with_full_state() {
                 o.value, 100,
                 "homeworld hab is centred on race tolerance — value should be 100%"
             );
+            // Resources/year: colonists floor(25000/1000)=25 + operated
+            // factories min(10, capacity 25)=10 x factory_production 10 = 100.
+            assert_eq!(o.resources_per_year, Some(125));
         }
         PlanetIntel::Unobserved(_) => panic!("own homeworld must be Observed"),
     }

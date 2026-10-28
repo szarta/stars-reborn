@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "definitions": {
     "planet-unobserved": {
       "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
@@ -166,6 +166,13 @@
           "maximum": 100,
           "format": "int32"
         },
+        "resources-per-year": {
+          "description": "Resources the planet generates per year: floor(population / resource-production) + operated-factories x factory-production (see docs/mechanics/production.rst). A derived value recomputed each turn, present only for a planet the viewing player owns. Absent when the engine cannot compute it (e.g. an Alternate Reality race, whose economy model is not yet implemented).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
         "build-queue": {
           "description": "The planet's production queue, in build order. Present only for planets the viewing player owns (production is private); empty array when the queue is empty.",
           "type": "array",
@@ -323,6 +330,50 @@
         }
       ],
       "title": "PlanetIntel"
+    },
+    "turn-message": {
+      "description": "One message shown in the player's turn for this year. Messages are per-turn (regenerated each year, not accumulated). Mirrors the design-target turn-message shape in schemas/turn.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "message",
+        "message-type",
+        "important"
+      ],
+      "properties": {
+        "id": {
+          "description": "Position of this message within this turn's list, 0-based. Stable only within the turn file it appears in.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "message": {
+          "description": "The rendered display text. The original client caps a single message at 1024 characters; the engine keeps messages well under that.",
+          "type": "string"
+        },
+        "message-type": {
+          "description": "Stable tag for the kind of message (the turn-message-type family in schemas/turn.json), e.g. 'PlanetProductionQueueEmpty'. A client treats it as an opaque tag and never derives importance from it.",
+          "type": "string"
+        },
+        "related-object": {
+          "description": "Universe-wide space-object id (a planet or fleet) this message is about — the client's 'Goto' subject. Absent for a message with no on-map subject.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "related-battle": {
+          "description": "Id of the battle this message reports on, when it is a combat message. Absent otherwise.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "important": {
+          "description": "Whether this message survives the player's 'hide unimportant messages' filter. The engine classifies importance; a client never derives it from message-type.",
+          "type": "boolean"
+        }
+      },
+      "title": "TurnMessage"
     }
   },
   "type": "object",
@@ -333,7 +384,8 @@
     "game-name",
     "player-id",
     "planets",
-    "ship-designs"
+    "ship-designs",
+    "messages"
   ],
   "properties": {
     "year": {
@@ -373,6 +425,13 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/ship-design"
+      }
+    },
+    "messages": {
+      "description": "This player's messages for this turn, in display order. Per-turn: regenerated every year, never accumulated. Carries only messages the engine can produce from the state it models today (e.g. an empty production queue); event messages (combat, bombing, colonisation, growth, mining, research, minefields, packets, random events) are added as turn resolution and each mechanic land.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/turn-message"
       }
     }
   },
