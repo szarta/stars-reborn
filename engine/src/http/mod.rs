@@ -53,6 +53,7 @@ use crate::game::objects::{
     },
     starbase_hull_catalog::starbase_hull_catalog,
     technology::{ShipHull, StarbaseHull, TechSlot},
+    technology_catalog::{technology_catalog, Props, TechItem, TraitReq},
 };
 use crate::game::orders::{
     apply_set_production_queue, apply_set_route_target, OrderError, ProductionItemInput,
@@ -138,19 +139,156 @@ async fn model_version() -> Json<Value> {
     }))
 }
 
+/// GET /model/technologies — the component technology catalog.
+///
+/// Response shape: schemas/response-model-technologies.json. The catalog is a
+/// growing slice (task #144): engines, armor, shields, and orbital components
+/// today; other categories land as follow-ups. Built with `json!` (no typed
+/// producer yet, like `/model/buildables`); the `technologies_schema_contract`
+/// test validates the output against the schema.
 async fn model_technologies() -> impl IntoResponse {
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({"error": "not yet implemented"})),
-    )
+    Json(technologies_response())
 }
 
+/// GET /model/technologies/{id} — a single component by numeric id or slug.
 async fn model_technology_by_id(Path(id): Path<String>) -> impl IntoResponse {
-    let _ = id;
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({"error": "not yet implemented"})),
-    )
+    let found = technology_catalog()
+        .into_iter()
+        .find(|t| t.slug == id || id.parse::<u16>().map(|n| n == t.id).unwrap_or(false));
+    match found {
+        Some(item) => (StatusCode::OK, Json(tech_item_to_json(&item))).into_response(),
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("no technology with id or slug '{id}'")})),
+        )
+            .into_response(),
+    }
+}
+
+/// Build the `GET /model/technologies` response body.
+pub fn technologies_response() -> Value {
+    let technologies: Vec<Value> = technology_catalog().iter().map(tech_item_to_json).collect();
+    json!({ "technologies": technologies })
+}
+
+/// Map one catalog `TechItem` to its wire `tech-item` JSON. `mass` is emitted
+/// only for installable parts; `requirement` is null or a trait gate; and
+/// `properties` carries the category-specific `props-*` shape.
+fn tech_item_to_json(t: &TechItem) -> Value {
+    let mut obj = json!({
+        "id": t.id,
+        "slug": t.slug,
+        "name": t.name,
+        "category": t.props.category(),
+        "requirement": trait_req_to_json(t.requirement),
+        "cost": {
+            "ironium": t.cost.ironium,
+            "boranium": t.cost.boranium,
+            "germanium": t.cost.germanium,
+            "resources": t.cost.resources,
+        },
+        "tech-requirements": {
+            "energy": t.tech_requirements.energy,
+            "weapons": t.tech_requirements.weapons,
+            "propulsion": t.tech_requirements.propulsion,
+            "construction": t.tech_requirements.construction,
+            "electronics": t.tech_requirements.electronics,
+            "biotechnology": t.tech_requirements.bio,
+        },
+        "properties": props_to_json(&t.props),
+    });
+    if let Some(mass) = t.mass {
+        obj["mass"] = json!(mass);
+    }
+    obj
+}
+
+/// Trait gate → wire `trait-requirement` (null, or `{ "prt": [slug] }`).
+fn trait_req_to_json(req: Option<TraitReq>) -> Value {
+    match req {
+        None => Value::Null,
+        Some(TraitReq::Prt(prt)) => json!({ "prt": [prt] }),
+    }
+}
+
+/// Category stats → the matching wire `props-*` object.
+fn props_to_json(props: &Props) -> Value {
+    match props {
+        Props::Engine {
+            fuel_usage,
+            battle_speed,
+            warp10_travel,
+            last_free_warp,
+            cloaking,
+            battle_speed_modifier,
+        } => {
+            let mut p = json!({
+                "fuel-usage": fuel_usage.to_vec(),
+                "battle-speed": battle_speed,
+                "warp10-travel": warp10_travel,
+                "last-free-warp": last_free_warp,
+            });
+            if *cloaking != 0 {
+                p["cloaking"] = json!(cloaking);
+            }
+            if *battle_speed_modifier != 0.0 {
+                p["battle-speed-modifier"] = json!(battle_speed_modifier);
+            }
+            p
+        }
+        Props::Armor {
+            armor_value,
+            shield_value,
+            cloaking,
+        } => {
+            let mut p = json!({ "armor-value": armor_value });
+            if *shield_value != 0 {
+                p["shield-value"] = json!(shield_value);
+            }
+            if *cloaking != 0 {
+                p["cloaking"] = json!(cloaking);
+            }
+            p
+        }
+        Props::Shield {
+            shield_value,
+            armor_value,
+            cloaking,
+            jamming,
+            scanner_basic_range,
+            scanner_penetrating_range,
+        } => {
+            let mut p = json!({ "shield-value": shield_value });
+            if *armor_value != 0 {
+                p["armor-value"] = json!(armor_value);
+            }
+            if *cloaking != 0 {
+                p["cloaking"] = json!(cloaking);
+            }
+            if *jamming != 0 {
+                p["jamming"] = json!(jamming);
+            }
+            if *scanner_basic_range != 0 {
+                p["scanner-basic-range"] = json!(scanner_basic_range);
+            }
+            if *scanner_penetrating_range != 0 {
+                p["scanner-penetrating-range"] = json!(scanner_penetrating_range);
+            }
+            p
+        }
+        Props::Stargate {
+            safe_mass,
+            safe_range,
+        } => json!({
+            "kind": "stargate",
+            "safe-mass": safe_mass,
+            "safe-range": safe_range,
+        }),
+        Props::MassDriver { warp } => json!({
+            "kind": "mass-driver",
+            "warp": warp,
+        }),
+    }
 }
 
 async fn model_race_traits() -> impl IntoResponse {

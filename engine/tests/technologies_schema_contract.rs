@@ -17,6 +17,8 @@
 
 use serde_json::{json, Value};
 
+use stars_engine::http::technologies_response;
+
 /// Build the response schema with tech.json's and race.json's definitions
 /// merged in and all cross-file `*.json#/...` refs rewritten local.
 fn technologies_schema() -> Value {
@@ -183,4 +185,47 @@ fn schema_rejects_unknown_category_and_fields() {
         !validator.is_valid(&mismatch),
         "properties that do not match the category must be rejected"
     );
+}
+
+#[test]
+fn engine_output_matches_the_schema() {
+    // The real GET /model/technologies producer (task #144 slice: engines,
+    // armor, shields, orbital) must validate against the schema.
+    let schema = technologies_schema();
+    let validator = jsonschema::validator_for(&schema).expect("compile schema");
+
+    let instance = technologies_response();
+    let errors: Vec<String> = validator
+        .iter_errors(&instance)
+        .map(|e| e.to_string())
+        .collect();
+    assert!(
+        errors.is_empty(),
+        "technologies response does not match response-model-technologies.json:\n  {}",
+        errors.join("\n  ")
+    );
+
+    // Guard against a vacuous pass: the slice ships 52 items across four
+    // categories (16 engines, 11 armor, 9 shields, 16 orbital).
+    let techs = instance["technologies"]
+        .as_array()
+        .expect("technologies array");
+    assert_eq!(
+        techs.len(),
+        52,
+        "unexpected catalog size for the #144 slice"
+    );
+    let has = |cat: &str| techs.iter().any(|t| t["category"] == cat);
+    for cat in ["engines", "armor", "shields", "orbital"] {
+        assert!(has(cat), "catalog is missing category {cat}");
+    }
+
+    // Orbital items carry no mass; installable parts do.
+    for t in techs {
+        if t["category"] == "orbital" {
+            assert!(t.get("mass").is_none(), "orbital items must not carry mass");
+        } else {
+            assert!(t.get("mass").is_some(), "installable parts must carry mass");
+        }
+    }
 }

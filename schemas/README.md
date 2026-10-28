@@ -74,16 +74,19 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > and `race.json` (prt/lrt enums for trait gating). It is the **design target**
 > for the full component tree — every installable ship/starbase part plus the
 > non-installable planetary/orbital techs — with per-category `properties`
-> selected by an if/then discriminator on `category`. It is **not yet wired to
-> a producer**: the engine handler returns 501, there is no component data
-> catalog yet (only hulls have one), and it is in neither codegen allowlist
-> (`engine/build.rs`, `scripts/generate_types.py`), so no Rust or client types
-> are generated from it. A schema-validity guard test
-> (`engine/tests/technologies_schema_contract.rs`) compiles it and checks
-> representative items. Wiring the real producer — the ~300-item catalog with
-> oracle-verified values, the `/model/technologies` + `/{id}` handlers, a
-> real wire-contract test, generated client types, and the `icon` field once
-> the icon convention lands — is a tracked follow-up.
+> selected by an if/then discriminator on `category`. A **first producer slice**
+> is now wired (task #144): `engine/src/game/objects/technology_catalog.rs`
+> holds engines, armor, shields and orbital components (stargates + mass
+> drivers), the `/model/technologies` and `/{id}` handlers serve it, and the
+> output is built with `json!` (like `/model/buildables`; not in a codegen
+> allowlist, so no Rust/client types are generated from it yet). The guard test
+> `engine/tests/technologies_schema_contract.rs` validates that real output
+> against the schema in addition to the schema-validity checks. Still to come as
+> tracked follow-ups: the remaining categories (weapons, bombs, scanners,
+> electrical, mechanical, mine-layers, mining-robots, planetary), the two
+> Mystery-Trader items (MegaPolyShell, LangstonShell), oracle verification of the
+> non-engine values, generated client types, and the `icon` field once the icon
+> convention lands.
 >
 > `GET /model/buildables` (the production-queue buildable registry) is
 > likewise hand-built with `json!` in `engine/src/http/mod.rs`
