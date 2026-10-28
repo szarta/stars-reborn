@@ -197,6 +197,73 @@ class MessageData:
         )
 
 
+@dataclass
+class ScoreData:
+    """The viewing player's F10 score breakdown from the turn file (see
+    docs/mechanics/victory.rst).
+
+    Each category carries its raw ``count`` and the ``points`` it contributes;
+    ``total`` is their sum. Points come straight from the engine — the client
+    never recomputes the formula (CLAUDE.md data-model invariant). Starbase and
+    ship categories read 0 until those models land in the engine.
+    """
+
+    total: int = 0
+    planet_count: int = 0
+    planet_points: int = 0
+    starbase_count: int = 0
+    starbase_points: int = 0
+    unarmed_count: int = 0
+    unarmed_points: int = 0
+    escort_count: int = 0
+    escort_points: int = 0
+    capital_count: int = 0
+    capital_points: int = 0
+    tech_level_sum: int = 0
+    tech_points: int = 0
+    resource_amount: int = 0
+    resource_points: int = 0
+
+    @classmethod
+    def from_turn_score(cls, s: dict | None) -> ScoreData | None:
+        """Build a ``ScoreData`` from the turn file's ``score`` object, or
+        ``None`` when the turn file carries no score (an older engine)."""
+        if not s:
+            return None
+        return cls(
+            total=s.get("total", 0),
+            planet_count=s.get("planet-count", 0),
+            planet_points=s.get("planet-points", 0),
+            starbase_count=s.get("starbase-count", 0),
+            starbase_points=s.get("starbase-points", 0),
+            unarmed_count=s.get("unarmed-count", 0),
+            unarmed_points=s.get("unarmed-points", 0),
+            escort_count=s.get("escort-count", 0),
+            escort_points=s.get("escort-points", 0),
+            capital_count=s.get("capital-count", 0),
+            capital_points=s.get("capital-points", 0),
+            tech_level_sum=s.get("tech-level-sum", 0),
+            tech_points=s.get("tech-points", 0),
+            resource_amount=s.get("resource-amount", 0),
+            resource_points=s.get("resource-points", 0),
+        )
+
+
+def score_rows(score: ScoreData) -> list[tuple[str, int, int]]:
+    """The F10 breakdown table as ``(label, count, points)`` rows, in the
+    original Score-sheet order. The row ``count`` is the raw tally the category
+    is scored from (planets owned, ships, tech-level sum, annual resources)."""
+    return [
+        ("Planets", score.planet_count, score.planet_points),
+        ("Starbases", score.starbase_count, score.starbase_points),
+        ("Unarmed Ships", score.unarmed_count, score.unarmed_points),
+        ("Escort Ships", score.escort_count, score.escort_points),
+        ("Capital Ships", score.capital_count, score.capital_points),
+        ("Tech Levels", score.tech_level_sum, score.tech_points),
+        ("Resources", score.resource_amount, score.resource_points),
+    ]
+
+
 # Default game name keyed on (difficulty, universe_size).
 # This is a fixed lookup table in the original — NOT randomly generated.
 # Confirmed: all Easy entries; Standard/Small.

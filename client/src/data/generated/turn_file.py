@@ -152,6 +152,55 @@ class TurnMessage(BaseModel):
     )
 
 
+class TurnScore(BaseModel):
+    """
+    The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. Categories for objects the engine does not model yet read 0 (starbases, #147; ships, #155).
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    total: conint(le=4294967295) = Field(
+        ..., description="Total F10 score: the sum of every category's points."
+    )
+    planet_count: conint(le=4294967295) = Field(
+        ..., alias="planet-count", description="Number of planets the player owns."
+    )
+    planet_points: conint(le=4294967295) = Field(..., alias="planet-points")
+    starbase_count: conint(le=4294967295) = Field(
+        ...,
+        alias="starbase-count",
+        description="Starbases owned (Orbital Forts excluded). 0 until the starbase model lands (#147).",
+    )
+    starbase_points: conint(le=4294967295) = Field(..., alias="starbase-points")
+    unarmed_count: conint(le=4294967295) = Field(
+        ...,
+        alias="unarmed-count",
+        description="Unarmed ships (power rating 0). 0 until the fleet model lands (#155).",
+    )
+    unarmed_points: conint(le=4294967295) = Field(..., alias="unarmed-points")
+    escort_count: conint(le=4294967295) = Field(
+        ...,
+        alias="escort-count",
+        description="Escort ships (power rating 1..1999). 0 until the fleet model lands (#155).",
+    )
+    escort_points: conint(le=4294967295) = Field(..., alias="escort-points")
+    capital_count: conint(le=4294967295) = Field(
+        ...,
+        alias="capital-count",
+        description="Capital ships (power rating >= 2000). 0 until the fleet model lands (#155).",
+    )
+    capital_points: conint(le=4294967295) = Field(..., alias="capital-points")
+    tech_level_sum: conint(le=4294967295) = Field(
+        ..., alias="tech-level-sum", description="Sum of the player's six tech-field levels."
+    )
+    tech_points: conint(le=4294967295) = Field(..., alias="tech-points")
+    resource_amount: conint(le=4294967295) = Field(
+        ..., alias="resource-amount", description="Annual resources the player's planets generate."
+    )
+    resource_points: conint(le=4294967295) = Field(..., alias="resource-points")
+
+
 class PlanetObserved(BaseModel):
     """
     A planet the player has observed. Contents fields hold values as of the last scan; years-since-last-scan = 0 means current ground truth, anything higher is stale (see Information Staleness in stars-reborn-design/docs/mechanics/scanning.rst).
@@ -249,3 +298,4 @@ class PlayerView(BaseModel):
         ...,
         description="This player's messages for this turn, in display order. Per-turn: regenerated every year, never accumulated. Carries only messages the engine can produce from the state it models today (e.g. an empty production queue); event messages (combat, bombing, colonisation, growth, mining, research, minefields, packets, random events) are added as turn resolution and each mechanic land.",
     )
+    score: TurnScore

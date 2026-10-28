@@ -36,8 +36,10 @@ use crate::game::state::GameState;
 // file. `PlanetIntel` is untagged: a client tells observed from unobserved by
 // whether the contents fields are present. See `docs/adr/0003`.
 pub use crate::game::objects::generated::turn_file::{
-    BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, TurnMessage,
+    BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, TurnMessage, TurnScore,
 };
+
+use crate::game::score;
 
 /// Project a `PlayerView` for `player_id` from the host-side `GameState`.
 ///
@@ -72,6 +74,89 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         // list until the design model lands. See docs/mechanics/ship_design.rst.
         ship_designs: vec![],
         messages: turn_messages(state, player_id),
+        score: compute_score(state, player_id),
+    }
+}
+
+/// Compute the viewing player's F10 score breakdown for the turn file.
+///
+/// Uses the confirmed formula in `game::score` (docs/mechanics/victory.rst).
+/// Own score only — opponents' scores and ranks are gated on the
+/// public-player-scores game flag, which `GameState` does not model yet. The
+/// categories the engine can measure today are planets (owned populations),
+/// tech (the player's six tech levels), and resources (the sum of each owned
+/// planet's resources/year). Starbase and ship categories read 0 until those
+/// models land (#147, #155), so `total` grows automatically as they do.
+fn compute_score(state: &GameState, player_id: u32) -> TurnScore {
+    let player = state.players.iter().find(|p| p.id == player_id);
+
+    let populations: Vec<u32> = state
+        .planet_states
+        .values()
+        .filter(|s| s.owner == Some(player_id))
+        .map(|s| s.population)
+        .collect();
+    let planet_count = populations.len() as u32;
+    let planet_points: u32 = populations.iter().copied().map(score::planet_points).sum();
+
+    // Annual resources: the sum of each owned planet's resources/year. A planet
+    // the engine cannot compute resources for (an AR race) contributes 0.
+    let race = player.and_then(|p| p.race.as_ref());
+    let resource_amount: u32 = state
+        .planet_states
+        .values()
+        .filter(|s| s.owner == Some(player_id))
+        .filter_map(|s| compute_resources_per_year(s, race))
+        .sum();
+    let resource_points = score::resource_points(resource_amount);
+
+    let tech = player.map(|p| &p.tech);
+    let tech_levels = tech.map_or([0; 6], |t| {
+        [
+            t.energy,
+            t.weapons,
+            t.propulsion,
+            t.construction,
+            t.electronics,
+            t.biotechnology,
+        ]
+    });
+    let tech_level_sum: u32 = tech_levels.iter().sum();
+    let tech_points: u32 = tech_levels
+        .iter()
+        .copied()
+        .map(score::tech_field_points)
+        .sum();
+
+    // Not modelled yet (#147 starbases, #155 fleets): counts and points are 0.
+    let (starbase_count, unarmed_count, escort_count, capital_count) = (0, 0, 0, 0);
+    let starbase_points = score::starbase_points(starbase_count);
+    let unarmed_points = score::unarmed_points(unarmed_count, planet_count);
+    let escort_points = score::escort_points(escort_count, planet_count);
+    let capital_points = score::capital_points(capital_count, planet_count);
+
+    TurnScore {
+        total: planet_points
+            + starbase_points
+            + unarmed_points
+            + escort_points
+            + capital_points
+            + tech_points
+            + resource_points,
+        planet_count,
+        planet_points,
+        starbase_count,
+        starbase_points,
+        unarmed_count,
+        unarmed_points,
+        escort_count,
+        escort_points,
+        capital_count,
+        capital_points,
+        tech_level_sum,
+        tech_points,
+        resource_amount,
+        resource_points,
     }
 }
 

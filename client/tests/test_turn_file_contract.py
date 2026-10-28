@@ -77,6 +77,23 @@ TURN_FILE = {
             "important": True,
         }
     ],
+    "score": {
+        "total": 5,
+        "planet-count": 1,
+        "planet-points": 1,
+        "starbase-count": 0,
+        "starbase-points": 0,
+        "unarmed-count": 0,
+        "unarmed-points": 0,
+        "escort-count": 0,
+        "escort-points": 0,
+        "capital-count": 0,
+        "capital-points": 0,
+        "tech-level-sum": 0,
+        "tech-points": 0,
+        "resource-amount": 125,
+        "resource-points": 4,
+    },
 }
 
 
@@ -116,6 +133,11 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert msg.message_type == "PlanetProductionQueueEmpty"
     assert msg.related_object == 1
     assert msg.important is True
+
+    assert view.score.total == 5
+    assert view.score.planet_count == 1
+    assert view.score.resource_amount == 125
+    assert view.score.resource_points == 4
 
     # Round-trip back to kebab-case wire JSON and re-validate against the schema.
     # mode="json" renders enums (e.g. ship-design kind) as their wire values.

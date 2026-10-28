@@ -85,6 +85,9 @@ class MainWindow(QMainWindow):
     messages:
         This turn's messages (``MessageData``), shown in the Messages pane.
         Per-turn — replaced each year and cleared when a new turn is generated.
+    score:
+        The viewing player's F10 score breakdown (``ScoreData``) for this turn,
+        shown by the F10 Score dialog; ``None`` when the turn file has no score.
     """
 
     def __init__(
@@ -99,11 +102,15 @@ class MainWindow(QMainWindow):
         engine_url: str | None = None,
         game_id: str | None = None,
         messages=(),
+        score=None,
     ):
         super().__init__()
         self._planets = list(planets)
         # This turn's messages (MessageData); per-turn, cleared on generate.
         self._messages_data = list(messages)
+        # The viewing player's F10 score breakdown (ScoreData) for this turn,
+        # or None when the turn file carries no score. Shown by the F10 dialog.
+        self._score = score
         self._universe_w = universe_w
         self._universe_h = universe_h
         self._player_id = player_id
@@ -897,7 +904,9 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Battles report — not yet implemented.")
 
     def _handle_score(self):
-        self.statusBar().showMessage("Score — not yet implemented.")
+        from .dialogs.score import ScoreDialog
+
+        ScoreDialog(self._score, year=self._game_year, parent=self).exec()
 
     def _handle_dump_universe(self):
         self.statusBar().showMessage("Dump universe — not yet implemented.")

@@ -109,6 +109,32 @@ fn own_homeworld_is_observed_with_full_state() {
 }
 
 #[test]
+fn own_score_counts_planets_resources_tech_only() {
+    // At year 2400: one owned homeworld (pop 25000 -> 1 planet pt), tech all 0,
+    // resources 125 -> floor(125/30)=4 pts. No starbases/ships modelled yet.
+    let game = two_player_game();
+    let s = player_view(&game, PLAYER_0).score;
+
+    assert_eq!(s.planet_count, 1);
+    assert_eq!(s.planet_points, 1);
+    assert_eq!(s.resource_amount, 125);
+    assert_eq!(s.resource_points, 4);
+    assert_eq!(s.tech_level_sum, 0);
+    assert_eq!(s.tech_points, 0);
+    assert_eq!(s.starbase_count, 0);
+    assert_eq!(s.capital_count, 0);
+    assert_eq!(s.total, 5, "1 planet + 4 resource points");
+}
+
+#[test]
+fn phantom_caller_scores_zero() {
+    let game = two_player_game();
+    let s = player_view(&game, 99).score;
+    assert_eq!(s.total, 0);
+    assert_eq!(s.planet_count, 0);
+}
+
+#[test]
 fn opponent_homeworld_is_unobserved() {
     let game = two_player_game();
     let hw1 = game.players[1].homeworld_id.unwrap();

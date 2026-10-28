@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "definitions": {
     "planet-unobserved": {
       "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
@@ -374,6 +374,114 @@
         }
       },
       "title": "TurnMessage"
+    },
+    "turn-score": {
+      "description": "The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. Categories for objects the engine does not model yet read 0 (starbases, #147; ships, #155).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "planet-count",
+        "planet-points",
+        "starbase-count",
+        "starbase-points",
+        "unarmed-count",
+        "unarmed-points",
+        "escort-count",
+        "escort-points",
+        "capital-count",
+        "capital-points",
+        "tech-level-sum",
+        "tech-points",
+        "resource-amount",
+        "resource-points"
+      ],
+      "properties": {
+        "total": {
+          "description": "Total F10 score: the sum of every category's points.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "planet-count": {
+          "description": "Number of planets the player owns.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "planet-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "starbase-count": {
+          "description": "Starbases owned (Orbital Forts excluded). 0 until the starbase model lands (#147).",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "starbase-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "unarmed-count": {
+          "description": "Unarmed ships (power rating 0). 0 until the fleet model lands (#155).",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "unarmed-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "escort-count": {
+          "description": "Escort ships (power rating 1..1999). 0 until the fleet model lands (#155).",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "escort-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "capital-count": {
+          "description": "Capital ships (power rating >= 2000). 0 until the fleet model lands (#155).",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "capital-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "tech-level-sum": {
+          "description": "Sum of the player's six tech-field levels.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "tech-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "resource-amount": {
+          "description": "Annual resources the player's planets generate.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "resource-points": {
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        }
+      },
+      "title": "TurnScore"
     }
   },
   "type": "object",
@@ -385,7 +493,8 @@
     "player-id",
     "planets",
     "ship-designs",
-    "messages"
+    "messages",
+    "score"
   ],
   "properties": {
     "year": {
@@ -433,6 +542,9 @@
       "items": {
         "$ref": "#/definitions/turn-message"
       }
+    },
+    "score": {
+      "$ref": "#/definitions/turn-score"
     }
   },
   "title": "PlayerView"
