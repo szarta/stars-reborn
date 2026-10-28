@@ -846,6 +846,7 @@ pub fn hull_requirement_slug(r: HullRequirement) -> &'static str {
         HullRequirement::AR => "AR",
         HullRequirement::ARM => "ARM",
         HullRequirement::MT => "MT",
+        HullRequirement::ISB => "ISB",
     }
 }
 

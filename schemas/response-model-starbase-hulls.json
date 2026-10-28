@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-model-starbase-hulls.json",
+  "version": "0.1.0",
+  "title": "StarbaseHullsResponse",
+  "description": "Response shape for GET /model/starbase/hulls — full starbase-hull catalog.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hulls"
+  ],
+  "properties": {
+    "hulls": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/starbase-hull"
+      }
+    }
+  },
+  "definitions": {
+    "starbase-hull": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slug",
+        "name",
+        "requirement",
+        "armor",
+        "initiative",
+        "cost",
+        "tech-requirements",
+        "slots"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "tech.json#/definitions/starbase-hull-id"
+        },
+        "slug": {
+          "type": "string",
+          "description": "Stable machine identifier (lower-snake: ^[a-z][a-z0-9_]*$); safe for URLs, filenames, and asset lookups. Engine-emitted from a fixed catalog and validated by the starbase-hulls contract test, so the constraint is documented here rather than enforced as a generated newtype (see docs/adr/0003 on weighing pattern constraints against type churn)."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name as shown in the original game (e.g. 'Space Station', 'Death Star')."
+        },
+        "requirement": {
+          "description": "Trait gating, or null when available to all races.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/hull-requirement"
+            }
+          ]
+        },
+        "armor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "initiative": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "dock-capacity": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum ship hull mass (kT) this starbase can build or repair. 0 means it can do neither (Orbital Fort). Absent means unlimited (∞): Space Station, Ultra Station, Death Star."
+        },
+        "cost": {
+          "$ref": "tech.json#/definitions/mineral-cost"
+        },
+        "tech-requirements": {
+          "$ref": "tech.json#/definitions/tech-requirements"
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hull-slot"
+          }
+        }
+      }
+    },
+    "hull-requirement": {
+      "description": "Trait gate restricting which races may build a starbase hull. 'AR' = Alternate Reality PRT only (Death Star). 'ISB' = Improved Starbases LRT only (Space Dock, Ultra Station). See the owning property for the null (available-to-all) case.",
+      "type": "string",
+      "enum": [
+        "AR",
+        "ISB"
+      ]
+    },
+    "hull-slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot-type",
+        "max-count",
+        "position"
+      ],
+      "properties": {
+        "slot-type": {
+          "$ref": "tech.json#/definitions/slot-type"
+        },
+        "max-count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32,
+          "description": "Maximum parts this slot can hold."
+        },
+        "position": {
+          "$ref": "#/definitions/slot-position"
+        }
+      }
+    },
+    "slot-position": {
+      "description": "Grid coordinates of the slot in the Ship Designer layout, matching the original game. The unit is half a slot box; the origin is the top-left of the hull's slot cluster.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row",
+        "col"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "col": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

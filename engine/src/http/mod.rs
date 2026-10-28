@@ -11,7 +11,8 @@
 //   GET /model/technologies                         — full technology tree
 //   GET /model/technologies/{id}                    — single technology item
 //   GET /model/race/traits                          — PRT/LRT definitions and point costs
-//   GET /model/ships/hulls                          — all hull definitions
+//   GET /model/ships/hulls                          — all ship hull definitions
+//   GET /model/starbase/hulls                       — all starbase hull definitions
 //   GET /model/buildables                           — production-queue buildable registry
 //   GET /model/schemas                              — JSON schemas for all request/response types
 //
@@ -41,6 +42,7 @@ use crate::game::objects::buildable::{
     design_build_object_id, Category, DESIGN_SLOTS, FIXED_BUILDABLES,
 };
 use crate::game::objects::generated::ship_hulls as wire;
+use crate::game::objects::generated::starbase_hulls as sb_wire;
 use crate::game::objects::{
     advantage_points::advantage_points,
     player::{Player, TechLevels},
@@ -49,7 +51,8 @@ use crate::game::objects::{
     ship_hull_catalog::{
         hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
     },
-    technology::{ShipHull, TechSlot},
+    starbase_hull_catalog::starbase_hull_catalog,
+    technology::{ShipHull, StarbaseHull, TechSlot},
 };
 use crate::game::orders::{
     apply_set_production_queue, apply_set_route_target, OrderError, ProductionItemInput,
@@ -99,6 +102,7 @@ pub fn router(state: AppState) -> Router {
         .route("/model/technologies/:id", get(model_technology_by_id))
         .route("/model/race/traits", get(model_race_traits))
         .route("/model/ships/hulls", get(model_ship_hulls))
+        .route("/model/starbase/hulls", get(model_starbase_hulls))
         .route("/model/buildables", get(model_buildables))
         .route("/model/schemas", get(model_schemas))
         // Race design utilities
@@ -224,6 +228,74 @@ fn slot_to_wire(s: &TechSlot) -> wire::HullSlot {
         max_count: std::num::NonZeroU64::new(u64::from(s.max_count))
             .expect("hull slot max_count is >= 1"),
         position: wire::SlotPosition {
+            row: s.position.row.into(),
+            col: s.position.col.into(),
+        },
+    }
+}
+
+/// GET /model/starbase/hulls — full starbase-hull catalog.
+///
+/// Response shape: schemas/response-model-starbase-hulls.json.
+async fn model_starbase_hulls() -> impl IntoResponse {
+    Json(starbase_hulls_response())
+}
+
+/// Build the `GET /model/starbase/hulls` response. The shape is GENERATED from
+/// the single source of truth `schemas/response-model-starbase-hulls.json` (see
+/// `build.rs`); this maps the internal catalog into that wire type, and the
+/// `starbase_hulls_schema_contract` test validates the serialized output against
+/// the schema. Mirrors `ship_hulls_response`; `slot_to_wire`'s slug is reused
+/// via `slot_type_slug`.
+pub fn starbase_hulls_response() -> sb_wire::StarbaseHullsResponse {
+    sb_wire::StarbaseHullsResponse {
+        hulls: starbase_hull_catalog()
+            .into_iter()
+            .map(starbase_hull_to_wire)
+            .collect(),
+    }
+}
+
+/// Map one internal `StarbaseHull` to its generated wire shape.
+fn starbase_hull_to_wire(h: StarbaseHull) -> sb_wire::StarbaseHull {
+    sb_wire::StarbaseHull {
+        id: h.id.into(),
+        slug: h.slug.to_string(),
+        name: h.name.to_string(),
+        requirement: h.requirement.map(|r| {
+            sb_wire::HullRequirement::try_from(hull_requirement_slug(r))
+                .expect("catalog starbase hull requirement is a canonical slug")
+        }),
+        armor: h.armor.into(),
+        initiative: h.initiative,
+        dock_capacity: h.dock_capacity.map(u64::from),
+        cost: sb_wire::MineralCost {
+            ironium: h.cost.ironium.into(),
+            boranium: h.cost.boranium.into(),
+            germanium: h.cost.germanium.into(),
+            resources: h.cost.resources.into(),
+        },
+        tech_requirements: sb_wire::TechRequirements {
+            energy: i64::from(h.requirements.energy).into(),
+            weapons: i64::from(h.requirements.weapons).into(),
+            propulsion: i64::from(h.requirements.propulsion).into(),
+            construction: i64::from(h.requirements.construction).into(),
+            electronics: i64::from(h.requirements.electronics).into(),
+            biotechnology: i64::from(h.requirements.bio).into(),
+        },
+        slots: h.slots.iter().map(starbase_slot_to_wire).collect(),
+    }
+}
+
+/// Map one internal starbase hull slot to its generated wire shape.
+fn starbase_slot_to_wire(s: &TechSlot) -> sb_wire::HullSlot {
+    let slug = slot_type_slug(s.slot_type).expect("catalog slots use only canonical slot types");
+    sb_wire::HullSlot {
+        slot_type: sb_wire::SlotType::try_from(slug)
+            .expect("slot-type slug is a canonical wire value"),
+        max_count: std::num::NonZeroU64::new(u64::from(s.max_count))
+            .expect("hull slot max_count is >= 1"),
+        position: sb_wire::SlotPosition {
             row: s.position.row.into(),
             col: s.position.col.into(),
         },

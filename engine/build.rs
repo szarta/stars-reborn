@@ -23,6 +23,9 @@ const SCHEMAS: &[(&str, &str)] = &[
     // GET /model/ships/hulls catalog. References tech.json (cost,
     // tech-requirements, slot-type, id); the bundler resolves that for typify.
     ("response-model-ship-hulls", "ship_hulls_types.rs"),
+    // GET /model/starbase/hulls catalog. References tech.json (cost,
+    // tech-requirements, slot-type, starbase-hull-id); the bundler resolves it.
+    ("response-model-starbase-hulls", "starbase_hulls_types.rs"),
     // Host-side authoritative game state (game.json / .sr save). References
     // race.json; the bundler below resolves that cross-file ref for typify.
     ("game-state", "game_state_types.rs"),

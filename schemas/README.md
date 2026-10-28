@@ -60,6 +60,15 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > `json!` — replacing that with the generated typed producer is a tracked
 > follow-up.
 >
+> `response-model-starbase-hulls.json` (GET /model/starbase/hulls) mirrors the
+> ship-hulls schema for the five starbase hulls (starbase-hull-id space, no
+> category/mass/fuel/cargo; adds `dock-capacity`, absent = unlimited). It
+> references the same `tech.json` leaf defs, is reconciled to the engine's live
+> output from `starbase_hull_catalog.rs`, and is guarded by a Rust contract test
+> (`engine/tests/starbase_hulls_schema_contract.rs`). The engine maps the
+> internal catalog into the generated wire type (no `json!`). No client consumer
+> yet, so pydantic types are not generated until the Ship Designer needs them.
+>
 > `response-model-technologies.json` (GET /model/technologies) is
 > authored draft-07 and references `tech.json` (ids, cost, tech-requirements)
 > and `race.json` (prt/lrt enums for trait gating). It is the **design target**
@@ -121,6 +130,7 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 | `race.json`                          | Race definition: PRT, LRTs, economy parameters, hab ranges, tech costs                                    |
 | `tech.json`                          | Shared tech-item types: ids, mineral costs, tech-level requirements, slot-type enum                       |
 | `response-model-ship-hulls.json`     | API response for `GET /model/ships/hulls`: full ship-hull catalog                                         |
+| `response-model-starbase-hulls.json` | API response for `GET /model/starbase/hulls`: full starbase-hull catalog                                  |
 | `response-model-technologies.json`   | API response for `GET /model/technologies`: full component tree (parts + planetary/orbital techs)         |
 | `turn.json`                          | Turn input/output wrapper: player orders in, game state out                                               |
 | `universe.json`                      | Universe snapshot: all planets, all fleets, all players                                                   |

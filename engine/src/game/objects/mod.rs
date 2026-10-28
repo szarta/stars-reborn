@@ -9,5 +9,6 @@ pub mod player;
 pub mod race;
 pub mod race_defaults;
 pub mod ship_hull_catalog;
+pub mod starbase_hull_catalog;
 pub mod technology;
 pub mod universe;

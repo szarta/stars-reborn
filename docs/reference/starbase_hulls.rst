@@ -2,10 +2,11 @@ Starbase Hull Reference
 =======================
 
 Slot counts and layouts are verified against the original game's Ship Designer
-/ Tech Browser hull views. Starbases are not yet part of the engine's hull
-model (``HullCategory`` covers ship hulls only), so this page is their source
-of truth until a starbase catalog is added; the per-slot grid positions below
-are ready to port into it.
+/ Tech Browser hull views, and this page is their authoritative source. The
+engine's starbase-hull catalog
+(``engine/src/game/objects/starbase_hull_catalog.rs``, served at ``GET
+/model/starbase/hulls``) is populated from the data below; keep the two in sync
+when either changes.
 
 **Availability restrictions (from in-game help):**
 

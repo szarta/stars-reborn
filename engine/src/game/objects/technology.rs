@@ -143,12 +143,14 @@ pub enum HullCategory {
 /// `None` = available to all races.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HullRequirement {
-    /// Alternate Reality PRT only (MetaMorph, MiniMorph).
+    /// Alternate Reality PRT only (MetaMorph, MiniMorph, Death Star).
     AR,
     /// Advanced Remote Mining LRT only (Midget Miner).
     ARM,
     /// Available only after a Mystery Trader exchange.
     MT,
+    /// Improved Starbases LRT only (Space Dock, Ultra Station).
+    ISB,
 }
 
 #[derive(Debug, Clone)]
@@ -175,6 +177,11 @@ pub struct ShipHull {
 
 #[derive(Debug, Clone)]
 pub struct StarbaseHull {
+    pub id: u8,
+    pub slug: &'static str,
+    pub name: &'static str,
+    /// `None` = no trait gate; available to all races.
+    pub requirement: Option<HullRequirement>,
     pub requirements: TechRequirements,
     pub cost: TechCost,
     pub slots: Vec<TechSlot>,
