@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
         # When set, the next map click picks the route target for this planet id
         # (snapped to the nearest planet) instead of selecting a planet.
         self._awaiting_route_target: int | None = None
+        # Same, for a starbase mass-driver packet destination.
+        self._awaiting_packet_target: int | None = None
 
         self._init_ui()
         self._init_menu()
@@ -143,6 +145,7 @@ class MainWindow(QMainWindow):
         self._left_panel.route_change_requested.connect(self._on_route_change)
         self._left_panel.route_clear_requested.connect(self._on_route_clear)
         self._left_panel.route_fleet_requested.connect(self._on_route_fleet)
+        self._left_panel.packet_dest_requested.connect(self._on_set_packet_dest)
 
         # Space map (absolute pixel-per-ly scale; scroll area provides panning).
         self._space_map = SpaceMap()
@@ -527,8 +530,9 @@ class MainWindow(QMainWindow):
         the small arrow). Promotes to primary when this planet was already
         the secondary target — i.e. the user has clicked it a second time.
         """
-        # While picking a route target, the click is consumed by _on_map_clicked.
-        if self._awaiting_route_target is not None:
+        # While picking a route or packet target, the click is consumed by
+        # _on_map_clicked.
+        if self._awaiting_route_target is not None or self._awaiting_packet_target is not None:
             return
 
         planet = next((p for p in self._planets if p.id == pid), None)
@@ -577,6 +581,7 @@ class MainWindow(QMainWindow):
         """
         orders_ok = bool(self._engine_url and self._game_id)
         self._left_panel.set_route_editable(orders_ok)
+        self._left_panel.set_starbase_editable(orders_ok)
 
         buildables_ok = False
         if self._engine_url:
@@ -643,17 +648,54 @@ class MainWindow(QMainWindow):
         """Route button — routes the selected fleet; a fleet order deferred (#141)."""
         self.statusBar().showMessage("Route fleet — fleet routing not yet implemented.", 4000)
 
+    # ── starbase: mass-driver packet destination ────────────────────────────
+    def _on_set_packet_dest(self, planet_id: int):
+        """Set Dest clicked: enter packet-target mode. The next map click picks
+        the mass-driver destination, snapped to the nearest planet."""
+        if not self._engine_url or self._game_id is None:
+            return
+        self._awaiting_packet_target = planet_id
+        self.setCursor(Qt.CrossCursor)
+        self.statusBar().showMessage(
+            "Click a destination on the map — the packet target snaps to the nearest planet."
+        )
+
+    def _submit_packet_target(self, planet_id: int, target: int):
+        """Submit a planet.set_packet_target order and refresh the Starbase
+        display on success."""
+        order = {
+            "kind": "planet.set_packet_target",
+            "planet_id": planet_id,
+            "target_planet_id": target,
+        }
+        if not self._submit_orders([order]):
+            return
+        planet = next((p for p in self._planets if p.id == planet_id), None)
+        if planet is not None and getattr(planet, "starbase", None) is not None:
+            planet.starbase["packet_target"] = target
+            if self._primary_id == planet_id:
+                self._left_panel.update_planet(planet, self._player)
+        name = next((p.name for p in self._planets if p.id == target), str(target))
+        self.statusBar().showMessage(f"Packet destination set to {name}.", 3000)
+
     def _on_map_clicked(self, wx: float, wy: float):
-        """Handle a raw map click while picking a route target."""
-        if self._awaiting_route_target is None:
+        """Handle a raw map click while picking a route or packet target."""
+        if self._awaiting_route_target is not None:
+            planet_id = self._awaiting_route_target
+            self._awaiting_route_target = None
+            self.unsetCursor()
+            nearest = self._nearest_planet(wx, wy)
+            if nearest is not None:
+                self._submit_route_target(planet_id, nearest.id)
             return
-        planet_id = self._awaiting_route_target
-        self._awaiting_route_target = None
-        self.unsetCursor()
-        nearest = self._nearest_planet(wx, wy)
-        if nearest is None:
+        if self._awaiting_packet_target is not None:
+            planet_id = self._awaiting_packet_target
+            self._awaiting_packet_target = None
+            self.unsetCursor()
+            nearest = self._nearest_planet(wx, wy)
+            if nearest is not None:
+                self._submit_packet_target(planet_id, nearest.id)
             return
-        self._submit_route_target(planet_id, nearest.id)
 
     def _nearest_planet(self, wx: float, wy: float):
         """The planet nearest (Euclidean) to a world-space point, or None."""

@@ -70,6 +70,13 @@ class PlanetData:
     # to, or None for no route. Emitted only for owned planets.
     route_target: int | None = None
 
+    # Starbase stats for an owned planet that has a starbase, or ``None`` when
+    # the planet has no starbase (also unowned/unobserved). Snake-keyed dict:
+    # {"dock_capacity", "armor", "shields", "damage_percent", "mass_driver",
+    # "packet_target"}. The engine does not serialize this yet (parallel to the
+    # Status-section fields, task #54); until it does it stays ``None``.
+    starbase: dict | None = None
+
     @classmethod
     def from_turn_planet(cls, p: dict) -> PlanetData:
         """Build a ``PlanetData`` from one entry in the engine's PlayerView.
@@ -105,7 +112,25 @@ class PlanetData:
             value=p.get("value"),
             build_queue=cls._queue_from_wire(p.get("build-queue")),
             route_target=p.get("route-target"),
+            starbase=cls._starbase_from_wire(p.get("starbase")),
         )
+
+    @staticmethod
+    def _starbase_from_wire(sb) -> dict | None:
+        """Normalize the wire ``starbase`` object (kebab keys) into a
+        snake-keyed dict, or ``None`` when the key is absent (no starbase, or
+        an unowned planet). The engine does not emit this field yet, so today
+        this is always ``None``; the mapping is in place for when it lands."""
+        if not sb:
+            return None
+        return {
+            "dock_capacity": sb.get("dock-capacity"),
+            "armor": sb.get("armor"),
+            "shields": sb.get("shields"),
+            "damage_percent": sb.get("damage-percent"),
+            "mass_driver": sb.get("mass-driver"),
+            "packet_target": sb.get("packet-target"),
+        }
 
     @staticmethod
     def _queue_from_wire(items) -> list[dict] | None:

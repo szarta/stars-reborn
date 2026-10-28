@@ -114,6 +114,45 @@ def order_items_from_entries(entries, buildables):
     return items
 
 
+def starbase_field_rows(starbase, names=None):
+    """Format a planet's starbase stats into the display strings shown by the
+    Starbase section, or ``None`` when the planet has no starbase.
+
+    ``starbase`` is the snake-keyed dict carried on ``PlanetData.starbase``
+    (the engine's per-planet starbase stats). ``names`` maps planet id → name
+    so a mass-driver packet destination can show by name. Returning ``None``
+    for a missing/empty starbase lets the section collapse to a "No Starbase"
+    placeholder. Individual absent fields render as "n/a", so the section
+    degrades cleanly before the engine serializes every field (parallel to the
+    Status section — see task #54).
+    """
+    if not starbase:
+        return None
+    names = names or {}
+
+    def _dp(v):
+        return f"{v} dp" if v is not None else "n/a"
+
+    dock = starbase.get("dock_capacity")
+    damage = starbase.get("damage_percent")
+    driver = starbase.get("mass_driver")
+    dest = starbase.get("packet_target")
+    return {
+        "dock": "n/a" if dock is None else f"{dock} kT",
+        "armor": _dp(starbase.get("armor")),
+        "shields": _dp(starbase.get("shields")),
+        "damage": "none" if not damage else f"{damage}%",
+        "mass_driver": str(driver) if driver else "None",
+        "dest": names.get(dest, str(dest)) if dest is not None else "none",
+    }
+
+
+def starbase_has_mass_driver(starbase) -> bool:
+    """True when the planet's starbase mounts a mass driver, so a packet
+    destination can be set. A falsy or absent rating means no driver."""
+    return bool(starbase) and bool(starbase.get("mass_driver"))
+
+
 # ── Section title bar with collapse arrow ─────────────────────────────────
 
 
@@ -643,10 +682,37 @@ class _RouteSection(_SectionPane):
 
 
 class _StarbaseSection(_SectionPane):
-    """Starbase stats for the selected planet."""
+    """Starbase stats for the selected planet, plus the mass-driver packet
+    destination picker.
+
+    Data-driven from ``PlanetData.starbase`` (the engine's per-planet starbase
+    stats). A planet with no starbase collapses the stat rows to a "No
+    Starbase" placeholder. ``Set Dest`` emits ``set_dest_requested(planet_id)``
+    so the host can pick a destination planet and submit a
+    ``planet.set_packet_target`` order; it enables only for an owned planet
+    whose starbase mounts a mass driver, and only when order editing is on.
+
+    The engine does not serialize starbase stats yet, nor dispatch the
+    ``planet.set_packet_target`` order (engine work tracked in task #142,
+    parallel to the Status section's #54); until it does, every planet reads as
+    "No Starbase" and Set Dest stays disabled.
+    """
+
+    # planet_id — begin picking a mass-driver packet destination on the map.
+    set_dest_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__("Starbase", parent)
+
+        self._planet = None
+        self._owned = False
+        self._editable = False
+        self._names: dict[int, str] = {}
+        self._player_id = None
+        # Display strings for the current planet's starbase, or None when the
+        # planet has no starbase; and whether that starbase mounts a driver.
+        self._display: dict | None = None
+        self._has_driver = False
 
         self._dock_val = QLabel("n/a")
         self._armor_val = QLabel("n/a")
@@ -656,25 +722,85 @@ class _StarbaseSection(_SectionPane):
         self._dest_val = QLabel("n/a")
 
         def _row(lbl_text, val_lbl):
+            w = QWidget()
             r = QBoxLayout(QBoxLayout.Direction.LeftToRight)
+            r.setContentsMargins(0, 0, 0, 0)
             r.addWidget(QLabel(lbl_text))
             r.addStretch(1)
             r.addWidget(val_lbl)
-            return r
+            w.setLayout(r)
+            return w
+
+        self._stat_rows = [
+            _row("Dock Capacity", self._dock_val),
+            _row("Armor", self._armor_val),
+            _row("Shields", self._shields_val),
+            _row("Damage", self._damage_val),
+            _row("Mass Driver", self._mass_driver_val),
+            _row("Destination", self._dest_val),
+        ]
+
+        self._no_starbase = QLabel("No Starbase")
+        self._no_starbase.setAlignment(Qt.AlignCenter)
+
+        self._set_dest_btn = QPushButton("Set Dest")
+        self._set_dest_btn.setEnabled(False)
+        self._set_dest_btn.clicked.connect(self._on_set_dest)
 
         col = QBoxLayout(QBoxLayout.Direction.TopToBottom)
         col.setContentsMargins(4, 4, 4, 4)
         col.setSpacing(1)
-        col.addLayout(_row("Dock Capacity", self._dock_val))
-        col.addLayout(_row("Armor", self._armor_val))
-        col.addLayout(_row("Shields", self._shields_val))
-        col.addLayout(_row("Damage", self._damage_val))
-        col.addLayout(_row("Mass Driver", self._mass_driver_val))
-        col.addLayout(_row("Destination", self._dest_val))
-        set_dest = QPushButton("Set Dest")
-        set_dest.setEnabled(False)
-        col.addWidget(set_dest, 0, Qt.AlignLeft)
+        col.addWidget(self._no_starbase)
+        for w in self._stat_rows:
+            col.addWidget(w)
+        col.addWidget(self._set_dest_btn, 0, Qt.AlignLeft)
         self.set_content_layout(col)
+
+        self._render()
+
+    def set_universe(self, planets, player_id):
+        """Store an id → name map (to show a packet destination by name) and
+        the active player id (to tell which planets the player controls)."""
+        self._names = {p.id: getattr(p, "name", str(p.id)) for p in planets}
+        self._player_id = player_id
+
+    def set_editable(self, editable: bool):
+        """Enable the Set Dest control. Off when there is no engine to submit
+        to (e.g. a locally loaded turn file)."""
+        self._editable = bool(editable)
+        self._refresh_buttons()
+
+    def update_planet(self, planet, player=None):
+        self._planet = planet
+        starbase = getattr(planet, "starbase", None) if planet is not None else None
+        self._owned = planet is not None and getattr(planet, "owner", None) == self._player_id
+        self._display = starbase_field_rows(starbase, self._names)
+        self._has_driver = starbase_has_mass_driver(starbase)
+        self._render()
+
+    def _render(self):
+        has_starbase = self._display is not None
+        self._no_starbase.setVisible(not has_starbase)
+        for w in self._stat_rows:
+            w.setVisible(has_starbase)
+        self._set_dest_btn.setVisible(has_starbase)
+        if has_starbase:
+            self._dock_val.setText(self._display["dock"])
+            self._armor_val.setText(self._display["armor"])
+            self._shields_val.setText(self._display["shields"])
+            self._damage_val.setText(self._display["damage"])
+            self._mass_driver_val.setText(self._display["mass_driver"])
+            self._dest_val.setText(self._display["dest"])
+        self._refresh_buttons()
+
+    def _refresh_buttons(self):
+        self._set_dest_btn.setEnabled(
+            self._editable and self._owned and self._display is not None and self._has_driver
+        )
+
+    def _on_set_dest(self):
+        if self._planet is not None:
+            self.set_dest_requested.emit(self._planet.id)
 
 
 # ── Messages pane ──────────────────────────────────────────────────────────
@@ -756,6 +882,8 @@ class LeftPanel(QWidget):
     route_change_requested = Signal(int)
     route_clear_requested = Signal(int)
     route_fleet_requested = Signal(int)
+    # Forwarded from the Starbase section: pick a mass-driver packet destination.
+    packet_dest_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -794,6 +922,7 @@ class LeftPanel(QWidget):
         self._route.clear_requested.connect(self.route_clear_requested)
         self._route.route_requested.connect(self.route_fleet_requested)
         self._starbase = _StarbaseSection()
+        self._starbase.set_dest_requested.connect(self.packet_dest_requested)
 
         col2 = QWidget()
         c2 = QBoxLayout(QBoxLayout.Direction.TopToBottom)
@@ -839,6 +968,7 @@ class LeftPanel(QWidget):
         self._planets = list(planets)
         self._player_id = player_id
         self._route.set_universe(self._planets, player_id)
+        self._starbase.set_universe(self._planets, player_id)
 
     def set_buildables(self, mapping):
         """Forward the buildable registry to the Production section."""
@@ -852,6 +982,10 @@ class LeftPanel(QWidget):
         """Enable route editing (off when there is no engine to submit to)."""
         self._route.set_editable(editable)
 
+    def set_starbase_editable(self, editable: bool):
+        """Enable the Starbase Set Dest control (off with no engine to submit to)."""
+        self._starbase.set_editable(editable)
+
     def update_planet(self, planet, player=None):
         self._current_planet = planet
         self._planet_header.update_planet(planet)
@@ -859,6 +993,7 @@ class LeftPanel(QWidget):
         self._status.update_planet(planet, player)
         self._production.update_planet(planet, player)
         self._route.update_planet(planet, player)
+        self._starbase.update_planet(planet, player)
 
     def _on_nav(self, direction: int):
         """Prev/Next clicked: pick the adjacent owned world and ask the host to
