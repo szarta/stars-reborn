@@ -892,7 +892,11 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Battle plans — not yet implemented.")
 
     def _handle_planets_report(self):
-        self.statusBar().showMessage("Planets report — not yet implemented.")
+        from .dialogs.planet_report import PlanetReportDialog
+
+        dlg = PlanetReportDialog(self._planets, self._player_id, parent=self)
+        dlg.planet_activated.connect(self._on_planet_nav)
+        dlg.exec()
 
     def _handle_fleets_report(self):
         self.statusBar().showMessage("Fleets report — not yet implemented.")

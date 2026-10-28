@@ -249,6 +249,38 @@ class ScoreData:
         )
 
 
+def planet_report_rows(planets, player_id) -> list[dict]:
+    """Rows for the F3 Planets report: one dict per planet the player can see
+    the contents of (observed — ``value`` is set), sorted by name.
+
+    Each row carries the planet ``id`` (for jump-to-planet) plus the columns the
+    turn file provides today. ``owned`` flags the player's own worlds. Never-
+    observed planets (identity only) are omitted — they have no contents to
+    report; they appear once scanning surfaces foreign planets.
+    """
+    rows: list[dict] = []
+    for p in planets:
+        if getattr(p, "value", None) is None:
+            continue
+        rows.append(
+            {
+                "id": p.id,
+                "name": p.name,
+                "owned": getattr(p, "owner", None) == player_id,
+                "value": getattr(p, "value", 0),
+                "population": getattr(p, "population", 0),
+                "resources": getattr(p, "resources_per_year", None),
+                "mines": getattr(p, "mines", 0),
+                "factories": getattr(p, "factories", 0),
+                "ironium": getattr(p, "surface_ironium", 0),
+                "boranium": getattr(p, "surface_boranium", 0),
+                "germanium": getattr(p, "surface_germanium", 0),
+            }
+        )
+    rows.sort(key=lambda r: r["name"])
+    return rows
+
+
 def score_rows(score: ScoreData) -> list[tuple[str, int, int]]:
     """The F10 breakdown table as ``(label, count, points)`` rows, in the
     original Score-sheet order. The row ``count`` is the raw tally the category
