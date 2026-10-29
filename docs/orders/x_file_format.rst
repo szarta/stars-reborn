@@ -195,11 +195,21 @@ Confirmed via R0.7 oracle (2026-04-20/21).
 Type 2 — Fleet Depart Orbit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Emitted when a fleet that is currently **in orbit** is given its first movement
-waypoint. It records the fleet and the planet it is leaving, and always
-immediately precedes that fleet's type-4 ``waypoint_add`` (``waypoint_nr =
-1``).  A fleet that is already under way when re-routed produces no type-2, so
-the record is far less common than ``waypoint_add``.
+Emitted when a fleet departs orbit, recording the fleet and the planet it is
+leaving. It always immediately precedes that fleet's type-4 ``waypoint_add``
+(``waypoint_nr = 1``), and a fleet already under way when re-routed produces no
+type-2, so the record is far less common than ``waypoint_add``.
+
+The precise trigger is **narrower than "first movement waypoint from orbit"**.
+A UI oracle run (2026-10-29) gave all six turn-1 starting fleets their first
+planet-targeted waypoint and got six ``waypoint_add`` records but **zero**
+type-2, so first-waypoint-from-orbit is necessary but not sufficient. The
+record is nonetheless common in real play (one archived turn carries 15) and is
+not cargo-driven (no type-2 fleet in the corpus has a paired
+``manual_cargo_transfer``). The leading hypothesis is that it fires only for an
+**established** fleet — one that has persisted at least one turn — not a
+freshly-created starting fleet; confirming that needs an oracle fleet that is a
+turn old.
 
 .. code-block:: text
 
