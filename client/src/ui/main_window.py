@@ -855,7 +855,16 @@ class MainWindow(QMainWindow):
         RaceViewDialog(self._race, parent=self).exec()
 
     def _handle_game_params(self):
-        self.statusBar().showMessage("Game parameters — not yet implemented.")
+        from .dialogs.game_parameters import GameParametersDialog
+
+        GameParametersDialog(
+            self._game_name,
+            self._game_year,
+            self._universe_w,
+            self._universe_h,
+            len(self._planets),
+            parent=self,
+        ).exec()
 
     def _handle_wait_for_new(self):
         self.statusBar().showMessage("Wait for new turn — not yet implemented.")

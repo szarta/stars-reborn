@@ -249,6 +249,38 @@ class ScoreData:
         )
 
 
+# Universe edge length (ly) -> size name, per the engine's DIMENSIONS table
+# (engine/src/game/universe/mod.rs). A square map off this table reads "Custom".
+_UNIVERSE_SIZES = {400: "Tiny", 800: "Small", 1200: "Medium", 1600: "Large", 2000: "Huge"}
+
+
+def universe_size_label(width, height) -> str:
+    """Human label for a universe of ``width`` x ``height`` ly: the named size
+    when it matches the standard square dimensions, else 'Custom'."""
+    try:
+        w, h = int(width), int(height)
+    except (TypeError, ValueError):
+        return "n/a"
+    name = _UNIVERSE_SIZES.get(w) if w == h else None
+    prefix = f"{name} " if name else "Custom "
+    return f"{prefix}({w} × {h} ly)"
+
+
+def game_parameters_rows(
+    game_name, year, universe_w, universe_h, planet_count
+) -> list[tuple[str, str]]:
+    """The Game Parameters shown from data the client already has. Settings the
+    engine does not persist yet (victory conditions, play flags, player roster,
+    difficulty) are omitted rather than shown as 'n/a' — see the engine
+    follow-up."""
+    return [
+        ("Game Name", str(game_name)),
+        ("Year", str(year)),
+        ("Universe Size", universe_size_label(universe_w, universe_h)),
+        ("Planets", str(planet_count)),
+    ]
+
+
 def _hab_range(axis: dict | None, unit: str) -> str:
     """Display string for one habitat axis from the race's ``hab`` object:
     'Immune', or 'lo – hi<unit>'. Falls back to 'n/a' when bounds are absent."""
