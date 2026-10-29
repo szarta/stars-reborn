@@ -117,7 +117,18 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 >   engine serializes today is covered by `game-state.json`; these remain the
 >   design target for the rest and are reconciled (and folded into the
 >   `game-state.json` cluster via the bundler) as the engine serializes those
->   objects. They still carry known ref bugs to fix on conversion.
+>   objects. Their dangling `$ref`s are now fixed (`universe.json`'s
+>   `planets.json#/...` typo → `planet.json`; the two mineral-packet
+>   `#/definitions/warp-speed` refs → `mineral-warp-speed`, the only
+>   warp-speed defs being `fleet-warp-speed`/`mineral-warp-speed`), and the
+>   `every_schema_ref_resolves` guard
+>   (`engine/tests/schema_refs_resolve.rs`) now fails on any unresolvable ref
+>   across all schemas. The remaining reconciliation is naming: these sketches
+>   are kebab-case shared-object defs while the live request schemas use
+>   snake_case serde defs (`request-submit-orders.json`'s `fleet_id` /
+>   `warp_speed`); the two conventions collapse into one set only when a
+>   sketch is bundled into a generated cluster, so no shared def is renamed
+>   until then.
 > - `request-submit-orders.json`, `request-create-tutorial-game.json`,
 >   `response-create-tutorial-game.json`, `error.json` — convert as they gain
 >   stable typed producers/consumers.

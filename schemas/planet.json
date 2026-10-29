@@ -76,7 +76,7 @@
               "$ref": "universe.json#/definitions/space-coordinate"
             },
             "packet-warpspeed": {
-              "$ref": "universe.json#/definitions/warp-speed"
+              "$ref": "universe.json#/definitions/mineral-warp-speed"
             },
             "mines": {
               "type": "integer",

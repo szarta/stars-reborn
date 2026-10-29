@@ -150,7 +150,7 @@
               "$ref": "player.json#/definitions/player-id"
             },
             "warp-speed": {
-              "$ref": "#/definitions/warp-speed"
+              "$ref": "#/definitions/mineral-warp-speed"
             },
             "destination": {
               "description": "TBD: this might end up being a planet id",
@@ -207,7 +207,7 @@
         "planets": {
           "type": "array",
           "items": {
-            "$ref": "planets.json#/definitions/planet"
+            "$ref": "planet.json#/definitions/planet"
           }
         }
       }
