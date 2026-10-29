@@ -319,6 +319,68 @@
       },
       "title": "ShipDesign"
     },
+    "scanned-design": {
+      "description": "An enemy (or other-player) ship/starbase design the viewing player has learned about by scanning a fleet built from it, or from meeting it in battle. Partial information, gated by scan depth (see docs/mechanics/scanning.rst 'Enemy Design Intel'): identity fields (owner, name, hull, kind) are known from any observation; the component fill (slot-assignments) is known only from a penetrating-range scan and is omitted otherwise. Like planet intel, the fields hold the values as of the last observation; years-since-last-scan = 0 means seen this turn, higher is a stale snapshot. Drives the Ship Designer 'Enemy Hulls' view and battle planning. Empty until the engine models fleets and scanning.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner-player-id",
+        "design-slot",
+        "kind",
+        "name",
+        "hull-id",
+        "years-since-last-scan"
+      ],
+      "properties": {
+        "owner-player-id": {
+          "description": "Player id of the design's owner (the scanned enemy), distinguishing designs that collide on slot/name across players.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "design-slot": {
+          "description": "The owner's design slot index (ship 0-15, starbase 0-9). With owner-player-id it is the stable identity of the enemy design, so a re-scan updates the same record rather than adding a duplicate.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "format": "uint32"
+        },
+        "kind": {
+          "description": "Whether this is a ship or a starbase design; selects whether hull-id is a ship-hull or starbase-hull id.",
+          "enum": [
+            "ship",
+            "starbase"
+          ]
+        },
+        "name": {
+          "description": "The owner's name for the design, as revealed by scanning. Basic (normal-range) intel.",
+          "type": "string"
+        },
+        "hull-id": {
+          "description": "Hull the design is built on: a ship-hull id (GET /model/ships/hulls) when kind=ship, a starbase-hull id when kind=starbase. Identifiable from a scanned fleet, so basic (normal-range) intel.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "years-since-last-scan": {
+          "description": "0 = observed this turn (current composition). Higher = a stale snapshot from an earlier observation; the owner may have since redesigned the slot (designs are mutable while unbuilt).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "slot-assignments": {
+          "description": "The design's component fill, same shape as a player's own design. Present only when the player has penetrating-range intel on a fleet of this design; omitted (not empty) when only basic intel is held. NAS races never obtain it by scanning. Needs oracle verification — see docs/mechanics/scanning.rst.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/slot-assignment"
+          }
+        }
+      },
+      "title": "ScannedDesign"
+    },
     "planet-intel": {
       "description": "A single planet entry in the player's turn file. Untagged on the wire: clients distinguish observed vs. unobserved by the presence of contents fields.",
       "oneOf": [
@@ -493,6 +555,7 @@
     "player-id",
     "planets",
     "ship-designs",
+    "scanned-designs",
     "messages",
     "score"
   ],
@@ -534,6 +597,13 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/ship-design"
+      }
+    },
+    "scanned-designs": {
+      "description": "Other players' ship/starbase designs this player has learned about through scanning or battle (partial info, see the scanned-design definition). Never includes the viewing player's own designs. Empty until the engine models fleets and scanning.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scanned-design"
       }
     },
     "messages": {

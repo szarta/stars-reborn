@@ -292,6 +292,52 @@ The original game uses ``NeverSeenPlanet`` (−1) as a sentinel for
 uses field absence instead, consistent with the
 :ref:`architecture-discoverable-data` model.
 
+.. _enemy-design-intel:
+
+Enemy Design Intel
+------------------
+
+Scanning an enemy fleet also teaches the player about the *designs* that fleet
+is built from. This is what feeds the Ship Designer's **Enemy Hulls** view and
+battle planning, and it is partial information in the same spirit as planet
+intel: how much of a design a player knows depends on how closely they have
+observed a fleet built from it.
+
+A learned enemy design is keyed by **(owner player, owner's design slot)**, so
+re-observing the same design updates one record rather than accumulating
+duplicates. It is carried per viewing player in the turn file as
+``scanned-designs`` (``schemas/response-turn-file.json`` → the
+``scanned-design`` definition); it never includes the viewer's own designs,
+which live in ``ship-designs``.
+
+Two tiers of knowledge, gated the same way planet contents are:
+
+- **Basic intel** — any observation of a fleet built from the design (a
+  normal-range scan, or meeting it in battle) reveals the design's
+  **identity**: the owner, the design **name**, its **hull** (the hull
+  silhouette is identifiable from a scan), and whether it is a ship or a
+  starbase. The component fill is *not* known; ``slot-assignments`` is omitted.
+- **Full intel** — a **penetrating-range** scan of a fleet built from the
+  design additionally reveals its **component fill** (``slot-assignments``, the
+  same shape as the player's own design). As with planet contents, penetrating
+  scanning is the mechanism that exposes "inside" information, and the **NAS**
+  (No Advanced Scanners) LRT, which has no penetrating scanners, therefore
+  never learns an enemy design's components by scanning.
+
+Staleness follows the planet rule: the fields hold the design as it was at last
+observation. ``years-since-last-scan`` is 0 the turn the design is observed and
+increments afterwards; because designs are mutable while unbuilt, a stale
+record may describe a loadout the owner has since changed. Absence of the whole
+record means the player has never observed a fleet of that design.
+
+.. todo:: Oracle-verify the enemy-design visibility contract against the
+   original game: confirm that (a) design **name** and **hull** are revealed by
+   a *normal*-range scan rather than only at penetrating range or only in the
+   ship list after battle; (b) ``slot-assignments`` (component fill) is gated on
+   *penetrating* range specifically, not on a scanner-tech threshold or on
+   physically engaging the fleet; and (c) how counts/fleet composition relate to
+   this (fleet intel is tracked separately once fleets are modelled, #155).
+
 Open Questions
 --------------
 

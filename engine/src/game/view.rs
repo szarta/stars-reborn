@@ -73,6 +73,13 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         // player's turn file carries only their own designs, so emit an empty
         // list until the design model lands. See docs/mechanics/ship_design.rst.
         ship_designs: vec![],
+        // Other players' designs the viewer has scanned. The engine models
+        // neither fleets nor scanning yet (#155), so there is no enemy-design
+        // intel to project; emit an empty list. The wire shape is defined
+        // (schemas/response-turn-file.json scanned-design) so the client's
+        // Enemy Hulls view has a stable field to read. See
+        // docs/mechanics/scanning.rst 'Enemy Design Intel'.
+        scanned_designs: vec![],
         messages: turn_messages(state, player_id),
         score: compute_score(state, player_id),
         // The viewing player's own race (None for a phantom/unknown player id).

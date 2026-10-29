@@ -234,6 +234,49 @@ class ShipDesign(BaseModel):
     )
 
 
+class ScannedDesign(BaseModel):
+    """
+    An enemy (or other-player) ship/starbase design the viewing player has learned about by scanning a fleet built from it, or from meeting it in battle. Partial information, gated by scan depth (see docs/mechanics/scanning.rst 'Enemy Design Intel'): identity fields (owner, name, hull, kind) are known from any observation; the component fill (slot-assignments) is known only from a penetrating-range scan and is omitted otherwise. Like planet intel, the fields hold the values as of the last observation; years-since-last-scan = 0 means seen this turn, higher is a stale snapshot. Drives the Ship Designer 'Enemy Hulls' view and battle planning. Empty until the engine models fleets and scanning.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    owner_player_id: conint(ge=0, le=65535) = Field(
+        ...,
+        alias="owner-player-id",
+        description="Player id of the design's owner (the scanned enemy), distinguishing designs that collide on slot/name across players.",
+    )
+    design_slot: conint(ge=0, le=15) = Field(
+        ...,
+        alias="design-slot",
+        description="The owner's design slot index (ship 0-15, starbase 0-9). With owner-player-id it is the stable identity of the enemy design, so a re-scan updates the same record rather than adding a duplicate.",
+    )
+    kind: Kind = Field(
+        ...,
+        description="Whether this is a ship or a starbase design; selects whether hull-id is a ship-hull or starbase-hull id.",
+    )
+    name: str = Field(
+        ...,
+        description="The owner's name for the design, as revealed by scanning. Basic (normal-range) intel.",
+    )
+    hull_id: conint(ge=0, le=255) = Field(
+        ...,
+        alias="hull-id",
+        description="Hull the design is built on: a ship-hull id (GET /model/ships/hulls) when kind=ship, a starbase-hull id when kind=starbase. Identifiable from a scanned fleet, so basic (normal-range) intel.",
+    )
+    years_since_last_scan: conint(ge=0, le=65535) = Field(
+        ...,
+        alias="years-since-last-scan",
+        description="0 = observed this turn (current composition). Higher = a stale snapshot from an earlier observation; the owner may have since redesigned the slot (designs are mutable while unbuilt).",
+    )
+    slot_assignments: list[SlotAssignment] | None = Field(
+        None,
+        alias="slot-assignments",
+        description="The design's component fill, same shape as a player's own design. Present only when the player has penetrating-range intel on a fleet of this design; omitted (not empty) when only basic intel is held. NAS races never obtain it by scanning. Needs oracle verification — see docs/mechanics/scanning.rst.",
+    )
+
+
 class TurnMessage(BaseModel):
     """
     One message shown in the player's turn for this year. Messages are per-turn (regenerated each year, not accumulated). Mirrors the design-target turn-message shape in schemas/turn.json.
@@ -444,6 +487,11 @@ class PlayerView(BaseModel):
         ...,
         alias="ship-designs",
         description="The viewing player's own ship and starbase designs. Always the player's own designs (never another player's). Empty until the engine models designs.",
+    )
+    scanned_designs: list[ScannedDesign] = Field(
+        ...,
+        alias="scanned-designs",
+        description="Other players' ship/starbase designs this player has learned about through scanning or battle (partial info, see the scanned-design definition). Never includes the viewing player's own designs. Empty until the engine models fleets and scanning.",
     )
     messages: list[TurnMessage] = Field(
         ...,

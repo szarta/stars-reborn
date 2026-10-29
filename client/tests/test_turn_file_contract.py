@@ -40,6 +40,31 @@ TURN_FILE = {
             "built-count": 3,
         }
     ],
+    # Enemy designs this player has scanned. One with only basic intel
+    # (identity, no slot-assignments) and one with full (penetrating) intel —
+    # exercising both tiers of the scanned-design wire shape. The engine emits
+    # an empty list today (fleets/scanning not modeled).
+    "scanned-designs": [
+        {
+            "owner-player-id": 1,
+            "design-slot": 2,
+            "kind": "ship",
+            "name": "Pirate Raider",
+            "hull-id": 12,
+            "years-since-last-scan": 4,
+        },
+        {
+            "owner-player-id": 1,
+            "design-slot": 0,
+            "kind": "starbase",
+            "name": "Fort Knox",
+            "hull-id": 1,
+            "years-since-last-scan": 0,
+            "slot-assignments": [
+                {"slot-index": 0, "part-id": 60, "count": 8},
+            ],
+        },
+    ],
     "planets": [
         {
             "id": 1,
@@ -182,6 +207,19 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert design.built_count == 3
     assert len(design.slot_assignments) == 2
     assert design.slot_assignments[0].part_id == 60
+
+    # Scanned enemy designs: basic intel omits slot-assignments; full
+    # (penetrating) intel carries them.
+    assert len(view.scanned_designs) == 2
+    basic, full = view.scanned_designs
+    assert basic.name == "Pirate Raider"
+    assert basic.owner_player_id == 1
+    assert basic.design_slot == 2
+    assert basic.years_since_last_scan == 4
+    assert basic.slot_assignments is None
+    assert full.kind.value == "starbase"
+    assert full.slot_assignments is not None
+    assert full.slot_assignments[0].count == 8
 
     assert len(view.messages) == 1
     msg = view.messages[0]

@@ -282,8 +282,16 @@ Each entry carries:
   "N of N" badge and, when greater than zero, locks the slot so the design
   cannot be edited until the last ship is gone (see `Design Limits`_).
 
-A turn file carries only the viewing player's own designs. The engine does not
-model designs yet, so it currently emits an empty list.
+A turn file carries only the viewing player's own designs in ``ship-designs``.
+The engine does not model designs yet, so it currently emits an empty list.
+
+*Other* players' designs the viewer has scanned travel in a separate
+``scanned-designs`` array (the ``scanned-design`` definition), which carries
+only partial, scan-gated information: design identity always, and the component
+fill (``slot-assignments``) only with a penetrating-range scan. This feeds the
+Ship Designer's **Enemy Hulls** view; see :ref:`enemy-design-intel` for the
+visibility contract. It is likewise empty until the engine models fleets and
+scanning.
 
 Hull Reference
 --------------
