@@ -957,11 +957,13 @@ class MainWindow(QMainWindow):
             try:
                 from .dialogs.technology_browser import TechnologyBrowser
 
-                dlg = TechnologyBrowser(self._player, False)
+                dlg = TechnologyBrowser(self._player, self._engine_url, False, self)
                 dlg.exec()
                 return
-            except (ImportError, Exception):
+            except ImportError:
                 pass
+            except Exception:
+                log.exception("Technology browser failed to open")
         self.statusBar().showMessage("Technology browser — not yet implemented.")
 
     def _handle_about(self):
