@@ -844,14 +844,18 @@ class PlanetSummaryWidget(QWidget):
         cap = _max_pop(value, race)
         growth = _annual_growth(pop, race, value, cap)
 
-        # The original game shows a (min, max) range.  The exact min/max
-        # formula has not yet been confirmed via oracle; until it is, show
-        # the documented annual-growth value for both bounds so the popup
-        # matches the wording of the screencap.  Tracked as research.
+        # The "grow by X to Y" line is not a (min, max) range: X is the
+        # single-turn growth (the delta) and Y is the resulting population
+        # next year, i.e. pop + growth.  Confirmed against the original via
+        # FreeStars' Hints.xml ("will grow by <popGrowBy> to <popNextYear>")
+        # and the Winken oracle screencap (pop 21,500, JOAT 100%, max 1.2M →
+        # "3,200 to 24,700" = 3,225 growth, 24,725 next-year, each shown at
+        # the game's 100-colonist display granularity).
+        next_year = pop + growth
         body = (
             f"Your population on {name} is {pop:,}.<br>"
             f"{name} will support a population of up to {cap:,} of your colonists.<br>"
-            f"Your population on {name} will grow by {growth:,} to {growth:,} next year."
+            f"Your population on {name} will grow by {growth:,} to {next_year:,} next year."
         )
         html = f'<font color="#cc7a00">{body}</font>'
         self._popup.show_html(html, QCursor.pos())
