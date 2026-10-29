@@ -162,6 +162,11 @@ pub fn fixed_by_kind(kind: &str) -> Option<&'static Buildable> {
     FIXED_BUILDABLES.iter().find(|b| b.kind == kind)
 }
 
+/// Look up a fixed buildable by its flat `build_object_id`.
+pub fn fixed_by_id(id: u32) -> Option<&'static Buildable> {
+    FIXED_BUILDABLES.iter().find(|b| b.id == id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
