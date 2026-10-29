@@ -283,10 +283,24 @@ At the 5× mass limit, ``safe_send = 0`` and ``vmass = 1/3`` — confirming the
 "kills 1/3 of your ships at the limit" rule of thumb. Surviving ships at that
 limit have already taken ~98% damage.
 
-.. todo:: Oracle-validate the exact rounding rules and confirm the
-   sending-only-vs-both-gates question for the mass component of ``vodds``;
-   the captured FreeStars snippet uses both gates but the help file and wiki
-   say sending only.
+.. note::
+
+   The sending-only form for the mass component of ``vodds`` above is the
+   adopted model. It is backed by two independent authorities — the original
+   STARS!.HLP ("only the sending gate is relevant" for vanishing) and the
+   SBPosey/Butler/Scoop community spec — against a single clone (FreeStars)
+   that uses both gates. A source re-read showed the FreeStars overgating
+   helpers carry an operator-precedence bug (``/4.0*cap`` instead of
+   ``/(4.0*cap)``), so that snippet is not a reliable witness for any of the
+   overgating math. The two ``vodds`` forms are numerically identical whenever
+   both gates share a mass cap (the common case) and diverge only for
+   asymmetric caps.
+
+.. todo:: Binary-confirm the sending-only void model via one oracle swap test
+   (gate a heavy stack small-gate→large-gate, then large-gate→small-gate, and
+   check whether the vanish rate tracks direction). Needs mid-game fleet-order
+   turn-generation automation; not blocking. Exact 1% round-down rule also
+   still wants a binary check.
 
 Open Questions
 --------------
