@@ -207,12 +207,27 @@ the record is far less common than ``waypoint_add``.
      b4 = 0x12   b0–b1 fleet_num (9-bit),  b2–b3 planet_idx (LE uint16)
      b4 = 0x21   b0–b1 planet_idx (uint16), b2–b3 fleet_num (9-bit)
    b5           always 0x08 (meaning unknown)
-   b6–b7        vary between records (not yet decoded)
+   b6–b7        little-endian uint16; default 250 (0x00fa), see below
 
 Both decoded fields are confirmed on 26 real records across two games: the
 fleet always matches the paired ``waypoint_add``, and the planet always matches
 that fleet's ``orbit_planet_idx`` in the corresponding ``.mN`` turn file.
 ``b5`` and the trailing two bytes are surfaced raw rather than guessed.
+
+Residual bytes, from the full 26-record corpus (both games plus their backups):
+
+- ``b5`` is ``0x08`` in **every** record — a fixed structural byte, not a
+  varying field.
+- ``b6–b7`` read as a little-endian uint16 is **250 (0x00fa) in 22 of 26
+  records**. That default is invariant across fleets with very different fuel
+  (3–900 mg), ship designs, and cargo, so it is a sentinel/default rather than
+  a per-fleet physical quantity. The four non-default values — 208, 419, 436,
+  1000 — occur *only* on waypoints whose warp was manually set to 4 (every
+  default-250 record pairs with an auto-selected warp of 6 or 7). The four
+  values do not track trip distance, fleet fuel, cargo presence, or ship
+  composition, so the field's meaning when warp is non-default is still open.
+  Pinning it needs a UI oracle run that varies one input (warp, then
+  destination) on an orbiting fleet.
 
 Type 3 — Waypoint Delete
 ~~~~~~~~~~~~~~~~~~~~~~~~
