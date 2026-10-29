@@ -392,7 +392,7 @@ class TechnologyBrowser(QDialog):
         self._name_label.setText(name)
 
         # Icon.
-        pix = component_icon(category, name)
+        pix = component_icon(category, item.get("slug", ""))
         self._icon_label.setPixmap(
             pix.scaled(
                 64,

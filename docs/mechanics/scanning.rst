@@ -336,7 +336,7 @@ record means the player has never observed a fleet of that design.
    ship list after battle; (b) ``slot-assignments`` (component fill) is gated on
    *penetrating* range specifically, not on a scanner-tech threshold or on
    physically engaging the fleet; and (c) how counts/fleet composition relate to
-   this (fleet intel is tracked separately once fleets are modelled, #155).
+   this (fleet intel is tracked separately once fleets are modelled).
 
 Open Questions
 --------------

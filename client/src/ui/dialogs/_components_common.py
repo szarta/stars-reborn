@@ -1,9 +1,10 @@
 """
 ui/dialogs/_components_common.py
 
-Small Qt helpers shared by the Technology Browser and the Ship Designer's
-component views: resolving a component's icon pixmap. Kept separate so both
-dialogs render component icons the same way.
+Small Qt helpers shared by the Technology Browser and the Ship Designer:
+resolving component and hull icon pixmaps from the engine's slugs. The path
+convention is defined (Qt-free) in :mod:`src.data.assets`; this layer only wraps
+it in ``QPixmap`` and supplies the on-disk root from ``ResourcePaths``.
 
 :author: Brandon Arrendondo
 :license: MIT, see LICENSE.txt for more details.
@@ -15,23 +16,47 @@ import os
 
 from PySide6.QtGui import QColor, QPixmap
 
-from ...data.technologies import icon_filename
+from ...data.assets import component_icon_relpath, hull_icon_filename, hull_variants
 from ...rendering.enumerations import ResourcePaths
 
 
-def component_icon(category: str, name: str) -> QPixmap:
-    """Resolve a component's icon pixmap.
+def _placeholder() -> QPixmap:
+    pix = QPixmap(64, 64)
+    pix.fill(QColor("#2b2b2b"))
+    return pix
 
-    Icons live under ``assets/png/components/<category>/<Name-With-Dashes>.png``
-    (e.g. ``engines/Quick-Jump-5.png``). Only a few categories ship icons today;
-    a miss returns a neutral placeholder tile. When the engine starts emitting an
-    ``icon`` field on tech items (schema reserves it; see icon-convention task
-    #88) this name heuristic can be replaced by a direct path.
+
+def component_icon(category: str, slug: str) -> QPixmap:
+    """Resolve a component's icon pixmap by ``category`` + ``slug``.
+
+    Icons live under ``assets/png/components/<category>/<slug>.png`` (e.g.
+    ``engines/quick_jump_5.png``). Only a few categories ship icons today; a
+    miss returns a neutral placeholder tile (see the icon-asset pipeline in
+    docs/reference/assets.rst; missing artwork is filled by the icon-generation
+    pass).
     """
-    path = os.path.join(ResourcePaths.ComponentsPath, category, icon_filename(name))
+    if not slug:
+        return _placeholder()
+    path = os.path.join(ResourcePaths.ComponentsPath, component_icon_relpath(category, slug))
     pix = QPixmap(path)
-    if not pix.isNull():
-        return pix
-    placeholder = QPixmap(64, 64)
-    placeholder.fill(QColor("#2b2b2b"))
-    return placeholder
+    return pix if not pix.isNull() else _placeholder()
+
+
+def hull_icon(slug: str, variant: int = 1) -> QPixmap:
+    """Resolve a hull's icon pixmap by ``slug`` and 1-based ``variant``.
+
+    Icons live under ``assets/png/hulls/<slug>-<variant>.png`` (e.g.
+    ``battle_cruiser-1.png``). A miss returns a neutral placeholder tile.
+    """
+    if not slug:
+        return _placeholder()
+    path = os.path.join(ResourcePaths.HullsPath, hull_icon_filename(slug, variant))
+    pix = QPixmap(path)
+    return pix if not pix.isNull() else _placeholder()
+
+
+def available_hull_variants(slug: str) -> list[int]:
+    """Variant numbers that have art for ``slug`` (ascending; empty if none)."""
+    if not slug:
+        return []
+    return hull_variants(ResourcePaths.HullsPath, slug)

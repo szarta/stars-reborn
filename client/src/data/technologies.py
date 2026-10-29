@@ -3,8 +3,9 @@ data/technologies.py
 
 Pure (Qt-free) helpers for the component technology catalog served by the engine
 at ``GET /model/technologies``. Shared by the Technology Browser dialog and the
-Ship Designer component picker (category grouping + availability filtering +
-icon-filename derivation). No Qt imports so the logic is unit-testable headless.
+Ship Designer component picker (category grouping + availability filtering). No
+Qt imports so the logic is unit-testable headless. Icon-path derivation lives in
+:mod:`src.data.assets`.
 
 :author: Brandon Arrendondo
 :license: MIT, see LICENSE.txt for more details.
@@ -29,11 +30,6 @@ CATEGORY_ORDER = [
     ("scanners", "Scanners"),
 ]
 CATEGORY_LABELS = dict(CATEGORY_ORDER)
-
-
-def icon_filename(name: str) -> str:
-    """Component display name -> icon filename (``Quick Jump 5`` -> ``Quick-Jump-5.png``)."""
-    return "-".join(name.split()) + ".png"
 
 
 def group_by_category(items: list[dict]) -> tuple[dict[str, list[dict]], list[str]]:

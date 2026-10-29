@@ -474,18 +474,21 @@ def depleted_neutronium() -> Image.Image:
 
 # ── dispatch ──────────────────────────────────────────────────────────────────
 
+# Keyed by the engine component slug (GET /model/technologies) so output lands
+# at components/armor/<slug>.png, the slug-based icon convention
+# (docs/reference/assets.rst).
 ICONS: dict[str, callable] = {
-    "Tritanium": tritanium,
-    "Crobmnium": crobmnium,
-    "Carbonic-Armor": carbonic_armor,
-    "Strobnium": strobnium,
-    "Kelarium": kelarium,
-    "Organic-Armor": organic_armor,
-    "Neutronium": neutronium,
-    "Valanium": valanium,
-    "Superlatanium": superlatanium,
-    "Fielded-Kelarium": fielded_kelarium,
-    "Depleted-Neutronium": depleted_neutronium,
+    "tritanium": tritanium,
+    "crobmnium": crobmnium,
+    "carbonic_armor": carbonic_armor,
+    "strobnium": strobnium,
+    "kelarium": kelarium,
+    "organic_armor": organic_armor,
+    "neutronium": neutronium,
+    "valanium": valanium,
+    "superlatanium": superlatanium,
+    "fielded_kelarium": fielded_kelarium,
+    "depleted_neutronium": depleted_neutronium,
 }
 
 

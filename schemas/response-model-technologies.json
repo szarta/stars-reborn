@@ -261,7 +261,7 @@
         },
         "icon": {
           "type": "string",
-          "description": "Reserved. Icon identifier, added once the hull/component icon convention lands. Omitted until then; see docs/schemas/index.rst."
+          "description": "Optional, usually omitted. Clients derive a component's icon from its category + slug (components/<category>/<slug>.png); see docs/reference/assets.rst. This field exists only as a future explicit override for an item whose art cannot follow the slug rule, and is unused today."
         },
         "properties": {
           "description": "Category-specific stats. The 'allOf' if/then clauses above constrain this object to the 'props-*' definition matching 'category'.",

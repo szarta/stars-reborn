@@ -16,17 +16,11 @@ sys.path.insert(0, str(REPO / "client"))
 from src.data.technologies import (  # noqa: E402
     component_available,
     group_by_category,
-    icon_filename,
 )
 
 
 def _item(name, category="engines", requirement=None):
     return {"name": name, "category": category, "requirement": requirement}
-
-
-def test_icon_filename_dashes_words():
-    assert icon_filename("Quick Jump 5") == "Quick-Jump-5.png"
-    assert icon_filename("Enigma Pulsar") == "Enigma-Pulsar.png"
 
 
 def test_group_by_category_orders_canonically_and_keeps_catalog_order():

@@ -14,6 +14,7 @@ Community documentation, strategy guide excerpts, and raw notes from the
    engines
    ship_hulls
    starbase_hulls
+   assets
    universe_sizes
    abbreviations
    ai_races

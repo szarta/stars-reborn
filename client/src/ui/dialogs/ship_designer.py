@@ -34,8 +34,8 @@ What is wired here:
   is validated and the cost/mass preview updates live
   (``src.data.ship_design``).
 
-What is NOT wired yet (blocked on the engine host-side design model, task
-#145): persisting an edited design back to the engine, engine-computed combat
+What is NOT wired yet (blocked on the engine host-side design model):
+persisting an edited design back to the engine, engine-computed combat
 stats (armor/shield totals, rating, cloak/jam), and the player's real
 *Existing Designs* (those remain illustrative placeholders until the turn file
 carries them). The editor therefore operates on an in-memory design; closing
@@ -74,7 +74,7 @@ from PySide6.QtWidgets import (
 
 from ...data.ship_design import DesignModel, slot_accepts
 from ...data.technologies import CATEGORY_LABELS, component_available, group_by_category
-from ._components_common import component_icon
+from ._components_common import available_hull_variants, component_icon, hull_icon
 
 log = logging.getLogger(__name__)
 
@@ -247,7 +247,7 @@ class _ComponentPalette(QWidget):
             items = [it for it in items if self._is_available(it)]
         for it in items:
             entry = QListWidgetItem(it.get("name", "?"))
-            pix = component_icon(it.get("category", ""), it.get("name", ""))
+            pix = component_icon(it.get("category", ""), it.get("slug", ""))
             entry.setIcon(_pixmap_icon(pix))
             entry.setData(Qt.ItemDataRole.UserRole, it)
             if not self._is_available(it):
@@ -741,6 +741,8 @@ class ShipDesignerDialog(QDialog):
             self._populate_existing_page()
         elif self._view_mode == _VIEW_AVAILABLE:
             self._populate_available_page()
+        elif self._view_mode == _VIEW_ENEMY:
+            self._hull_thumb.setText("(hull)")
 
     def _refresh_name_combo(self) -> None:
         self._name_combo.blockSignals(True)
@@ -777,7 +779,26 @@ class ShipDesignerDialog(QDialog):
             edit_enabled = d.get("fleet_count", 0) == 0
         self._edit_btn.setEnabled(edit_enabled)
 
+    def _set_hull_thumb(self, slug: str) -> None:
+        """Show hull ``slug``'s icon (variant 1) in the header thumbnail, or a
+        placeholder when the hull has no art yet (art is added by the
+        icon-generation pass)."""
+        variants = available_hull_variants(slug)
+        if not variants:
+            self._hull_thumb.setText("(hull)")
+            return
+        pix = hull_icon(slug, variants[0])
+        self._hull_thumb.setPixmap(
+            pix.scaled(
+                self._hull_thumb.width(),
+                self._hull_thumb.height(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
     def _populate_existing_page(self) -> None:
+        self._hull_thumb.setText("(hull)")  # placeholder designs have no real hull slug
         page = self._page_existing
         _clear_layout(page._slot_layout)  # type: ignore[attr-defined]
         _clear_layout(page._footer_layout)  # type: ignore[attr-defined]
@@ -808,12 +829,14 @@ class ShipDesignerDialog(QDialog):
         hulls = self._available_hulls()
         idx = self._name_combo.currentIndex()
         if idx < 0 or idx >= len(hulls):
+            self._hull_thumb.setText("(hull)")
             if not self._has_catalog:
                 page._footer_layout.addWidget(  # type: ignore[attr-defined]
                     self._catalog_unavailable_label(), 0, 0
                 )
             return
         hull = hulls[idx]
+        self._set_hull_thumb(hull.get("slug", ""))
         for i, slot in enumerate(hull.get("slots", [])):
             pos = slot.get("position", {})
             max_count = int(slot.get("max-count", 1) or 1)

@@ -74,7 +74,7 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         // list until the design model lands. See docs/mechanics/ship_design.rst.
         ship_designs: vec![],
         // Other players' designs the viewer has scanned. The engine models
-        // neither fleets nor scanning yet (#155), so there is no enemy-design
+        // neither fleets nor scanning yet, so there is no enemy-design
         // intel to project; emit an empty list. The wire shape is defined
         // (schemas/response-turn-file.json scanned-design) so the client's
         // Enemy Hulls view has a stable field to read. See
