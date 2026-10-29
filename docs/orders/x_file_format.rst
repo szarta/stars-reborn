@@ -200,16 +200,22 @@ leaving. It always immediately precedes that fleet's type-4 ``waypoint_add``
 (``waypoint_nr = 1``), and a fleet already under way when re-routed produces no
 type-2, so the record is far less common than ``waypoint_add``.
 
-The precise trigger is **narrower than "first movement waypoint from orbit"**.
-A UI oracle run (2026-10-29) gave all six turn-1 starting fleets their first
-planet-targeted waypoint and got six ``waypoint_add`` records but **zero**
-type-2, so first-waypoint-from-orbit is necessary but not sufficient. The
-record is nonetheless common in real play (one archived turn carries 15) and is
-not cargo-driven (no type-2 fleet in the corpus has a paired
-``manual_cargo_transfer``). The leading hypothesis is that it fires only for an
-**established** fleet — one that has persisted at least one turn — not a
-freshly-created starting fleet; confirming that needs an oracle fleet that is a
-turn old.
+The precise trigger is **not derivable from fleet or order state** and is
+narrower than "first movement waypoint from orbit." The decisive evidence: two
+**byte-identical** fleets in the same order file — same design, same orbit
+planet, same position, fuel, cargo and waypoint count — one emits a type-2 and
+the other does not, differing only in where they are sent. So emission depends
+on the client-side *interaction* used to command the orbiting fleet, not on any
+recorded property. Ruled out as the trigger: being a first-waypoint-from-orbit
+(necessary but not sufficient), carrying cargo (no corpus type-2 fleet has a
+paired ``manual_cargo_transfer``), the ship design, the orbit planet's owner
+(always the player's own), and being a freshly-created vs. established fleet. A
+2026-10-29 UI oracle (shift-click is the add-waypoint gesture) reproduced
+``waypoint_add`` reliably but produced **no** type-2 across the tested
+fleet-command gestures (``Goto``- and double-click-select, then shift-click a
+planet) in a fresh Small-universe game at turn 1 and after one generated turn.
+The specific interaction (or richer game state) that emits type-2 is still
+unidentified, so ``b6-b7`` cannot yet be pinned by varying one oracle input.
 
 .. code-block:: text
 
