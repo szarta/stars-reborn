@@ -278,15 +278,30 @@ races in three ways:
 If an AR starbase is destroyed, the resident population becomes overpopulation
 against an effective cap of zero, and dies off rapidly.
 
-**Warp acceleration deaths (AR-specific).** AR colonists in transit suffer
-losses each turn — message 193: "Due to the rigors of warp acceleration, X of
-your colonists on Y have died." Confirmed AR-specific in the ``transport_test``
-game in the research game-store (``experiments/games/store.sqlite``; Wine
-save).  Non-AR races do **not** incur this loss when transporting colonists.
-The exact per-turn rate as a function of warp speed is still open.
+**Movement losses (AR-specific).** AR colonists carried on a fleet die each
+turn the fleet **moves** — reported by message 193: "Due to the rigors of warp
+acceleration, X of your colonists on Y have died." The loss is a **flat 2% of
+the carried population per turn of movement**; it does **not** scale with warp
+speed, distance, engine, or fuel (the "warp acceleration" wording is flavor).
+A fleet that holds position loses nothing. Non-AR races do **not** incur this
+loss (IS instead *grows* in transit, above).
 
-.. todo:: Document the exact AR warp-acceleration death rate (per-turn
-   fraction as a function of warp speed).
+.. code-block:: text
+
+   # Applied once per fleet, each turn its position changed, only for AR:
+   deaths = round(0.02 × fleet_colonists)
+   fleet_colonists -= deaths
+
+Because population is stored in units of 100 colonists, the effective loss is
+rounded to the nearest 100: a fleet carrying **≤ 2,200 pop loses zero**, and
+each further ~3,300 pop adds 100 lost per turn. This is the basis of the AR
+"minitruck" tactic (keep ≤ 2,200 pop per colony-run fleet to dodge the loss).
+
+*Sources: Leonard Dickens, "Stars! FAQ — AR Guide" ("Movement losses: 2% of the
+AR pop on a freighter dies when it moves … 2200 or less pop … you lose zero");
+corroborated by Stars! FAQ art205. See research finding ``ar_movement_losses``.
+The only sub-detail not yet byte-confirmed is the exact rounding boundary (a
+candidate oracle check).*
 
 Radiating Hydro-Ram Scoop
 -------------------------
@@ -302,7 +317,28 @@ fleet has the engine, even if the colonists are riding on a different
 either design the race with a radiation midpoint ≥85 mR or keep colonist
 transports in a separate fleet.
 
-*Source: in-game component help text on Radiating Hydro-Ram Scoop.*
+The per-turn colonist death **fraction** is a function of the race's Radiation
+habitat midpoint only (no PRT term):
 
-.. todo:: Document the exact RHRS death rate when the radiation midpoint
-   is below 85 mR.
+.. code-block:: text
+
+   rad_death_fraction =
+       0                        if radiation-immune
+       0                        if rad_midpoint >= 85       # mR
+       (86 - rad_midpoint)/100  otherwise                   # midpoint 0..84
+
+So it ranges from 2% per turn at a midpoint of 84 mR up to 86% at a midpoint of
+0 mR (e.g. 50 mR → 36%, 65 mR → 21%). The *No Ram Scoop Engines* LRT removes
+the engine from the buildable set, so NRSE races never face this loss.
+
+Deaths are reported by **message 116** ("Engine radiation has killed X
+colonists traveling in Y") — a distinct message from the AR movement loss's
+message 193. Because pop is stored in 100-colonist units, the applied count is
+the fraction rounded to a 100-pop unit.
+
+*Sources: FreeStars server — ``Race::RadDamage`` returns ``(86 - rad_midpoint)
+/ 100`` below 85 mR (0 at/above, or if rad-immune), summed per radiating engine
+by ``Fleet::RadDamage``; the RHRS engine declares it radiates in the Radiation
+hab axis. Corroborated by the in-game component help ("AT LEAST 85mR"). See
+research finding ``rhrs_radiation_losses``. Application timing (every turn vs.
+only moving turns) and exact rounding are candidate oracle checks.*
