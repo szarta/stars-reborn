@@ -34,11 +34,10 @@ Fuel-Usage-vs-Warp graph; every other category gets a generic stats panel.
 from __future__ import annotations
 
 import logging
-import os
 
 import requests
 from PySide6.QtCore import QPointF, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPixmap, QPolygonF
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -57,9 +56,8 @@ from ...data.technologies import (
     CATEGORY_LABELS,
     component_available,
     group_by_category,
-    icon_filename,
 )
-from ...rendering.enumerations import ResourcePaths
+from ._components_common import component_icon
 
 log = logging.getLogger(__name__)
 
@@ -93,24 +91,6 @@ _PRT_NAMES = {
     "AR": "Alternate Reality",
     "JOAT": "Jack of All Trades",
 }
-
-
-def _component_icon(category: str, name: str) -> QPixmap:
-    """Resolve a component's icon pixmap.
-
-    Icons live under ``assets/png/components/<category>/<Name-With-Dashes>.png``
-    (e.g. ``engines/Quick-Jump-5.png``). Only a few categories ship icons today;
-    a miss returns a neutral placeholder. When the engine starts emitting an
-    ``icon`` field on tech items this heuristic can be replaced by a direct path.
-    """
-    path = os.path.join(ResourcePaths.ComponentsPath, category, icon_filename(name))
-    pix = QPixmap(path)
-    if not pix.isNull():
-        return pix
-    # Neutral placeholder tile.
-    placeholder = QPixmap(64, 64)
-    placeholder.fill(QColor("#2b2b2b"))
-    return placeholder
 
 
 # ── Engine fuel-usage graph ──────────────────────────────────────────────────
@@ -412,7 +392,7 @@ class TechnologyBrowser(QDialog):
         self._name_label.setText(name)
 
         # Icon.
-        pix = _component_icon(category, name)
+        pix = component_icon(category, name)
         self._icon_label.setPixmap(
             pix.scaled(
                 64,

@@ -891,11 +891,13 @@ class MainWindow(QMainWindow):
         try:
             from .dialogs.ship_designer import ShipDesignerDialog
 
-            dlg = ShipDesignerDialog(self._player, self)
+            dlg = ShipDesignerDialog(self._player, self._engine_url, self)
             dlg.exec()
             return
-        except (ImportError, Exception):
+        except ImportError:
             pass
+        except Exception:
+            log.exception("Ship designer failed to open")
         self.statusBar().showMessage("Ship design — not yet implemented.")
 
     def _handle_research(self):
