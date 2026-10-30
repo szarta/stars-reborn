@@ -399,9 +399,43 @@ distinct from the plain delete above.
 
 **Long form (34–80 B) — design create/save:**
 
-Emitted by *Copy Selected Design* → edit → *OK* in the designer.  Partially
-decoded (oracle 2026-07-13); full slot-tuple layout pending dedicated
-component-varying runs.  A captured 44-byte *Armed Probe* copy:
+Emitted by *Copy Selected Design* → edit → *OK* in the designer. The slot
+layout is confirmed across the full archive corpus (hulls of 3–12 slots,
+2026-10-29):
+
+.. code-block:: text
+
+   b0,b1  design id / hash         (varies per save; not yet decoded)
+   b2     0x07                     (invariant anchor)
+   b3     per-save counter         (increments on re-save; not yet decoded)
+   b4,b5  not yet decoded
+   b6,b7  vary per design          (not yet decoded; NOT an invariant anchor)
+   b8     hull slot count
+   b9     non-zero per-save field  (observed 0x37 / 0x5f / 0x67; meaning open)
+   b10–b18  nine zero bytes
+   b19…   one 4-byte slot tuple per slot:
+            [category_lo, category_hi, component_id, count]
+
+Each slot tuple carries:
+
+- **category** — a little-endian ``uint16`` in the same space as the ``.mN``
+  design-slot ``category`` bitmask: ``0x0001`` Engine, ``0x0002`` Scanner,
+  ``0x0004`` Shield, ``0x0008`` Armor, ``0x0010`` BeamWeapon, ``0x0020``
+  Torpedo, ``0x0040`` Bomb, ``0x0080`` MiningRobot, ``0x0100`` MineLayer,
+  ``0x0800`` Electrical, ``0x1000`` Mechanical, and composite masks such as
+  ``0x1800`` for a slot accepting either Electrical or Mechanical. (This is why
+  the earlier single-byte read saw a mysterious ``0x10`` — it is the low byte
+  of BeamWeapon.)
+- **component_id** — the index within the category, matching the ``.mN`` slot
+  ``item_id`` (resolve to a name via ``GET /model/technologies``). It keeps its
+  last value when the slot is emptied.
+- **count** — the number of that component in the slot: 1 by default, higher
+  from a shift-drag (×4) or ctrl-drag (fill), 0 when the slot is empty.
+  Confirmed by a design re-saved three times with the same slots at counts 4 →
+  8 → 16.
+
+A captured 44-byte *Armed Probe* copy (``b9`` zero in this early capture;
+non-zero in played-game saves):
 
 .. code-block:: text
 
@@ -409,11 +443,11 @@ component-varying runs.  A captured 44-byte *Armed Probe* copy:
    00 03 01 02 00 01 01 10 00 01 01 0d b0 8d b2 d6 0b f8 7d 42
    0f 82 cc f9 2f
 
-Byte 2 (``0x07``) and byte 6 (``0x14``) are **invariant** across captured
-samples and the research corpus long sample (``21 b2 07 48 22 89 14 05 0c …``),
-anchoring the format.  The tail (``… 0d b0 8d …``) is the Stars-name-encoded
-design name (``0d`` length prefix).  The reference parser surfaces this form as
-``design_save`` with the raw payload until the slot tuples are decoded.
+Byte 2 (``0x07``) is the invariant anchor. The tail (``… 0d b0 8d …``) is the
+Stars-name-encoded design name (``0d`` length prefix). The reference parser
+decodes ``slot_count`` and the slot tuples (``category``/``component_id``/
+``count``), falling back to raw ``payload_hex`` for an unrecognized shape;
+``b0/b1/b3/b6/b7`` and ``b9`` are still surfaced only via the raw bytes.
 
 Type 29 — Production Queue Replace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
