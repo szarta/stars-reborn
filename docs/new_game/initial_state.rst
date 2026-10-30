@@ -208,11 +208,11 @@ each step):
         - Electronics ≥ 5
         - Oracle-confirmed
       * - PP
-        - Energy ≥ 4, Propulsion ≥ 4
-        - Oracle-confirmed (all corpus PP designs include IFE; see note)
+        - Energy ≥ 4
+        - Oracle-confirmed (``pp1.r1``, no LRTs; Propulsion base 0 — see note)
       * - AR
-        - Energy ≥ 1, Propulsion ≥ 1
-        - Oracle-confirmed (all corpus AR designs include IFE; see note)
+        - Energy ≥ 1
+        - Oracle-confirmed (``ar1.r1``, no LRTs; Propulsion base 0 — see note)
       * - IT
         - Propulsion ≥ 5, Construction ≥ 5
         - Oracle-confirmed (human race, basic_it.r1)
@@ -228,16 +228,14 @@ each step):
 
    .. note::
 
-      PP and AR corpus designs all include the IFE LRT (see step 3 below).  It
-      is not yet confirmed from oracle data whether PP's Propulsion=4 is a PRT
-      minimum or IFE applied to a lower PRT base.  The table above reflects
-      observed values; the split between PRT and IFE contribution is unresolved
-      for these two PRTs.  The engine (``game::objects::starting_tech``)
-      resolves it as a lower PRT base plus the universal IFE/CE bonus — PP
-      Propulsion base 3, AR base 0 — the only split consistent with the
-      observed values once the IFE/CE +1 is applied unconditionally; this
-      matters only for a custom PP/AR race *without* IFE, which no corpus
-      sample covers.
+      PP and AR carry **no** propulsion in their PRT minimum.  The earlier
+      corpus showed PP/AR Propulsion ≥ 4 / ≥ 1, but every one of those designs
+      carried the IFE LRT *and* came from harder/expert AI templates (which add
+      difficulty tech bonuses, see the examples below), so that figure was not
+      the PRT minimum.  A clean PP/AR custom race with no LRTs starts at
+      **Propulsion 0** (oracle-confirmed 2026-10-29, ``pp1.r1`` / ``ar1.r1``
+      turn-1 files; PP Energy 4, AR Energy 1, all other fields 0).  The IFE/CE
+      bonus (step 4) then applies on top as for any race.
 
 3. **Expensive tech boost (EB):** if the race has the "Expensive Tech Boost"
    flag set, every field whose research cost is ``75% extra`` is raised to

@@ -65,20 +65,18 @@ pub fn starting_tech_levels(race: &Race) -> TechLevels {
 /// electronics, biotechnology), oracle-confirmed per
 /// `docs/new_game/initial_state.rst`.
 ///
-/// The doc's table lists the PRT's observed minimums. For PP and AR every
-/// observed corpus race also carries IFE, so the *base* propulsion here is one
-/// below the doc's observed value (PP 3, AR 0): base + the universal IFE/CE
-/// bonus (step 4) reproduces the observed PP=4 / AR=1. The doc flags this split
-/// as unresolved; this is the only split consistent with the observed turn-1
-/// data given the unconditional IFE/CE propulsion bonus. (No predefined race is
-/// PP or AR, so this only affects custom races.)
+/// PP and AR carry **no** propulsion in their PRT minimum (only energy: PP 4,
+/// AR 1). A clean PP/AR custom race with no LRTs starts at Propulsion 0
+/// (oracle-confirmed 2026-10-29 from `pp1.r1`/`ar1.r1` turn-1 files). The
+/// higher PP/AR propulsion the earlier corpus showed came from AI/expert
+/// difficulty tech bonuses, not the PRT minimum.
 fn prt_minimums(prt: Prt) -> Fields {
     // [energy, weapons, propulsion, construction, electronics, biotechnology]
     match prt {
         Prt::Joat => [3, 3, 3, 3, 3, 3],
         Prt::Ca => [0, 0, 0, 0, 0, 6],
         Prt::Ss => [0, 0, 0, 0, 5, 0],
-        Prt::Pp => [4, 0, 3, 0, 0, 0],
+        Prt::Pp => [4, 0, 0, 0, 0, 0],
         Prt::Ar => [1, 0, 0, 0, 0, 0],
         Prt::It => [0, 0, 5, 5, 0, 0],
         Prt::Wm => [1, 6, 1, 0, 0, 0],
@@ -133,6 +131,8 @@ mod tests {
         assert_eq!(get(Prt::Joat), [3, 3, 3, 3, 3, 3]);
         assert_eq!(get(Prt::Ca), [0, 0, 0, 0, 0, 6]); // Biotech >= 6
         assert_eq!(get(Prt::Ss), [0, 0, 0, 0, 5, 0]); // Electronics >= 5
+        assert_eq!(get(Prt::Pp), [4, 0, 0, 0, 0, 0]); // Energy 4, Prop 0 (oracle pp1.r1)
+        assert_eq!(get(Prt::Ar), [1, 0, 0, 0, 0, 0]); // Energy 1, Prop 0 (oracle ar1.r1)
         assert_eq!(get(Prt::It), [0, 0, 5, 5, 0, 0]); // Propulsion, Construction >= 5
         assert_eq!(get(Prt::Wm), [1, 6, 1, 0, 0, 0]); // Weapons >= 6, Energy/Prop >= 1
         assert_eq!(get(Prt::Sd), [0, 0, 3, 0, 0, 2]); // Propulsion >= 3, Biotech >= 2
@@ -154,13 +154,15 @@ mod tests {
     }
 
     #[test]
-    fn pp_and_ar_with_ife_reproduce_observed_propulsion() {
-        // Every observed corpus PP/AR race carries IFE; observed PP prop = 4,
-        // AR prop = 1 (base 3/0 + IFE +1).
-        let pp = starting_tech_levels(&race_with(Prt::Pp, vec![Lrt::Ife]));
-        assert_eq!((pp.energy, pp.propulsion), (4, 4));
-        let ar = starting_tech_levels(&race_with(Prt::Ar, vec![Lrt::Ife]));
-        assert_eq!((ar.energy, ar.propulsion), (1, 1));
+    fn pp_and_ar_base_propulsion_is_zero_ife_adds_one() {
+        // Oracle-confirmed (pp1.r1 / ar1.r1, no LRTs): PP starts energy 4 /
+        // prop 0, AR energy 1 / prop 0. IFE then adds +1 propulsion.
+        let pp = starting_tech_levels(&race_with(Prt::Pp, vec![]));
+        assert_eq!((pp.energy, pp.propulsion), (4, 0));
+        let ar = starting_tech_levels(&race_with(Prt::Ar, vec![]));
+        assert_eq!((ar.energy, ar.propulsion), (1, 0));
+        let pp_ife = starting_tech_levels(&race_with(Prt::Pp, vec![Lrt::Ife]));
+        assert_eq!((pp_ife.energy, pp_ife.propulsion), (4, 1));
     }
 
     #[test]
