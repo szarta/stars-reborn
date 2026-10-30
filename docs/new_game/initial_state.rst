@@ -232,7 +232,12 @@ each step):
       is not yet confirmed from oracle data whether PP's Propulsion=4 is a PRT
       minimum or IFE applied to a lower PRT base.  The table above reflects
       observed values; the split between PRT and IFE contribution is unresolved
-      for these two PRTs.
+      for these two PRTs.  The engine (``game::objects::starting_tech``)
+      resolves it as a lower PRT base plus the universal IFE/CE bonus — PP
+      Propulsion base 3, AR base 0 — the only split consistent with the
+      observed values once the IFE/CE +1 is applied unconditionally; this
+      matters only for a custom PP/AR race *without* IFE, which no corpus
+      sample covers.
 
 3. **Expensive tech boost (EB):** if the race has the "Expensive Tech Boost"
    flag set, every field whose research cost is ``75% extra`` is raised to

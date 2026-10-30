@@ -46,13 +46,14 @@ use crate::game::objects::generated::ship_hulls as wire;
 use crate::game::objects::generated::starbase_hulls as sb_wire;
 use crate::game::objects::{
     advantage_points::advantage_points,
-    player::{Player, TechLevels},
+    player::Player,
     race::Race,
     race_defaults::default_race_by_name,
     ship_hull_catalog::{
         hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
     },
     starbase_hull_catalog::starbase_hull_catalog,
+    starting_tech::starting_tech_levels,
     technology::{ShipHull, StarbaseHull, TechSlot},
     technology_catalog::{technology_catalog, Props, TechItem, TraitReq},
 };
@@ -697,7 +698,7 @@ async fn create_game(
             id: hp.id,
             race_name: race.name.clone(),
             homeworld_id,
-            tech: TechLevels::default(),
+            tech: starting_tech_levels(&race),
             race: Some(race),
         });
     }
@@ -725,7 +726,7 @@ async fn create_game(
             id: ai_id,
             race_name: "AI".to_string(),
             homeworld_id,
-            tech: TechLevels::default(),
+            tech: starting_tech_levels(&race),
             race: Some(race),
         });
     }
