@@ -41,6 +41,7 @@ use serde_json::{json, Value};
 use crate::game::objects::buildable::{
     design_build_object_id, Category, DESIGN_SLOTS, FIXED_BUILDABLES,
 };
+use crate::game::objects::generated::buildables as bld_wire;
 use crate::game::objects::generated::ship_hulls as wire;
 use crate::game::objects::generated::starbase_hulls as sb_wire;
 use crate::game::objects::{
@@ -451,30 +452,36 @@ async fn model_buildables() -> impl IntoResponse {
     Json(buildables_response())
 }
 
-/// Build the `GET /model/buildables` response body. Fixed installation/auto
-/// buildables first (in registry order), then the per-player design slots.
-pub fn buildables_response() -> Value {
-    let mut buildables: Vec<Value> = FIXED_BUILDABLES
+/// Build the `GET /model/buildables` response. Fixed installation/auto
+/// buildables first (in registry order), then the per-player design slots. The
+/// shape is the single source of truth schemas/response-model-buildables.json;
+/// the `buildables_schema_contract` test validates this output against it.
+pub fn buildables_response() -> bld_wire::BuildablesResponse {
+    let mut buildables: Vec<bld_wire::Buildable> = FIXED_BUILDABLES
         .iter()
-        .map(|b| {
-            json!({
-                "build-object-id": b.id,
-                "kind": b.kind,
-                "name": b.name,
-                "category": b.category.slug(),
-            })
+        .map(|b| bld_wire::Buildable {
+            build_object_id: b.id,
+            kind: b.kind.to_string(),
+            name: b.name.to_string(),
+            category: category_to_wire(b.category),
+            design_slot: None,
         })
         .collect();
     for slot in 0..DESIGN_SLOTS {
-        buildables.push(json!({
-            "build-object-id": design_build_object_id(slot).expect("slot in range"),
-            "kind": "design",
-            "design-slot": slot,
-            "name": format!("Design Slot {slot}"),
-            "category": Category::ShipDesign.slug(),
-        }));
+        buildables.push(bld_wire::Buildable {
+            build_object_id: design_build_object_id(slot).expect("slot in range"),
+            kind: "design".to_string(),
+            name: format!("Design Slot {slot}"),
+            category: category_to_wire(Category::ShipDesign),
+            design_slot: Some(slot),
+        });
     }
-    json!({ "buildables": buildables })
+    bld_wire::BuildablesResponse { buildables }
+}
+
+/// Map an internal buildable `Category` to its generated wire enum.
+fn category_to_wire(c: Category) -> bld_wire::BuildableCategory {
+    bld_wire::BuildableCategory::try_from(c.slug()).expect("buildable category is a canonical slug")
 }
 
 async fn model_schemas() -> impl IntoResponse {
@@ -1085,7 +1092,7 @@ mod tests {
 
     #[test]
     fn buildables_registry_is_well_formed() {
-        let body = buildables_response();
+        let body = serde_json::to_value(buildables_response()).expect("serialize buildables");
         let list = body["buildables"].as_array().expect("buildables array");
 
         // 12 fixed buildables + one entry per design slot.

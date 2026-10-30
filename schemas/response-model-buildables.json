@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.stars-reborn.com/schemas/response-model-buildables.json",
+  "version": "0.1.0",
+  "title": "BuildablesResponse",
+  "description": "Response shape for GET /model/buildables — the production-queue buildable registry. Fixed installation/auto buildables first (in registry order), then one entry per per-player ship/starbase design slot. Clients resolve queue ids and drive the add-item picker from this instead of hardcoding the build-object-id scheme.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildables"
+  ],
+  "properties": {
+    "buildables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/buildable"
+      }
+    }
+  },
+  "definitions": {
+    "buildable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build-object-id",
+        "kind",
+        "name",
+        "category"
+      ],
+      "properties": {
+        "build-object-id": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Flat buildable registry id the host stores in a planet build queue (e.g. 7=factory, 8=mine, 9=defenses; 1024+N=design slot N). The single source of truth is game::objects::buildable; see docs/mechanics/production.rst."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Semantic kind slug (lower-snake). Matches production_item.item.kind in request-submit-orders.json for the fixed buildables (factory, mine, defenses, alchemy, auto_factory, auto_mine, auto_defenses, auto_alchemy, auto_min_terraform, auto_max_terraform, auto_max_factories, auto_max_mines); 'design' for a design-slot buildable. Engine-emitted from the fixed registry and validated by the buildables contract test, so the value set is documented here rather than enforced as a generated enum (see docs/adr/0003 on weighing constraints against type churn)."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-facing display name (e.g. 'Factory', 'Auto Maximum Mines', 'Design Slot 0')."
+        },
+        "category": {
+          "$ref": "#/definitions/buildable-category"
+        },
+        "design-slot": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Present only when category is ship-design: the player design slot this buildable maps to (build-object-id = 1024 + design-slot). Absent for fixed installation/auto buildables."
+        }
+      }
+    },
+    "buildable-category": {
+      "type": "string",
+      "enum": [
+        "installation",
+        "auto",
+        "ship-design"
+      ],
+      "description": "What class of buildable this is. 'installation' = a one-off installation (factory, mine, defenses, alchemy); 'auto' = an auto-build item that repeats until a limit; 'ship-design' = a ship or starbase built from one of the player's design slots."
+    }
+  }
+}

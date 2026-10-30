@@ -78,8 +78,8 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > is now wired (task #144): `engine/src/game/objects/technology_catalog.rs`
 > holds engines, armor, shields and orbital components (stargates + mass
 > drivers), the `/model/technologies` and `/{id}` handlers serve it, and the
-> output is built with `json!` (like `/model/buildables`; not in a codegen
-> allowlist, so no Rust/client types are generated from it yet). The guard test
+> output is built with `json!` (not in a codegen allowlist, so no Rust/client
+> types are generated from it yet). The guard test
 > `engine/tests/technologies_schema_contract.rs` validates that real output
 > against the schema in addition to the schema-validity checks. Still to come as
 > tracked follow-ups: the remaining categories (weapons, bombs, scanners,
@@ -88,13 +88,18 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > non-engine values, generated client types, and the `icon` field once the icon
 > convention lands.
 >
-> `GET /model/buildables` (the production-queue buildable registry) is
-> likewise hand-built with `json!` in `engine/src/http/mod.rs`
-> (`buildables_response`) and covered by a unit test, but has **no schema file
-> yet** — formalizing `response-model-buildables.json` (draft-07, contract test,
-> generated client types) is a tracked follow-up, mirroring the ship-hulls one.
-> The production-queue shape itself is in the SSoT: `build_queue` /
-> `build-item` were added to `game-state.json` (host, snake_case) and
+> `response-model-buildables.json` (GET /model/buildables — the
+> production-queue buildable registry) is authored draft-07 and reconciled to
+> the engine's live output. It is self-contained (no cross-file `$ref`s): a
+> `buildable` is `{build-object-id, kind, name, category}` with an optional
+> `design-slot` present only for the per-player ship/starbase design entries.
+> The engine now serializes the generated `BuildablesResponse` type — the
+> `json!` builder in `buildables_response` was replaced with a typed producer
+> that maps the `game::objects::buildable` registry into the wire type (like
+> starbase-hulls, no `json!`). Guarded by `engine/tests/buildables_schema_contract.rs`
+> and client pydantic types are generated (`buildables.py`). The
+> production-queue shape itself is in the SSoT: `build_queue` / `build-item`
+> were added to `game-state.json` (host, snake_case) and
 > `response-turn-file.json` (view, kebab-case), both contract-tested.
 >
 > The POST /race/validate contract is reconciled (draft-07) and
@@ -143,6 +148,7 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 | `player.json`                        | Player state: race, known planets, fleets, tech levels                                                    |
 | `race.json`                          | Race definition: PRT, LRTs, economy parameters, hab ranges, tech costs                                    |
 | `tech.json`                          | Shared tech-item types: ids, mineral costs, tech-level requirements, slot-type enum                       |
+| `response-model-buildables.json`     | API response for `GET /model/buildables`: the production-queue buildable registry                         |
 | `response-model-ship-hulls.json`     | API response for `GET /model/ships/hulls`: full ship-hull catalog                                         |
 | `response-model-starbase-hulls.json` | API response for `GET /model/starbase/hulls`: full starbase-hull catalog                                  |
 | `response-model-technologies.json`   | API response for `GET /model/technologies`: full component tree (parts + planetary/orbital techs)         |

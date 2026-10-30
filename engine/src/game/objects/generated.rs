@@ -48,3 +48,8 @@ pub mod starbase_hulls {
     #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
     include!(concat!(env!("OUT_DIR"), "/starbase_hulls_types.rs"));
 }
+
+pub mod buildables {
+    #![allow(clippy::all, clippy::pedantic, dead_code, unused)]
+    include!(concat!(env!("OUT_DIR"), "/buildables_types.rs"));
+}

@@ -26,6 +26,9 @@ const SCHEMAS: &[(&str, &str)] = &[
     // GET /model/starbase/hulls catalog. References tech.json (cost,
     // tech-requirements, slot-type, starbase-hull-id); the bundler resolves it.
     ("response-model-starbase-hulls", "starbase_hulls_types.rs"),
+    // GET /model/buildables — the production-queue buildable registry.
+    // Self-contained (no cross-file refs).
+    ("response-model-buildables", "buildables_types.rs"),
     // Host-side authoritative game state (game.json / .sr save). References
     // race.json; the bundler below resolves that cross-file ref for typify.
     ("game-state", "game_state_types.rs"),
