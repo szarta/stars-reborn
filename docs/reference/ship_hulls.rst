@@ -274,10 +274,15 @@ Bombers
 Remote Miners
 -------------
 
-The Midget Miner (no tech required) is exclusive to races with **Advanced
-Remote Mining (ARM)**.  The OBRM LRT limits any hull to one mining robot per
-ship design regardless of available slots.  See :doc:`../mechanics/ship_design`
-for recommended designs by LRT combination.
+The **Midget Miner**, **Miner**, and **Ultra Miner** are the three
+remote-mining hulls exclusive to races with **Advanced Remote Mining (ARM)**
+(the manual's "three additional mining hulls").  The **Mini Miner** and **Maxi
+Miner** are base hulls available to all races — except that the **OBRM** ("Only
+Basic Remote Mining") LRT *removes* the Maxi Miner, leaving an OBRM race only
+the Mini Miner.  That OBRM removal is an exclusion the positive per-hull trait
+gate cannot express, so it is modelled in :doc:`technology_access`, not in the
+hull's ``requirement``.  See :doc:`../mechanics/ship_design` for recommended
+designs by LRT combination.
 
 .. list-table::
    :header-rows: 1
@@ -456,9 +461,13 @@ These hulls require very high Construction tech and serve specialized roles.
      - Engines(2), GeneralPurpose(2)×4, GeneralPurpose(1)×3, GeneralPurpose(3)
 
 Nubian has 13 GeneralPurpose slots of 3 each (total 39 possible part slots).
-MetaMorph and MiniMorph are Alternate Reality (AR) PRT-only hulls.
+The **MetaMorph** is a Hyper-Expansion (HE) PRT-exclusive hull; the
+**MiniMorph** is a general hull available to all races (it appears in no PRT's
+exclusive-hull list).  (The earlier "both are Alternate Reality" note was wrong
+— AR's only exclusive hull is the Death Star starbase; see
+:doc:`technology_access` and the original Stars! manual's per-PRT
+exclusive-hull lists.)
 
 .. todo::
 
-   Confirm exact slot counts for Nubian (factory.py shows 13 × GP(3)).
-   Confirm MetaMorph/MiniMorph availability is strictly gated to AR PRT.
+   Confirm exact slot counts for Nubian (prior Python prototype shows 13 × GP(3)).

@@ -143,9 +143,19 @@ pub enum HullCategory {
 /// `None` = available to all races.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HullRequirement {
-    /// Alternate Reality PRT only (MetaMorph, MiniMorph, Death Star).
+    /// Hyper-Expansion PRT only (Mini Colony Ship, Meta Morph).
+    HE,
+    /// Super-Stealth PRT only (Rogue, Stealth Bomber).
+    SS,
+    /// War-Monger PRT only (Battle Cruiser, Dreadnought).
+    WM,
+    /// Inner-Strength PRT only (Super Freighter, Fuel Transport).
+    IS,
+    /// Space-Demolition PRT only (Mini Mine Layer, Super Mine Layer).
+    SD,
+    /// Alternate Reality PRT only (Death Star starbase).
     AR,
-    /// Advanced Remote Mining LRT only (Midget Miner).
+    /// Advanced Remote Mining LRT only (Midget Miner, Miner, Ultra Miner).
     ARM,
     /// Available only after a Mystery Trader exchange.
     MT,

@@ -101,9 +101,14 @@ class HullCategory(Enum):
 
 class HullRequirement(StrEnum):
     """
-    Trait gate restricting which races may build a hull. 'AR' = Alternate Reality PRT only. 'ARM' = Advanced Remote Mining LRT only. 'MT' = available only after a Mystery Trader exchange. See the owning property for the null (available-to-all) case.
+    Trait gate restricting which races may build a hull. PRT gates: 'HE' Hyper-Expansion, 'SS' Super-Stealth, 'WM' War-Monger, 'IS' Inner-Strength, 'SD' Space-Demolition, 'AR' Alternate-Reality. LRT gate: 'ARM' Advanced Remote Mining. 'MT' = available only after a Mystery Trader exchange. This is the positive inclusion gate only; exclusions (e.g. OBRM removing Maxi Miner) are tracked in technology_access.rst, not here. See the owning property for the null (available-to-all) case.
     """
 
+    HE = "HE"
+    SS = "SS"
+    WM = "WM"
+    IS = "IS"
+    SD = "SD"
     AR = "AR"
     ARM = "ARM"
     MT = "MT"

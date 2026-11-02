@@ -147,7 +147,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "battle_cruiser",
             name: "Battle Cruiser",
             category: HullCategory::Scout,
-            requirement: None,
+            requirement: Some(HullRequirement::WM),
             requirements: req(10),
             cost: cost(55, 8, 12, 120),
             slots: slots(&[
@@ -201,7 +201,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "dreadnought",
             name: "Dreadnought",
             category: HullCategory::Scout,
-            requirement: None,
+            requirement: Some(HullRequirement::WM),
             requirements: req(16),
             cost: cost(140, 30, 25, 275),
             slots: slots(&[
@@ -296,7 +296,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "super_freighter",
             name: "Super Freighter",
             category: HullCategory::Freighter,
-            requirement: None,
+            requirement: Some(HullRequirement::IS),
             requirements: req(13),
             cost: cost(45, 0, 21, 125),
             slots: slots(&[
@@ -342,7 +342,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "rogue",
             name: "Rogue",
             category: HullCategory::ArmedFreighter,
-            requirement: None,
+            requirement: Some(HullRequirement::SS),
             requirements: req(8),
             cost: cost(80, 5, 5, 60),
             slots: slots(&[
@@ -396,7 +396,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "mini_colony_ship",
             name: "Mini Colony Ship",
             category: HullCategory::Colony,
-            requirement: None,
+            requirement: Some(HullRequirement::HE),
             requirements: TechRequirements::NONE,
             cost: cost(2, 0, 2, 3),
             slots: slots(&[(S::ENGINES, 1, 0, 0), (S::MECHANICAL, 1, 0, 4)]),
@@ -470,7 +470,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "stealth_bomber",
             name: "Stealth Bomber",
             category: HullCategory::Bomber,
-            requirement: None,
+            requirement: Some(HullRequirement::SS),
             requirements: req(8),
             cost: cost(55, 10, 15, 175),
             slots: slots(&[
@@ -514,6 +514,12 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             fuel_regen_percent: None,
         },
         // ----- Miners -----
+        // Remote-mining hull gating (see docs/reference/technology_access.rst):
+        //   Midget/Miner/Ultra Miner = ARM-only ("three additional mining hulls").
+        //   Mini Miner, Maxi Miner    = base (no positive gate). The OBRM LRT
+        //   *removes* Maxi Miner, leaving only Mini Miner; that exclusion is a
+        //   removal the positive `requirement` gate cannot express, so it lives
+        //   in the technology-access system, not here.
         ShipHull {
             id: 182,
             slug: "midget_miner",
@@ -558,7 +564,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "miner",
             name: "Miner",
             category: HullCategory::Miner,
-            requirement: None,
+            requirement: Some(HullRequirement::ARM),
             requirements: req(6),
             cost: cost(32, 0, 6, 110),
             slots: slots(&[
@@ -606,7 +612,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "ultra_miner",
             name: "Ultra Miner",
             category: HullCategory::Miner,
-            requirement: None,
+            requirement: Some(HullRequirement::ARM),
             requirements: req(14),
             cost: cost(30, 0, 6, 130),
             slots: slots(&[
@@ -631,7 +637,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "fuel_transport",
             name: "Fuel Transport",
             category: HullCategory::FuelTransport,
-            requirement: None,
+            requirement: Some(HullRequirement::IS),
             requirements: req(4),
             cost: cost(10, 0, 5, 50),
             slots: slots(&[(S::ENGINES, 1, 0, 0), (S::SHIELDS, 1, 0, 2)]),
@@ -670,7 +676,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "mini_mine_layer",
             name: "Mini Mine Layer",
             category: HullCategory::MineLayer,
-            requirement: None,
+            requirement: Some(HullRequirement::SD),
             requirements: TechRequirements::NONE,
             cost: cost(8, 2, 5, 20),
             slots: slots(&[
@@ -692,7 +698,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "super_mine_layer",
             name: "Super Mine Layer",
             category: HullCategory::MineLayer,
-            requirement: None,
+            requirement: Some(HullRequirement::SD),
             requirements: req(15),
             cost: cost(20, 3, 9, 30),
             slots: slots(&[
@@ -748,7 +754,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "metamorph",
             name: "MetaMorph",
             category: HullCategory::Ultra,
-            requirement: Some(HullRequirement::AR),
+            requirement: Some(HullRequirement::HE),
             requirements: req(8),
             cost: cost(50, 12, 12, 120),
             slots: slots(&[
@@ -773,7 +779,7 @@ pub fn ship_hull_catalog() -> Vec<ShipHull> {
             slug: "minimorph",
             name: "MiniMorph",
             category: HullCategory::Ultra,
-            requirement: Some(HullRequirement::AR),
+            requirement: None,
             requirements: req(8),
             cost: cost(30, 8, 8, 100),
             slots: slots(&[
@@ -843,6 +849,11 @@ pub fn hull_category_slug(c: HullCategory) -> &'static str {
 
 pub fn hull_requirement_slug(r: HullRequirement) -> &'static str {
     match r {
+        HullRequirement::HE => "HE",
+        HullRequirement::SS => "SS",
+        HullRequirement::WM => "WM",
+        HullRequirement::IS => "IS",
+        HullRequirement::SD => "SD",
         HullRequirement::AR => "AR",
         HullRequirement::ARM => "ARM",
         HullRequirement::MT => "MT",
@@ -972,23 +983,51 @@ mod tests {
     }
 
     #[test]
-    fn ar_hulls_are_metamorph_family() {
-        let ar_hulls: Vec<&str> = ship_hull_catalog()
-            .iter()
-            .filter(|h| h.requirement == Some(HullRequirement::AR))
-            .map(|h| h.slug)
-            .collect();
-        assert_eq!(ar_hulls, vec!["metamorph", "minimorph"]);
+    fn prt_hull_gating_matches_the_original_game() {
+        // Per-PRT exclusive hulls, from the original Stars! manual's per-PRT
+        // "Exclusive Hulls" lists and docs/reference/technology_access.rst.
+        // Verified against the Tech Browser (task #83: Dreadnought = War Monger).
+        // No ship hull is AR-gated (AR's only exclusive hull, the Death Star, is
+        // a starbase); MiniMorph is a general hull (not in any exclusive list).
+        use std::collections::BTreeMap;
+        let mut by_req: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        for h in ship_hull_catalog() {
+            if let Some(r) = h.requirement {
+                by_req
+                    .entry(hull_requirement_slug(r))
+                    .or_default()
+                    .push(h.slug);
+            }
+        }
+        for v in by_req.values_mut() {
+            v.sort_unstable();
+        }
+        let expected: BTreeMap<&str, Vec<&str>> = [
+            ("HE", vec!["metamorph", "mini_colony_ship"]),
+            ("WM", vec!["battle_cruiser", "dreadnought"]),
+            ("SS", vec!["rogue", "stealth_bomber"]),
+            ("IS", vec!["fuel_transport", "super_freighter"]),
+            ("SD", vec!["mini_mine_layer", "super_mine_layer"]),
+            ("ARM", vec!["midget_miner", "miner", "ultra_miner"]),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(by_req, expected);
     }
 
     #[test]
-    fn arm_hulls_are_midget_miner_only() {
-        let arm_hulls: Vec<&str> = ship_hull_catalog()
+    fn arm_hulls_are_the_three_advanced_remote_miners() {
+        // ARM ("Advanced Remote Mining") grants three additional mining hulls
+        // beyond the base Mini/Maxi Miner (docs/reference/technology_access.rst,
+        // original Stars! manual PG3-03). Mini/Maxi Miner stay ungated here; the
+        // OBRM removal of Maxi Miner is tracked in the technology-access system.
+        let mut arm_hulls: Vec<&str> = ship_hull_catalog()
             .iter()
             .filter(|h| h.requirement == Some(HullRequirement::ARM))
             .map(|h| h.slug)
             .collect();
-        assert_eq!(arm_hulls, vec!["midget_miner"]);
+        arm_hulls.sort_unstable();
+        assert_eq!(arm_hulls, vec!["midget_miner", "miner", "ultra_miner"]);
     }
 
     #[test]
