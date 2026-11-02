@@ -38,6 +38,12 @@ use crate::game::state::GameState;
 pub use crate::game::objects::generated::turn_file::{
     BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, TurnMessage, TurnScore,
 };
+use crate::game::objects::generated::turn_file::{
+    ShipDesign as WireShipDesign, ShipDesignKind as WireShipDesignKind,
+    SlotAssignment as WireSlotAssignment,
+};
+use crate::game::objects::player::ShipDesignKind;
+use crate::game::orders::design_built_count;
 
 use crate::game::score;
 
@@ -69,10 +75,36 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         player_id,
         homeworld_id: player.and_then(|p| p.homeworld_id),
         planets,
-        // The engine does not model ship designs yet (tracked separately); a
-        // player's turn file carries only their own designs, so emit an empty
-        // list until the design model lands. See docs/mechanics/ship_design.rst.
-        ship_designs: vec![],
+        // The viewing player's own ship/starbase designs, edited via
+        // design.upsert / design.delete orders. built-count derives from the
+        // player's live fleets (always 0 until fleets are modelled, so no slot
+        // is ever locked). See docs/mechanics/ship_design.rst.
+        ship_designs: player
+            .map(|p| {
+                p.designs
+                    .iter()
+                    .map(|d| WireShipDesign {
+                        slot: d.slot,
+                        kind: match d.kind {
+                            ShipDesignKind::Ship => WireShipDesignKind::Ship,
+                            ShipDesignKind::Starbase => WireShipDesignKind::Starbase,
+                        },
+                        name: d.name.clone(),
+                        hull_id: d.hull_id,
+                        slot_assignments: d
+                            .slot_assignments
+                            .iter()
+                            .map(|s| WireSlotAssignment {
+                                slot_index: s.slot_index,
+                                part_id: s.part_id,
+                                count: s.count,
+                            })
+                            .collect(),
+                        built_count: design_built_count(state, player_id, d.kind, d.slot),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
         // Other players' designs the viewer has scanned. The engine models
         // neither fleets nor scanning yet, so there is no enemy-design
         // intel to project; emit an empty list. The wire shape is defined

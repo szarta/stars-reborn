@@ -15,6 +15,9 @@ use serde::Deserialize;
 
 use crate::game::objects::buildable::{design_build_object_id, fixed_by_kind};
 use crate::game::objects::planet::BuildItem;
+use crate::game::objects::player::{ShipDesign, ShipDesignKind};
+use crate::game::objects::ship_hull_catalog::ship_hull_catalog;
+use crate::game::objects::starbase_hull_catalog::starbase_hull_catalog;
 use crate::game::state::GameState;
 
 /// Semantic production-queue item kind — mirrors the `item` object in
@@ -82,6 +85,40 @@ pub enum OrderError {
     UnknownBuildable,
     /// A route order named a target planet that does not exist.
     RouteTargetNotFound(u32),
+    /// A design order named a player id with no player.
+    PlayerNotFound(u32),
+    /// A design slot outside the valid range for its kind (ships 0–15,
+    /// starbases 0–9).
+    DesignSlotOutOfRange { kind: ShipDesignKind, slot: u32 },
+    /// A design named a hull id not in the catalog for its kind.
+    DesignHullNotFound { kind: ShipDesignKind, hull_id: u32 },
+    /// An edit/delete targeted a slot whose design is built (built-count > 0);
+    /// the slot is locked until the last ship of that design is gone.
+    DesignSlotLocked { kind: ShipDesignKind, slot: u32 },
+    /// A delete targeted a (kind, slot) with no design.
+    DesignNotFound { kind: ShipDesignKind, slot: u32 },
+}
+
+/// Highest valid design slot per kind: ship designs occupy slots 0–15, starbase
+/// designs 0–9 (a parallel space, disambiguated by kind).
+fn max_design_slot(kind: ShipDesignKind) -> u32 {
+    match kind {
+        ShipDesignKind::Ship => 15,
+        ShipDesignKind::Starbase => 9,
+    }
+}
+
+/// Number of ships of a given design currently in existence across the player's
+/// fleets. The engine does not model fleets yet, so this is always 0 (no design
+/// is ever built, so no slot is ever locked). When fleets land, count ships
+/// whose design matches `(kind, slot)`. See docs/mechanics/ship_design.rst.
+pub fn design_built_count(
+    _game: &GameState,
+    _player_id: u32,
+    _kind: ShipDesignKind,
+    _slot: u32,
+) -> u32 {
+    0
 }
 
 /// Apply a `planet.set_production_queue` order: replace the entire production
@@ -156,6 +193,85 @@ pub fn apply_set_route_target(
     Ok(())
 }
 
+/// Apply a `design.upsert` order: create or replace the submitting player's
+/// design in `design.slot` (a ship slot 0–15 or a starbase slot 0–9, by
+/// `design.kind`). Validates before writing: the slot must be in range for its
+/// kind, the hull id must exist in the matching catalog, and the slot must not
+/// be locked (its current design is built, built-count > 0). On success the new
+/// design replaces any existing design in that `(kind, slot)`.
+pub fn apply_design_upsert(
+    game: &mut GameState,
+    player_id: u32,
+    design: ShipDesign,
+) -> Result<(), OrderError> {
+    let kind = design.kind;
+    let slot = design.slot;
+    if slot > max_design_slot(kind) {
+        return Err(OrderError::DesignSlotOutOfRange { kind, slot });
+    }
+    let hull_known = match kind {
+        ShipDesignKind::Ship => ship_hull_catalog()
+            .iter()
+            .any(|h| u32::from(h.id) == design.hull_id),
+        ShipDesignKind::Starbase => starbase_hull_catalog()
+            .iter()
+            .any(|h| u32::from(h.id) == design.hull_id),
+    };
+    if !hull_known {
+        return Err(OrderError::DesignHullNotFound {
+            kind,
+            hull_id: design.hull_id,
+        });
+    }
+    // A built design's slot is locked (cannot be edited) until its last ship is
+    // gone. built-count is 0 until fleets are modelled, so this never fires yet.
+    if design_built_count(game, player_id, kind, slot) > 0 {
+        return Err(OrderError::DesignSlotLocked { kind, slot });
+    }
+
+    let player = game
+        .players
+        .iter_mut()
+        .find(|p| p.id == player_id)
+        .ok_or(OrderError::PlayerNotFound(player_id))?;
+    match player
+        .designs
+        .iter_mut()
+        .find(|d| d.kind == kind && d.slot == slot)
+    {
+        Some(existing) => *existing = design,
+        None => player.designs.push(design),
+    }
+    Ok(())
+}
+
+/// Apply a `design.delete` order: remove the submitting player's design in
+/// `(kind, slot)`. Fails if there is no such design, or if it is locked
+/// (built-count > 0).
+pub fn apply_design_delete(
+    game: &mut GameState,
+    player_id: u32,
+    kind: ShipDesignKind,
+    slot: u32,
+) -> Result<(), OrderError> {
+    if design_built_count(game, player_id, kind, slot) > 0 {
+        return Err(OrderError::DesignSlotLocked { kind, slot });
+    }
+    let player = game
+        .players
+        .iter_mut()
+        .find(|p| p.id == player_id)
+        .ok_or(OrderError::PlayerNotFound(player_id))?;
+    let before = player.designs.len();
+    player
+        .designs
+        .retain(|d| !(d.kind == kind && d.slot == slot));
+    if player.designs.len() == before {
+        return Err(OrderError::DesignNotFound { kind, slot });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -187,6 +303,7 @@ mod tests {
                 homeworld_id: Some(hw),
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
+                designs: vec![],
             }],
             year: 2400,
         };
@@ -305,5 +422,132 @@ mod tests {
         assert_eq!(err, OrderError::RouteTargetNotFound(missing));
         // prior route is preserved
         assert_eq!(game.planet_states[&hw].route_target, Some(target));
+    }
+
+    // -- ship designs --------------------------------------------------------
+
+    fn design(slot: u32, kind: ShipDesignKind, hull_id: u32, name: &str) -> ShipDesign {
+        ShipDesign {
+            slot,
+            kind,
+            name: name.into(),
+            hull_id,
+            slot_assignments: vec![crate::game::objects::player::SlotAssignment {
+                slot_index: 0,
+                part_id: 112, // a valid engine id
+                count: std::num::NonZeroU32::new(1).unwrap(),
+            }],
+        }
+    }
+
+    fn a_ship_hull() -> u32 {
+        u32::from(ship_hull_catalog()[0].id)
+    }
+
+    #[test]
+    fn design_upsert_creates_then_replaces_in_same_slot() {
+        let (mut game, _) = one_player_game();
+        let hull = a_ship_hull();
+        apply_design_upsert(
+            &mut game,
+            0,
+            design(3, ShipDesignKind::Ship, hull, "Scout I"),
+        )
+        .unwrap();
+        assert_eq!(game.players[0].designs.len(), 1);
+        assert_eq!(game.players[0].designs[0].name, "Scout I");
+
+        // Same (kind, slot) replaces, not appends.
+        apply_design_upsert(
+            &mut game,
+            0,
+            design(3, ShipDesignKind::Ship, hull, "Scout II"),
+        )
+        .unwrap();
+        assert_eq!(game.players[0].designs.len(), 1);
+        assert_eq!(game.players[0].designs[0].name, "Scout II");
+
+        // A starbase slot 3 is a parallel space — distinct from ship slot 3.
+        let sb = u32::from(starbase_hull_catalog()[0].id);
+        apply_design_upsert(
+            &mut game,
+            0,
+            design(3, ShipDesignKind::Starbase, sb, "Fort"),
+        )
+        .unwrap();
+        assert_eq!(game.players[0].designs.len(), 2);
+    }
+
+    #[test]
+    fn design_upsert_validates_slot_and_hull() {
+        let (mut game, _) = one_player_game();
+        let hull = a_ship_hull();
+        // Ship slot 16 is out of range (ships are 0–15).
+        let err = apply_design_upsert(&mut game, 0, design(16, ShipDesignKind::Ship, hull, "x"))
+            .unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignSlotOutOfRange {
+                kind: ShipDesignKind::Ship,
+                slot: 16
+            }
+        );
+        // Starbase slot 10 is out of range (starbases are 0–9).
+        let sb = u32::from(starbase_hull_catalog()[0].id);
+        let err = apply_design_upsert(&mut game, 0, design(10, ShipDesignKind::Starbase, sb, "x"))
+            .unwrap_err();
+        assert!(matches!(
+            err,
+            OrderError::DesignSlotOutOfRange { slot: 10, .. }
+        ));
+        // Unknown hull id.
+        let err = apply_design_upsert(&mut game, 0, design(0, ShipDesignKind::Ship, 254, "x"))
+            .unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignHullNotFound {
+                kind: ShipDesignKind::Ship,
+                hull_id: 254
+            }
+        );
+        assert!(game.players[0].designs.is_empty());
+    }
+
+    #[test]
+    fn design_delete_removes_and_reports_missing() {
+        let (mut game, _) = one_player_game();
+        let hull = a_ship_hull();
+        apply_design_upsert(&mut game, 0, design(2, ShipDesignKind::Ship, hull, "s")).unwrap();
+        apply_design_delete(&mut game, 0, ShipDesignKind::Ship, 2).unwrap();
+        assert!(game.players[0].designs.is_empty());
+        // Deleting again (or a never-created slot) errors.
+        let err = apply_design_delete(&mut game, 0, ShipDesignKind::Ship, 2).unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignNotFound {
+                kind: ShipDesignKind::Ship,
+                slot: 2
+            }
+        );
+    }
+
+    #[test]
+    fn designs_project_into_the_turn_file() {
+        let (mut game, _) = one_player_game();
+        let hull = a_ship_hull();
+        apply_design_upsert(
+            &mut game,
+            0,
+            design(5, ShipDesignKind::Ship, hull, "Range Scout"),
+        )
+        .unwrap();
+        let view = crate::game::view::player_view(&game, 0);
+        assert_eq!(view.ship_designs.len(), 1);
+        let d = &view.ship_designs[0];
+        assert_eq!(d.slot, 5);
+        assert_eq!(d.name, "Range Scout");
+        assert_eq!(d.hull_id, hull);
+        // No fleets yet, so nothing is built.
+        assert_eq!(d.built_count, 0);
     }
 }

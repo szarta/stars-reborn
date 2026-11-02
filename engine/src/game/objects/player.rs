@@ -13,7 +13,9 @@
 // `objects::race::Race` (the schema's cross-file `$ref` is redirected to that
 // one generated type via `x-rust-type`, not copied). To change the wire contract
 // edit the schema, never this file. See `docs/adr/0003`.
-pub use super::generated::game_state::{Player, TechLevels};
+pub use super::generated::game_state::{
+    Player, ShipDesign, ShipDesignKind, SlotAssignment, TechLevels,
+};
 
 /// All-zero tech levels — the starting point before any research is applied.
 ///

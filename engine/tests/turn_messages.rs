@@ -50,6 +50,7 @@ fn two_player_game() -> GameState {
                 homeworld_id: Some(hw0),
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
+                designs: vec![],
             },
             Player {
                 id: PLAYER_1,
@@ -57,6 +58,7 @@ fn two_player_game() -> GameState {
                 homeworld_id: Some(hw1),
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
+                designs: vec![],
             },
         ],
         year: 2400,

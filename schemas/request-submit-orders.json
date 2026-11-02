@@ -36,7 +36,6 @@
       }
     }
   },
-
   "definitions": {
     "fleet_id": {
       "description": "0-based fleet id (max 511; original game's 9-bit field).",
@@ -57,7 +56,7 @@
       "maximum": 15
     },
     "battle_plan_index": {
-      "description": "Battle plan slot id; 0–4 are built-in (default, kill_starbase, max_def, sniper, chicken), 5+ user-defined.",
+      "description": "Battle plan slot id; 0\u20134 are built-in (default, kill_starbase, max_def, sniper, chicken), 5+ user-defined.",
       "type": "integer",
       "minimum": 0,
       "maximum": 15
@@ -74,7 +73,6 @@
       "minLength": 1,
       "maxLength": 31
     },
-
     "coord": {
       "description": "Universe coordinate.",
       "type": "object",
@@ -96,7 +94,6 @@
         }
       }
     },
-
     "waypoint_target": {
       "description": "Optional named target for a waypoint.  Absent => deep-space coordinate move.",
       "type": "object",
@@ -122,7 +119,6 @@
         }
       }
     },
-
     "research_field": {
       "enum": [
         "energy",
@@ -134,7 +130,6 @@
         "same_field"
       ]
     },
-
     "production_item": {
       "description": "One entry of a planet's production queue.",
       "type": "object",
@@ -198,7 +193,6 @@
         }
       }
     },
-
     "transport_action": {
       "description": "A single resource's behaviour for the Transport waypoint task.",
       "oneOf": [
@@ -242,7 +236,6 @@
         }
       ]
     },
-
     "waypoint_task": {
       "description": "Task to perform when a fleet arrives at the waypoint.  Mirrors the original type-5 task codes.",
       "oneOf": [
@@ -335,7 +328,6 @@
         }
       ]
     },
-
     "order": {
       "description": "One order in a player's submission.  Tagged union discriminated by 'kind'.",
       "oneOf": [
@@ -389,7 +381,6 @@
         }
       ]
     },
-
     "order_waypoint_add": {
       "type": "object",
       "additionalProperties": false,
@@ -430,7 +421,6 @@
         }
       }
     },
-
     "order_waypoint_update": {
       "type": "object",
       "additionalProperties": false,
@@ -468,7 +458,6 @@
         }
       }
     },
-
     "order_waypoint_delete": {
       "type": "object",
       "additionalProperties": false,
@@ -493,7 +482,6 @@
         }
       }
     },
-
     "order_waypoint_repeat": {
       "type": "object",
       "additionalProperties": false,
@@ -516,7 +504,6 @@
         }
       }
     },
-
     "order_fleet_split": {
       "description": "Move ships out of source_fleet_id into a destination fleet (created if destination_fleet_id is null).",
       "type": "object",
@@ -578,7 +565,6 @@
         }
       }
     },
-
     "order_fleet_merge": {
       "type": "object",
       "additionalProperties": false,
@@ -605,7 +591,6 @@
         }
       }
     },
-
     "order_fleet_rename": {
       "type": "object",
       "additionalProperties": false,
@@ -628,7 +613,6 @@
         }
       }
     },
-
     "order_fleet_set_battle_plan": {
       "type": "object",
       "additionalProperties": false,
@@ -651,7 +635,6 @@
         }
       }
     },
-
     "order_cargo_transfer": {
       "description": "Manual immediate cargo load/unload at the fleet's current planet (waypoint-0).",
       "type": "object",
@@ -710,7 +693,6 @@
         }
       }
     },
-
     "order_planet_set_production_queue": {
       "type": "object",
       "additionalProperties": false,
@@ -736,9 +718,8 @@
         }
       }
     },
-
     "order_planet_set_packet_target": {
-      "description": "Provisional — pending oracle for binary type-35.  Sets a planet's mineral-packet destination.",
+      "description": "Provisional \u2014 pending oracle for binary type-35.  Sets a planet's mineral-packet destination.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -760,7 +741,6 @@
         }
       }
     },
-
     "order_planet_set_route_target": {
       "type": "object",
       "additionalProperties": false,
@@ -790,7 +770,6 @@
         }
       }
     },
-
     "order_research_set_allocation": {
       "type": "object",
       "additionalProperties": false,
@@ -819,7 +798,6 @@
         }
       }
     },
-
     "order_battle_plan_upsert": {
       "type": "object",
       "additionalProperties": false,
@@ -886,9 +864,8 @@
         }
       }
     },
-
     "order_design_upsert": {
-      "description": "Provisional — pending oracle for binary type-27.  Saves a ship or starbase design into a numbered slot.  The 'design' field is reserved for the full design payload once decoded.",
+      "description": "Save (create or replace) a ship or starbase design into a numbered slot (ships 0-15, starbases 0-9, by the design's kind).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -906,17 +883,17 @@
           "$ref": "#/definitions/design_slot"
         },
         "design": {
-          "type": "object"
+          "$ref": "#/definitions/design_payload"
         }
       }
     },
-
     "order_design_delete": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "kind",
-        "design_slot"
+        "design_slot",
+        "design_kind"
       ],
       "properties": {
         "kind": {
@@ -926,6 +903,77 @@
         },
         "design_slot": {
           "$ref": "#/definitions/design_slot"
+        },
+        "design_kind": {
+          "description": "Whether the slot is a ship or starbase design slot.",
+          "enum": [
+            "ship",
+            "starbase"
+          ]
+        }
+      }
+    },
+    "slot_assignment": {
+      "description": "One filled hull slot in a design: component + count at a slot index.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot-index",
+        "part-id",
+        "count"
+      ],
+      "properties": {
+        "slot-index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "part-id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "format": "uint32"
+        }
+      }
+    },
+    "design_payload": {
+      "description": "A ship/starbase design body for design.upsert (slot comes from design_slot).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name",
+        "hull-id",
+        "slot-assignments"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ship",
+            "starbase"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "hull-id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "slot-assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/slot_assignment"
+          }
         }
       }
     }

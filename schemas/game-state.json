@@ -18,7 +18,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "UUID v4 — the engine's canonical identifier for this game."
+          "description": "UUID v4 \u2014 the engine's canonical identifier for this game."
         },
         "name": {
           "type": "string"
@@ -61,7 +61,7 @@
         "size": {
           "type": "integer",
           "format": "uint32",
-          "description": "Universe size constant (0=Tiny … 4=Huge)."
+          "description": "Universe size constant (0=Tiny \u2026 4=Huge)."
         },
         "width": {
           "type": "integer",
@@ -113,7 +113,7 @@
     },
     "planet-state": {
       "type": "object",
-      "description": "Mutable per-game planet state — host-side ground truth. Hab values are in original-game units: gravity is one of 101 discrete floats (0.12–8.00), temperature an integer -200..+200 step 4, radiation an integer 0..100.",
+      "description": "Mutable per-game planet state \u2014 host-side ground truth. Hab values are in original-game units: gravity is one of 101 discrete floats (0.12\u20138.00), temperature an integer -200..+200 step 4, radiation an integer 0..100.",
       "additionalProperties": false,
       "required": [
         "gravity",
@@ -312,6 +312,93 @@
             "crate": "stars-engine",
             "version": "*",
             "path": "stars_engine::game::objects::race::Race"
+          }
+        },
+        "designs": {
+          "description": "The player's stored ship and starbase designs. Optional/defaulted for back-compat with games persisted before the design model; new games set []. Edited via design.upsert / design.delete orders; projected into the owner's turn file as ship-designs.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/definitions/ship-design"
+          }
+        }
+      }
+    },
+    "slot-assignment": {
+      "description": "One filled hull slot in a stored design: which component sits in which slot, and how many.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot-index",
+        "part-id",
+        "count"
+      ],
+      "properties": {
+        "slot-index": {
+          "description": "Index into the hull's slots array.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "part-id": {
+          "description": "Component installed; indexes the technology catalog.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "count": {
+          "description": "How many of the part occupy this slot.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "format": "uint32"
+        }
+      }
+    },
+    "ship-design": {
+      "description": "A stored ship or starbase design owned by a player. built-count is NOT stored here: it is derived from the player's live fleets when a turn file is projected. See docs/mechanics/ship_design.rst.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "kind",
+        "name",
+        "hull-id",
+        "slot-assignments"
+      ],
+      "properties": {
+        "slot": {
+          "description": "Design slot index (ships 0-15, starbases 0-9 in a parallel space disambiguated by kind).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "format": "uint32"
+        },
+        "kind": {
+          "description": "Whether this is a ship or starbase design.",
+          "enum": [
+            "ship",
+            "starbase"
+          ]
+        },
+        "name": {
+          "description": "Player-assigned design name.",
+          "type": "string"
+        },
+        "hull-id": {
+          "description": "Hull id (ship-hull when kind=ship, starbase-hull when kind=starbase).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "format": "uint32"
+        },
+        "slot-assignments": {
+          "description": "Filled slots; empty slots omitted.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/slot-assignment"
           }
         }
       }

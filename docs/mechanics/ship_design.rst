@@ -283,7 +283,10 @@ Each entry carries:
   cannot be edited until the last ship is gone (see `Design Limits`_).
 
 A turn file carries only the viewing player's own designs in ``ship-designs``.
-The engine does not model designs yet, so it currently emits an empty list.
+The engine stores each player's designs (``Player.designs``), edits them via
+``design.upsert`` / ``design.delete`` orders, and projects the viewing player's
+own designs here.  ``built-count`` is derived from the player's live fleets — 0
+until the engine models fleets, so no slot is locked yet.
 
 *Other* players' designs the viewer has scanned travel in a separate
 ``scanned-designs`` array (the ``scanned-design`` definition), which carries

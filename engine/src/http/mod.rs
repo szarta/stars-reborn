@@ -58,7 +58,8 @@ use crate::game::objects::{
     technology_catalog::{technology_catalog, Props, TechItem, TraitReq},
 };
 use crate::game::orders::{
-    apply_set_production_queue, apply_set_route_target, OrderError, ProductionItemInput,
+    apply_design_delete, apply_design_upsert, apply_set_production_queue, apply_set_route_target,
+    OrderError, ProductionItemInput,
 };
 use crate::game::state::GameState;
 use crate::game::universe::generate_universe;
@@ -700,6 +701,7 @@ async fn create_game(
             homeworld_id,
             tech: starting_tech_levels(&race),
             race: Some(race),
+            designs: vec![],
         });
     }
 
@@ -728,6 +730,7 @@ async fn create_game(
             homeworld_id,
             tech: starting_tech_levels(&race),
             race: Some(race),
+            designs: vec![],
         });
     }
 
@@ -931,6 +934,34 @@ struct SetRouteTargetOrder {
     target_planet_id: Option<u32>,
 }
 
+/// The `design.upsert` order payload (minus its `kind` tag): the target slot
+/// plus the design body. The body carries everything but the slot (which comes
+/// from `design_slot`), matching the stored `ShipDesign` shape.
+#[derive(Deserialize)]
+struct DesignUpsertOrder {
+    design_slot: u32,
+    design: DesignPayload,
+}
+
+#[derive(Deserialize)]
+struct DesignPayload {
+    kind: crate::game::objects::player::ShipDesignKind,
+    name: String,
+    #[serde(rename = "hull-id")]
+    hull_id: u32,
+    #[serde(rename = "slot-assignments", default)]
+    slot_assignments: Vec<crate::game::objects::player::SlotAssignment>,
+}
+
+/// The `design.delete` order payload (minus its `kind` tag): the (kind, slot)
+/// identifying which design to remove.
+#[derive(Deserialize)]
+struct DesignDeleteOrder {
+    design_slot: u32,
+    #[serde(rename = "design_kind")]
+    kind: crate::game::objects::player::ShipDesignKind,
+}
+
 /// Map an `OrderError` from the game layer to an HTTP response.
 fn order_error_response(e: OrderError) -> axum::response::Response {
     let (status, msg) = match e {
@@ -946,6 +977,23 @@ fn order_error_response(e: OrderError) -> axum::response::Response {
         OrderError::RouteTargetNotFound(id) => (
             StatusCode::NOT_FOUND,
             format!("route target planet {id} not found"),
+        ),
+        OrderError::PlayerNotFound(id) => (StatusCode::NOT_FOUND, format!("player {id} not found")),
+        OrderError::DesignSlotOutOfRange { kind, slot } => (
+            StatusCode::BAD_REQUEST,
+            format!("design slot {slot} is out of range for a {kind:?} design"),
+        ),
+        OrderError::DesignHullNotFound { kind, hull_id } => (
+            StatusCode::BAD_REQUEST,
+            format!("no {kind:?} hull with id {hull_id}"),
+        ),
+        OrderError::DesignSlotLocked { kind, slot } => (
+            StatusCode::CONFLICT,
+            format!("{kind:?} design slot {slot} is locked (built-count > 0)"),
+        ),
+        OrderError::DesignNotFound { kind, slot } => (
+            StatusCode::NOT_FOUND,
+            format!("no {kind:?} design in slot {slot}"),
         ),
     };
     (status, Json(json!({"error": msg}))).into_response()
@@ -1037,6 +1085,45 @@ async fn submit_orders(
                 if let Err(e) =
                     apply_set_route_target(game, pid, parsed.planet_id, parsed.target_planet_id)
                 {
+                    return order_error_response(e);
+                }
+                orders_applied += 1;
+            }
+            "design.upsert" => {
+                let parsed: DesignUpsertOrder = match serde_json::from_value(order.clone()) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({"error": format!("invalid design.upsert order: {e}")})),
+                        )
+                            .into_response()
+                    }
+                };
+                let design = crate::game::objects::player::ShipDesign {
+                    slot: parsed.design_slot,
+                    kind: parsed.design.kind,
+                    name: parsed.design.name,
+                    hull_id: parsed.design.hull_id,
+                    slot_assignments: parsed.design.slot_assignments,
+                };
+                if let Err(e) = apply_design_upsert(game, pid, design) {
+                    return order_error_response(e);
+                }
+                orders_applied += 1;
+            }
+            "design.delete" => {
+                let parsed: DesignDeleteOrder = match serde_json::from_value(order.clone()) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({"error": format!("invalid design.delete order: {e}")})),
+                        )
+                            .into_response()
+                    }
+                };
+                if let Err(e) = apply_design_delete(game, pid, parsed.kind, parsed.design_slot) {
                     return order_error_response(e);
                 }
                 orders_applied += 1;

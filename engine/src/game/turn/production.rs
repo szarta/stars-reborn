@@ -258,6 +258,7 @@ mod tests {
                 homeworld_id: Some(hw),
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
+                designs: vec![],
             }],
             year: 2400,
         };

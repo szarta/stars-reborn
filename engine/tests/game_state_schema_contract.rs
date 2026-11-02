@@ -91,6 +91,7 @@ fn sample_game_state() -> GameState {
             homeworld_id,
             tech: TechLevels::default(),
             race: Some(race),
+            designs: vec![],
         });
     }
 
