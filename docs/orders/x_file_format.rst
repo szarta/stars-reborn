@@ -543,23 +543,11 @@ Type 44 — Rename Fleet
 Unknown / Open Record Types
 ---------------------------
 
-Three opcodes are observed in the research corpus but not yet decoded.  Each is
-the subject of a separate oracle task in the work queue.
-
-Type 2 (8 B) — *fleet-create / new-fleet metadata*
-   Always paired with a following ``waypoint_add`` for the same fleet.  Sample
-   payloads:
-
-   .. code-block:: text
-
-      a4 01 35 0c 21 08 fa 00     (fleet 420 follows; waypoint added)
-      44 0c fc 01 12 08 fa 00
-      f7 01 18 16 21 08 fa 00
-
-   Bytes 6–7 are consistently ``fa 00``; bytes 4–5 are ``12 08`` or ``21 08``
-   (look like flag fields).  Hypothesis: this is the order that *creates* a new
-   fleet from a fleet-split or scoop-from-cargo action and assigns its initial
-   id.
+Opcodes observed in the research corpus but not fully decoded.  Each is the
+subject of a separate oracle task in the work queue.  (Type 2 is **not** here —
+it is decoded as `Type 2 — Fleet Depart Orbit`_ above; the registry's
+``MANUAL_MEDIUM_LOAD_UNLOAD_TASK`` name for it is addressed in the registry
+table below.)
 
 Type 35 (6 B) — ``PLANET_CHANGE`` (planet route / packet target / flag)
    The general per-planet order-change block; named ``PLANET_CHANGE`` in the
@@ -636,8 +624,14 @@ Order-relevant block types from the registry and their status here:
      - ⚠️ conflict
      - Our corpus decode reads type-2 as *fleet depart orbit* (26 records,
        ``b4`` = 0x12/0x21).  The registry names it a medium cargo task.
-       Reconcile by oracle — the two may be distinct uses of the same opcode,
-       or one naming is wrong.
+       **Structure favours our decode**: every type-2 is a fixed 8 bytes with a
+       single 2-byte tail, whereas a cargo task (type-1) is variable-length
+       with a resource mask and *per-resource* amounts — a "medium" cargo
+       variant would keep that mask+list, not one fixed value; and ``b4`` is a
+       fleet/planet byte-order flag (the non-fleet half is always an in-range
+       planet = the fleet's orbit), not a load/unload action.  So the registry
+       name is likely a mislabel.  Definitive confirmation (and the ``b6-b7``
+       field) still needs an oracle that emits a type-2 by a known action.
    * - 25
      - ``MANUAL_LARGE_LOAD_UNLOAD_TASK``
      - ❌ unsampled
@@ -653,12 +647,25 @@ Order-relevant block types from the registry and their status here:
      -
    * - 38
      - ``PLAYERS_RELATION_CHANGE``
-     - ❌ unsampled
-     - Set friend / enemy / neutral.
+     - ✅
+     - Decoded: one relation byte per player (payload length = player count),
+       indexed by 0-based player index (self included), ``0`` = Neutral, ``1``
+       = Friend, ``2`` = Enemy.  The full relation vector, not a delta.
+       Confirmed on a 12-player game.  Needs a multi-player game (the Player
+       Relations dialog is disabled in a single-human game); the dialog lists
+       every player slot — including unmet players, shown as generic "Player N"
+       — so contact is not required to set a relation.
    * - 40
      - ``MESSAGE``
-     - ❌ unsampled
-     - In-game player-to-player messages.
+     - ✅
+     - Decoded: 12-byte header + nibble-encoded text.  ``b6-7`` = recipient
+       (1-based player id; ``0`` = everybody/broadcast), ``b10-11`` = text
+       length in bytes, ``b12+`` = text in the Stars name nibble-encoding (no
+       inline length byte).  ``b0-3`` is an outgoing-message id (``0`` for a
+       self-addressed message); ``b4-5`` / ``b8-9`` are reserved ``00 00``.
+       Confirmed on four hand-sent messages (to everybody / player 2 / player 3
+       / self).  Needs a multi-player game (the compose/send envelope is shown
+       only against other players).
    * - 46
      - ``SAVE_AND_SUBMIT``
      - ❌ unsampled
@@ -682,9 +689,12 @@ Identified — opcode known, payload decode pending oracle:
   research-only / "contribute leftover energy" toggle → **type-35
   ``PLANET_CHANGE``** (multiplexed; the route-to sub-form is decoded —
   ``destref = display_id << 15`` — the others pending oracle).
-- Player-relations changes (friend / enemy / neutral) → **type-38
-  ``PLAYERS_RELATION_CHANGE``**.
-- Game messages (chat / send-to-player) → **type-40 ``MESSAGE``**.
+- Manual **large** load/unload → **type-25 ``MANUAL_LARGE_LOAD_UNLOAD_TASK``**,
+  the large-amount sibling of type-1; unsampled in the corpus (needs a
+  freighter carrying a large cargo), so still pending an oracle.
+
+Player-relations changes (type-38) and player messages (type-40) are now
+decoded (see the registry table); both required a multi-player game.
 
 Likely not a distinct opcode:
 
