@@ -37,6 +37,7 @@ SCHEMAS = [
     ("response-create-new-game", "create_game.py"),
     ("response-model-ship-hulls", "ship_hulls.py"),
     ("response-model-buildables", "buildables.py"),
+    ("response-model-technologies", "technologies.py"),
     ("response-validate-race", "validate_race.py"),
 ]
 

@@ -29,6 +29,13 @@ const SCHEMAS: &[(&str, &str)] = &[
     // GET /model/buildables — the production-queue buildable registry.
     // Self-contained (no cross-file refs).
     ("response-model-buildables", "buildables_types.rs"),
+    // NOTE: response-model-technologies is deliberately NOT here. Its per-
+    // category `props-*` are if/then-discriminated, and typify 0.8 panics with
+    // "if/then/else schemas are not supported". The engine produces that
+    // endpoint with hand-built `json!` (model_technologies), and the schema
+    // contract test validates the output, so no engine-side wire type is
+    // needed. The client pydantic types come from datamodel-codegen instead
+    // (scripts/generate_types.py), which does handle if/then.
     // Host-side authoritative game state (game.json / .sr save). References
     // race.json; the bundler below resolves that cross-file ref for typify.
     ("game-state", "game_state_types.rs"),
