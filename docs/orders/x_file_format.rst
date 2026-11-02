@@ -82,12 +82,12 @@ unknown.
      - 6–10 B
      - LOAD opcode 0x12, UNLOAD 0x02 (R0.7).
    * - 2
-     - Fleet depart orbit
-     - ⚠️
+     - Manual medium cargo load/unload
+     - ✅
      - 8 B
-     - An orbiting fleet is given its first waypoint; records the fleet and the
-       planet it leaves. Fields confirmed on 26 records; ``b5`` and the
-       trailing two bytes still unknown.
+     - ``MANUAL_MEDIUM_LOAD_UNLOAD_TASK``: the 2-byte-amount sibling of type-1.
+       fleet + planet + ``order_flag`` (b4) + resource mask (b5) + 2-byte
+       amount (b6-7).  Oracle-confirmed.  See below.
    * - 3
      - Waypoint delete
      - ✅
@@ -194,30 +194,35 @@ length depending on how many resource types are involved.
 
 Confirmed via R0.7 oracle (2026-04-20/21).
 
-Type 2 — Fleet Depart Orbit
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Type 2 — Manual Medium Cargo Load/Unload
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Emitted when a fleet departs orbit, recording the fleet and the planet it is
-leaving. It always immediately precedes that fleet's type-4 ``waypoint_add``
-(``waypoint_nr = 1``), and a fleet already under way when re-routed produces no
-type-2, so the record is far less common than ``waypoint_add``.
+``MANUAL_MEDIUM_LOAD_UNLOAD_TASK``: a waypoint-0 manual cargo transfer, exactly
+like type-1 but with a **2-byte** amount.  The manual transfer opcode is chosen
+by the amount's width — type-1 (small) holds a 1-byte amount, type-2 (medium) a
+2-byte amount, type-25 (large) a 4-byte amount:
 
-The precise trigger is **not derivable from fleet or order state** and is
-narrower than "first movement waypoint from orbit." The decisive evidence: two
-**byte-identical** fleets in the same order file — same design, same orbit
-planet, same position, fuel, cargo and waypoint count — one emits a type-2 and
-the other does not, differing only in where they are sent. So emission depends
-on the client-side *interaction* used to command the orbiting fleet, not on any
-recorded property. Ruled out as the trigger: being a first-waypoint-from-orbit
-(necessary but not sufficient), carrying cargo (no corpus type-2 fleet has a
-paired ``manual_cargo_transfer``), the ship design, the orbit planet's owner
-(always the player's own), and being a freshly-created vs. established fleet. A
-2026-10-29 UI oracle (shift-click is the add-waypoint gesture) reproduced
-``waypoint_add`` reliably but produced **no** type-2 across the tested
-fleet-command gestures (``Goto``- and double-click-select, then shift-click a
-planet) in a fresh Small-universe game at turn 1 and after one generated turn.
-The specific interaction (or richer game state) that emits type-2 is still
-unidentified, so ``b6-b7`` cannot yet be pinned by varying one oracle input.
+::
+
+   b0-1  fleet (9-bit) / planet (u16)    order selected by b4
+   b2-3  the other of planet / fleet
+   b4    order_flag: 0x12 = fleet in b0-1, 0x21 = fleet in b2-3 (load = 0x12)
+   b5    resource mask: 1=ironium, 2=boranium, 4=germanium, 8=colonists
+   b6-7  amount (LE uint16)
+
+Oracle-confirmed: loading **210 kT Germanium** onto a fleet produced a type-2
+with ``b5 = 0x04`` (germanium) and ``b6-7 = 210``, while an 11-unit colonist
+load the same turn stayed type-1.  Across the corpus every type-1 amount is ≤
+64 and every type-2 amount ≥ 208, consistent with a signed-int8 → int16
+boundary.
+
+This corrects an earlier reading of type-2 as "fleet depart orbit."  That
+decode was misled by two coincidences: a waypoint-0 cargo transfer necessarily
+happens at the fleet's *orbited* planet (so "planet matches orbit"), and the
+undecoded "trailing two bytes" were in fact the 2-byte cargo amount.  The
+registry name was correct all along.  (The remaining open detail is the
+``order_flag`` 0x21 variant — load is 0x12; the unload encoding is not yet
+sampled.)
 
 .. code-block:: text
 
@@ -545,9 +550,7 @@ Unknown / Open Record Types
 
 Opcodes observed in the research corpus but not fully decoded.  Each is the
 subject of a separate oracle task in the work queue.  (Type 2 is **not** here —
-it is decoded as `Type 2 — Fleet Depart Orbit`_ above; the registry's
-``MANUAL_MEDIUM_LOAD_UNLOAD_TASK`` name for it is addressed in the registry
-table below.)
+it is decoded as `Type 2 — Manual Medium Cargo Load/Unload`_ above.)
 
 Type 35 (6 B) — ``PLANET_CHANGE`` (planet route / packet target / flag)
    The general per-planet order-change block; named ``PLANET_CHANGE`` in the
@@ -621,21 +624,17 @@ Order-relevant block types from the registry and their status here:
      - Decoded as manual cargo transfer.
    * - 2
      - ``MANUAL_MEDIUM_LOAD_UNLOAD_TASK``
-     - ⚠️ conflict
-     - Our corpus decode reads type-2 as *fleet depart orbit* (26 records,
-       ``b4`` = 0x12/0x21).  The registry names it a medium cargo task.
-       **Structure favours our decode**: every type-2 is a fixed 8 bytes with a
-       single 2-byte tail, whereas a cargo task (type-1) is variable-length
-       with a resource mask and *per-resource* amounts — a "medium" cargo
-       variant would keep that mask+list, not one fixed value; and ``b4`` is a
-       fleet/planet byte-order flag (the non-fleet half is always an in-range
-       planet = the fleet's orbit), not a load/unload action.  So the registry
-       name is likely a mislabel.  Definitive confirmation (and the ``b6-b7``
-       field) still needs an oracle that emits a type-2 by a known action.
+     - ✅
+     - Decoded (registry name confirmed): the 2-byte-amount manual cargo
+       transfer; fleet + planet + ``order_flag`` + resource mask + 2-byte
+       amount.  See the type-2 section above.
    * - 25
      - ``MANUAL_LARGE_LOAD_UNLOAD_TASK``
      - ❌ unsampled
-     - Large-cargo variant of type-1; not seen in the corpus.
+     - The 4-byte-amount (large) sibling of type-1/2.  A single fleet's cargo
+       capacity keeps real transfers well under the ~32767 int16 ceiling, so
+       this tier is essentially unreachable in normal play — which is why it is
+       absent from the corpus.
    * - 35
      - ``PLANET_CHANGE``
      - ⚠️
@@ -690,11 +689,13 @@ Identified — opcode known, payload decode pending oracle:
   ``PLANET_CHANGE``** (multiplexed; the route-to sub-form is decoded —
   ``destref = display_id << 15`` — the others pending oracle).
 - Manual **large** load/unload → **type-25 ``MANUAL_LARGE_LOAD_UNLOAD_TASK``**,
-  the large-amount sibling of type-1; unsampled in the corpus (needs a
-  freighter carrying a large cargo), so still pending an oracle.
+  the 4-byte-amount sibling of type-1/2; unsampled because a single fleet's
+  cargo capacity keeps real transfers under the int16 ceiling (see the registry
+  table), so it is essentially unreachable rather than merely unsampled.
 
-Player-relations changes (type-38) and player messages (type-40) are now
-decoded (see the registry table); both required a multi-player game.
+Player-relations (type-38), player messages (type-40), and manual medium cargo
+transfers (type-2) are now decoded (see the registry table); 38 and 40 required
+a multi-player game.
 
 Likely not a distinct opcode:
 
