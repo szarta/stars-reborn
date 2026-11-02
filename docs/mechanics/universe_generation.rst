@@ -155,8 +155,7 @@ Planet Placement
    constant ``1120:00f4 = 12`` is read only there and never written). This also
    explains the oracle corpus's "no pair closer than ~14 ly Manhattan": a
    Euclidean floor just above 12 ly implies, but is not identical to, that
-   Manhattan shadow. See
-   ``stars-reborn-research/knowledge/findings/universe_generation_planet_placement.rst``.
+   Manhattan shadow.
 
 The above describes placement with Galaxy Clumping **off**. When the "Galaxy
 Clumping" new-game option is on, the original |original| clusters the planets
@@ -298,9 +297,9 @@ window slides toward the extremes.  This is why Art Lathrop's *Basic Race
 Design* article recommends sliding only the radiation window for free advantage
 points.
 
-Source: Alan L. Kolaga's per-click distribution table (charts captured at
-``stars-reborn-research/sources/web/arglos/charts/``), confirmed against 40,614
-independently observed planets in :ref:`hab-distribution-finding`.
+Source: Alan L. Kolaga's per-click distribution table (community charts hosted
+on Art Lathrop's arglos.net), confirmed against 40,614 independently observed
+planets in :ref:`hab-distribution-finding`.
 
 Mineral Generation
 ------------------

@@ -121,9 +121,9 @@ Empirical validation (R5.1)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Verified against an in-game F10 screen at year 2420 in a 16-player game
-(``stars-reborn-research/experiments/normally_played_game``).  Player 1 (AR
-race "Timmune") with 4 planets, 1 starbase, 16 unarmed ships, tech 6/0/1/4/3/3
-(sum 17), and 311 annual resources scored exactly:
+(experiment id ``2fa4b900-24b5-591f-88c4-3ac2e46f7221``).  Player 1 (AR race
+"Timmune") with 4 planets, 1 starbase, 16 unarmed ships, tech 6/0/1/4/3/3 (sum
+17), and 311 annual resources scored exactly:
 
 .. code-block:: text
 
@@ -181,15 +181,15 @@ reproduces every player's score with zero residual, across PRTs
 JOAT/HE/SS/PP/IS/AR, planet counts from 1 to 73, escort counts up to 60, and
 tech levels up to 10.
 
-Per-class validation scripts:
-``stars-reborn-research/re/scripts/score_calc.py`` (single player) and
-``validate_score.py`` (multi-player, takes an F10 ground-truth JSON).
+Per-class validation used internal score-calculation scripts (one
+single-player, one multi-player taking an F10 ground-truth JSON).
 
 Capital-ship harmonic mean (confirmed year 2504)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A fourth snapshot at year 2504 (``stars-reborn-research/experiments/try2``,
-6-player game) closed the last open cell.  Two players held capital ships:
+A fourth snapshot at year 2504 (experiment id
+``697e21e1-7448-5d94-96d0-8b51436b7d18``, 6-player game) closed the last open
+cell.  Two players held capital ships:
 
 * **P1 Timmune (AR)** — 1 capital ship, 5 planets → ``floor(8 × 1 × 5 / (1 +
   5)) = floor(6.667) = 6 pts``.  Total expected score 318 = F10 ✓

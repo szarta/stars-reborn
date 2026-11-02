@@ -343,9 +343,8 @@ or repaired at this starbase; 0 = no docking.
 Full Data Reference
 -------------------
 
-Numeric values for all technology items are in
-``stars-reborn-research/data/technologies.dat`` (original game data) and will
-be encoded in the engine's data model.
+Numeric values for all technology items come from the original game's
+technology data and will be encoded in the engine's data model.
 
 .. todo::
 

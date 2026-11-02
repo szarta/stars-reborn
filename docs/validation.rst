@@ -388,8 +388,8 @@ loader to handle it correctly.
 Known File Structure
 ^^^^^^^^^^^^^^^^^^^^
 
-Initial inspection of a real Stars! game (``~/data/stars/test/``, 3-player Tiny
-universe, year 1) reveals the following.
+Initial inspection of a real Stars! game (a 3-player Tiny universe, year 1)
+reveals the following.
 
 **File inventory:**
 

@@ -478,8 +478,8 @@ ASCII letter or digit (a consequence of the code formula for that range).
    total 8 nibbles (even) → no pad
    packed: [C3] [28] [81] [69] = [195, 40, 129, 105]
 
-The reference implementation is ``encode_name_key`` / ``decode_name_key`` in
-``scripts/analyze_r1.py`` of ``stars-reborn-research``.
+The reference implementation is the ``encode_name_key`` / ``decode_name_key``
+algorithm specified above, verified by round-trip against real ``.r1`` files.
 
 .. rubric:: Dropdown preset names (singular / plural key bytes)
 
@@ -500,8 +500,8 @@ LRT Bitmask Bit Order
 
 The 16-bit LE word at payload bytes 78–79 encodes all 14 LRTs.  Bits 14–15 are
 unused.  The bit layout does **not** follow the logical LRT order; it is a
-fixed scramble confirmed by single-LRT differential experiments
-(``scripts/analyze_r1.py`` in ``stars-reborn-research``, 2026-04-11).
+fixed scramble confirmed by single-LRT differential experiments against the
+original game (2026-04-11).
 
 .. list-table::
    :header-rows: 1

@@ -3,8 +3,7 @@ ui/dialogs/ship_designer.py
 
 Ship Designer dialog.
 
-Reproduces the layout of the original Stars! Ship Designer (see
-stars-reborn-research/experiments/screencaps/ship_designer/):
+Reproduces the layout of the original Stars! Ship Designer:
 
   ┌──── Ship Designer ──────────────────────────────────────────┐
   │ ┌─Design────┐                                                │

@@ -108,9 +108,8 @@ The engine ships with a set of pre-built race definitions used for AI slots and
 as starting points for new players.  These are bundled from
 ``stars-reborn-schemas`` (file: ``builtin_races/``).
 
-**Source:** Decoded from original ``stars.exe`` default ``.r1`` files
-(2026-04-22).  Full details in
-``stars-reborn-research/knowledge/findings/default_race_values.rst``.
+**Source:** Decoded from the original ``stars.exe`` default ``.r1`` (race)
+files (2026-04-22), field offsets confirmed by oracle experiments.
 
 Hab values: 0–100 index (``0xFF`` = immune).  Temperature: ``°C = (idx−50)×4``.
 Radiation: direct mR/yr.  Research cost: ``N``\=Normal, ``E``\=Expensive,

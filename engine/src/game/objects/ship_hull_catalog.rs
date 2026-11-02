@@ -1,8 +1,8 @@
 // Ship hull catalog
 //
-// Static data for every ship hull in the game. Values mirror the legacy
-// Python engine (stars-reborn-research/stars-reborn/src/factory.py) and the
-// design reference at stars-reborn-design/docs/reference/ship_hulls.rst.
+// Static data for every ship hull in the game. Values mirror the prior Python
+// engine prototype and the design reference at
+// stars-reborn-design/docs/reference/ship_hulls.rst.
 //
 // Slot positions are the real per-hull Ship Designer layout, verified against
 // the original game's Tech Browser hull view. Grid unit = half a slot box;

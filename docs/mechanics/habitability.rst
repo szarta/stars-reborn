@@ -83,8 +83,8 @@ index is therefore not always unambiguous without context.
      return result;
    }
 
-**Source:** Validated against live Stars! game data in
-``stars-reborn-research/maps/compare_formula_hab_to_actual.py``.
+**Source:** Validated against live Stars! game data (an oracle corpus of maps
+dumped from the original game via ``Reports -> Dump Universe``).
 
 Temperature
 ~~~~~~~~~~~

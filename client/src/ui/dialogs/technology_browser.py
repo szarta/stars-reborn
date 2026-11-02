@@ -4,8 +4,7 @@ ui/dialogs/technology_browser.py
 Technology Browser dialog — browse the ship/starbase component catalog served
 by the engine at ``GET /model/technologies``.
 
-Reproduces the layout of the original Stars! Technology Browser (see
-stars-reborn-research/experiments/screencaps/tech_browser/):
+Reproduces the layout of the original Stars! Technology Browser:
 
   ┌──── Technology Browser ─────────────────────────────────────┐
   │ [← Prev]  [ Engines              ▾]  [Next →]                │

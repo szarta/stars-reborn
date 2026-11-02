@@ -236,8 +236,9 @@ Practical effects:
 .. todo::
 
    Confirm via Ghidra: range modifier on beamer APN; exact accuracy rounding;
-   whether miniaturized costs or base costs are used in ``Cost``.  See
-   ``stars-reborn-research/knowledge/open_questions/targeting_attractiveness_formula.rst``.
+   whether miniaturized costs or base costs are used in ``Cost``.  (The full
+   targeting-attractiveness formula is Art Lathrop's, rev. April 1999, pending
+   Ghidra confirmation.)
 
 Battle Computers
 ^^^^^^^^^^^^^^^^

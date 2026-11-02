@@ -5,7 +5,8 @@
 // Direct port of:
 //   RacePointsCalculator.java  — getAdvantagePoints(), getHabRangePoints()
 //   Race.java                  — getPlanetHabitability()
-// Source: stars-reborn-research/sources/community-tools/starsapi/.../craigstars/
+// Source: the craigstars project (a community Stars! clone), via its
+//   RacePointsCalculator.java and Race.java.
 //
 // The raw point accumulator starts at STARTING_POINTS (1650) and is divided by
 // 3 at the end.  A result ≥ 0 is a valid (balanced) race design; negative

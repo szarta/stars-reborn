@@ -588,9 +588,8 @@ Type 35 (6 B) — ``PLANET_CHANGE`` (planet route / packet target / flag)
    The three candidate actions — mass-driver packet destination, planet route
    target, and the "contribute leftover resources to research" toggle — are all
    plausible ``PLANET_CHANGE`` payloads; the shared-value evidence favours a
-   destination over the research flag.  Full analysis:
-   ``stars-reborn-research/knowledge/findings/planet_change_block.rst``.
-   Definitive encoding pending an oracle diff with a known action.
+   destination over the research flag.  Definitive encoding pending an oracle
+   diff with a known action.
 
 Community Block-Type Registry
 -----------------------------

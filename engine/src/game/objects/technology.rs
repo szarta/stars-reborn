@@ -465,7 +465,6 @@ pub struct GenesisDevice {
 //
 // Source values are in the legacy Python engine (stars_reborn/data/factory.py,
 // now removed). All values need oracle verification before use. See:
-//   stars-reborn-research/PLAN.md   — research tasks
 //   stars-reborn-design/docs/reference/engines.rst
 //   stars-reborn-design/docs/reference/ship_hulls.rst
 //   stars-reborn-design/docs/reference/starbase_hulls.rst

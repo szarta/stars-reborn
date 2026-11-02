@@ -7,7 +7,8 @@ Converts the encrypted binary format to a race dict conformant to the engine's
 Race struct (documented in stars-reborn-design/docs/new_game/race_file_format.rst).
 Also handles loading / saving the JSON form (.r1.json).
 
-Cipher implementation mirrors decrypt_stars.py in stars-reborn-research exactly.
+Cipher follows the original ``stars.exe`` XOR-stream cipher (an L'Ecuyer
+combined LCG), recovered by Ghidra reverse-engineering of the original game.
 
 :author: Brandon Arrendondo
 :license: MIT, see LICENSE.txt for more details.

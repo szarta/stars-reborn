@@ -10,8 +10,7 @@ Turn Resolution Order
    community ``EventOrder.txt`` are also incorporated and are rated medium
    trust.  Core ordering from McBride is treated as authoritative (equivalent
    to the strategy guide).  Individual steps still benefit from oracle
-   confirmation — see
-   ``stars-reborn-research/knowledge/open_questions/turn_resolution_order.rst``.
+   confirmation against the original game.
 
 Each year, the |original| engine processes events in the following order.
 |project| must reproduce this sequence exactly for behavioral fidelity.
@@ -158,4 +157,5 @@ Notes
    - **Newly-launched packets reaching destination same turn** (Phase 6 sub-step;
      needs oracle confirmation of exact range cutoff).
 
-   See ``stars-reborn-research/knowledge/open_questions/turn_resolution_order.rst``.
+   These remaining sub-steps are flagged for oracle confirmation against the
+   original game.

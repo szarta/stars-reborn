@@ -1,8 +1,9 @@
 """PlanetData.route_target parsing for the turn editor's Route To section.
 
 The route destination is always a planet id (or None for no route); clicking
-empty space or an object snaps to the nearest planet client-side — see
-stars-reborn-research/knowledge/findings/route_to.rst."""
+empty space or an object snaps to the nearest planet client-side. Verified
+against the original ``stars.exe``; FreeStars models it as a planet-only
+``Planet::mRouteTo``."""
 
 from __future__ import annotations
 
