@@ -144,10 +144,12 @@ unknown.
      - Planet change (route / packet target / planet flag)
      - ⚠️
      - 6 B
-     - ``PLANET_CHANGE`` in the community registry.  Structure decoded: bytes
-       0–1 = ``planet_idx`` (matches the next type-29 in file order), bytes 2–3
-       = a packed destination field, bytes 4–5 always ``00 00``.  Exact bytes
-       2–3 encoding still open.  See below.
+     - ``PLANET_CHANGE`` in the community registry; multiplexed.  The **route
+       destination** sub-form is decoded: bytes 0–1 = ``planet_idx`` (matches
+       the next type-29 in file order), bytes 2–5 = destination as ``display_id
+       << 15`` (``destref >> 15`` = destination id, ``0`` = cleared).  A second
+       6-byte sub-form (field in bytes 2–3, bytes 4–5 ``00 00``; likely packet
+       target) is still open.  See below.
    * - 37
      - Fleets merge
      - ✅
@@ -562,34 +564,48 @@ Type 2 (8 B) — *fleet-create / new-fleet metadata*
 Type 35 (6 B) — ``PLANET_CHANGE`` (planet route / packet target / flag)
    The general per-planet order-change block; named ``PLANET_CHANGE`` in the
    community registry (its ``starsapi`` decoder is an empty stub, so the block
-   was named but never decoded there).  Structure confirmed from the corpus
-   (118 records across the standalone games; ≈59 unique after ``backup/``
-   de-duplication):
+   was named but never decoded there).  The 6-byte payload is **multiplexed** —
+   different planet-change sub-actions carry different fields in the same
+   envelope.  Bytes 0–1 are always the subject ``planet_idx`` (0-based, matches
+   the next ``production_queue_change`` in file order).
+
+   **Route destination (decoded).**  Confirmed against a differential oracle
+   that drove the production **Route** gesture to four known destinations and
+   diffed the saved ``.x1`` (4/4 exact):
 
    .. code-block:: text
 
-      b0–b1   planet_idx     (LE uint16; matches the next production_queue_change)
-      b2–b3   destination     (LE uint16; packed reference, see below)
-      b4–b5   always 0x00 0x00
+      b0–b1   planet_idx     (LE uint16, 0-based subject)
+      b2–b5   destref        (LE uint32) = destination display_id << 15
 
-   Bytes 2–3 are a **packed destination reference**, not a flag, a raw planet
-   id, or a raw coordinate:
+   So the destination display id is ``destref >> 15`` (``destref == 0`` = route
+   cleared); the low 15 bits are 0 — a reference-type tag for a plain
+   planet-by-id, consistent with the widened object references elsewhere in the
+   format.  Example: destination id 92 → ``destref = 0x002E0000`` → bytes ``00
+   00 2e 00``.  ``x1_to_json`` decodes this as ``planet_route_change`` when
+   ``destref & 0x7fff == 0``.
 
-   - ``0x0000`` / ``0x0001`` = default/empty; otherwise a value in the
-     ``0x13xx``–``0x3exx`` family, low byte essentially always even.
-   - The same value (``0x200a``) recurs for three *different* subject planets —
-     a shared destination, not a per-planet attribute.
-   - Values reach ``0x3e1c`` ≈ 15,900, far above the largest planet id (~800–
-     1000, even on a Huge map) or coordinate (~2000), ruling out a raw id or
-     coordinate; no clean low-bit slice yields an in-range index either.
+   **Second sub-form (open).**  118 type-35 records across the corpus ``.xN``
+   order files instead carry a field in bytes 2–3 with bytes 4–5 ``00 00`` (so
+   ``destref & 0x7fff != 0``; the route decode does not apply):
 
-   Leading hypotheses for the encoding: a coarse ``(x, y)`` destination point
-   (byte 2 ≈ X, byte 3 ≈ Y scaled to a byte), or a packed index + type/flag.
-   The three candidate actions — mass-driver packet destination, planet route
-   target, and the "contribute leftover resources to research" toggle — are all
-   plausible ``PLANET_CHANGE`` payloads; the shared-value evidence favours a
-   destination over the research flag.  Definitive encoding pending an oracle
-   diff with a known action.
+   - value in the ``0x13xx``–``0x3exx`` family, low byte essentially always
+     even; the same value (``0x200a``) recurs for three *different* subject
+     planets — a shared destination, not a per-planet attribute.
+
+   These come from *developed* games (among ``design_save`` /
+   ``research_change`` orders), so the sub-action needs a built installation
+   the turn-1 oracle never had — the **mass-driver packet target** is the
+   leading candidate.  Its encoding is still open and is gated on an oracle
+   that builds a mass driver and sets a packet target to a known planet, the
+   same way the engine's faithful packet-destination semantics are.  Any
+   non-route type-35 is surfaced raw (``unknown`` + ``payload_hex``) rather
+   than guessed.
+
+   (A glob of ``.x*`` also matches ``.xy`` universe files, whose own,
+   unrelated, type-35 records are planet-definition rows — keep those out of an
+   ``.xN`` order analysis; filter order files with ``*.x[1-9]`` /
+   ``*.x[1-9][0-9]``.)
 
 Community Block-Type Registry
 -----------------------------
@@ -664,7 +680,8 @@ Identified — opcode known, payload decode pending oracle:
 
 - Planet route-to target, auto-build / mass-driver target, and the
   research-only / "contribute leftover energy" toggle → **type-35
-  ``PLANET_CHANGE``**.
+  ``PLANET_CHANGE``** (multiplexed; the route-to sub-form is decoded —
+  ``destref = display_id << 15`` — the others pending oracle).
 - Player-relations changes (friend / enemy / neutral) → **type-38
   ``PLAYERS_RELATION_CHANGE``**.
 - Game messages (chat / send-to-player) → **type-40 ``MESSAGE``**.
