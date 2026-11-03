@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QBoxLayout,
     QCheckBox,
     QComboBox,
+    QDialog,
     QFrame,
     QLabel,
     QListWidget,
@@ -112,6 +113,66 @@ def order_items_from_entries(entries, buildables):
             item["design_slot"] = meta["design_slot"]
         items.append({"item": item, "count": e.get("build_quantity", 0)})
     return items
+
+
+# Add-item picker category order and display labels. The buildable registry
+# emits installations/autos first (in registry order) then one entry per design
+# slot; the picker presents them under these fixed group headers.
+_PICKER_CATEGORY_LABELS = (
+    ("installation", "Installations"),
+    ("auto", "Auto Build"),
+    ("ship-design", "Ship Designs"),
+)
+
+
+def grouped_buildables(buildables):
+    """Order the buildable registry for the add-item picker.
+
+    Returns a list of ``(group_label, [(build_object_id, name), ...])`` in fixed
+    category order (Installations, Auto Build, Ship Designs), each group's items
+    sorted by build-object-id (the registry order — design slots are 1024+N).
+    Empty groups are omitted. Any buildable whose category is outside the known
+    set is collected under a trailing "Other" group so nothing silently vanishes
+    from the picker.
+    """
+    by_cat: dict = {}
+    for oid, meta in (buildables or {}).items():
+        cat = meta.get("category")
+        name = meta.get("name") or f"Buildable {oid}"
+        by_cat.setdefault(cat, []).append((oid, name))
+
+    groups = []
+    known = set()
+    for cat, label in _PICKER_CATEGORY_LABELS:
+        known.add(cat)
+        items = by_cat.get(cat)
+        if items:
+            groups.append((label, sorted(items)))
+
+    other = []
+    for cat, items in by_cat.items():
+        if cat not in known:
+            other.extend(items)
+    if other:
+        groups.append(("Other", sorted(other)))
+    return groups
+
+
+def insert_queue_entry(entries, index, build_object_id, quantity):
+    """Return a copy of ``entries`` with a new production entry inserted.
+
+    The entry is ``{"build_object_id", "build_quantity"}``. ``index`` is the
+    position to insert at (the currently selected queue row — the item lands
+    above it, matching the original game); an out-of-range or negative index
+    appends to the end.
+    """
+    entry = {"build_object_id": build_object_id, "build_quantity": quantity}
+    out = [dict(e) for e in entries]
+    if 0 <= index <= len(out):
+        out.insert(index, entry)
+    else:
+        out.append(entry)
+    return out
 
 
 def starbase_field_rows(starbase, names=None):
@@ -477,17 +538,15 @@ class _ProductionSection(_SectionPane):
     """Production queue for the selected planet.
 
     Shows the queue from the engine's per-player turn file (present only for
-    owned planets) and lets the player remove/reorder entries. Each edit
+    owned planets) and lets the player add, remove, and reorder entries. Add
+    opens the buildable picker (:class:`ProductionPickerDialog`); every edit
     re-emits ``queue_changed(planet_id, order_items)`` so the host can submit
-    the whole new queue to the engine. Adding an item needs the buildable
-    picker, which is a separate task — ``add_item_requested`` is the hook for it.
+    the whole new queue to the engine.
     """
 
     # (planet_id, order-item list) — the full queue after an edit, ready to
     # PUT as a planet.set_production_queue order.
     queue_changed = Signal(int, list)
-    # planet_id — the Add button; the item-picker dialog is a deferred child task.
-    add_item_requested = Signal(int)
 
     _EMPTY_PLACEHOLDER = "--- Queue is Empty ---"
 
@@ -576,8 +635,27 @@ class _ProductionSection(_SectionPane):
 
     # ── edit handlers ────────────────────────────────────────────────────
     def _on_add(self):
-        if self._planet is not None:
-            self.add_item_requested.emit(self._planet.id)
+        """Open the buildable picker and insert the chosen item at the selected
+        queue position (above the selection, or at the end when nothing is
+        selected), then submit via the queue_changed path."""
+        if self._planet is None or not (self._editable and self._owned):
+            return
+        if not self._buildables:
+            return
+        from .dialogs.production_picker import ProductionPickerDialog
+
+        dlg = ProductionPickerDialog(self._buildables, parent=self.window())
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        chosen = dlg.selected()
+        if chosen is None:
+            return
+        oid, qty = chosen
+        pos = self._selected_index()
+        if pos < 0:
+            pos = len(self._entries)
+        self._entries = insert_queue_entry(self._entries, pos, oid, qty)
+        self._commit(pos)
 
     def _on_remove(self):
         idx = self._selected_index()
@@ -969,9 +1047,8 @@ class LeftPanel(QWidget):
     # Emitted with a planet id when Prev/Next picks a new world to navigate to.
     planet_nav_requested = Signal(int)
     # Forwarded from the Production section: (planet_id, order-item list) after a
-    # queue edit, and the planet_id of an Add request (picker is a child task).
+    # queue edit (add/remove/reorder). The host PUTs it as the new queue.
     queue_changed = Signal(int, list)
-    add_item_requested = Signal(int)
     # Forwarded from the Route To section.
     route_change_requested = Signal(int)
     route_clear_requested = Signal(int)
@@ -1013,7 +1090,6 @@ class LeftPanel(QWidget):
         self._fleets = _FleetsInOrbitSection()
         self._production = _ProductionSection()
         self._production.queue_changed.connect(self.queue_changed)
-        self._production.add_item_requested.connect(self.add_item_requested)
         self._route = _RouteSection()
         self._route.change_requested.connect(self.route_change_requested)
         self._route.clear_requested.connect(self.route_clear_requested)

@@ -163,7 +163,6 @@ class MainWindow(QMainWindow):
         self._left_panel.planet_nav_requested.connect(self._on_planet_nav)
         self._left_panel.message_goto_requested.connect(self._on_message_goto)
         self._left_panel.queue_changed.connect(self._on_production_queue_changed)
-        self._left_panel.add_item_requested.connect(self._on_add_production_item)
         self._left_panel.route_change_requested.connect(self._on_route_change)
         self._left_panel.route_clear_requested.connect(self._on_route_clear)
         self._left_panel.route_fleet_requested.connect(self._on_route_fleet)
@@ -659,12 +658,6 @@ class MainWindow(QMainWindow):
         order = {"kind": "planet.set_production_queue", "planet_id": planet_id, "items": items}
         if self._submit_orders([order]):
             self.statusBar().showMessage("Production order submitted.", 3000)
-
-    def _on_add_production_item(self, planet_id: int):
-        """Add button — the buildable picker dialog is a separate task (#140)."""
-        self.statusBar().showMessage(
-            "Add to production — item picker dialog not yet implemented.", 4000
-        )
 
     # ── route to ─────────────────────────────────────────────────────────────
     def _on_route_change(self, planet_id: int):
