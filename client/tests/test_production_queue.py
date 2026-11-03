@@ -18,6 +18,7 @@ from src.ui.info_panel import (  # noqa: E402
     build_buildables_map,
     grouped_buildables,
     insert_queue_entry,
+    modified_quantity,
     order_items_from_entries,
 )
 
@@ -178,6 +179,14 @@ def test_insert_queue_entry_out_of_range_appends():
 
 def test_insert_queue_entry_into_empty_queue():
     assert insert_queue_entry([], 0, 7, 1) == [{"build_object_id": 7, "build_quantity": 1}]
+
+
+def test_modified_quantity_matches_original_modifier_convention():
+    # No modifier uses the explicit base amount; Shift/Ctrl/both are presets.
+    assert modified_quantity(7, shift=False, ctrl=False) == 7
+    assert modified_quantity(7, shift=True, ctrl=False) == 10
+    assert modified_quantity(7, shift=False, ctrl=True) == 100
+    assert modified_quantity(7, shift=True, ctrl=True) == 1000
 
 
 # ── PlanetData.build_queue parsing ───────────────────────────────────────────

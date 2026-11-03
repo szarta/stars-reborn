@@ -11,10 +11,13 @@ Auto Build, Ship Designs. Picking an item and a quantity and accepting hands
 back ``(build_object_id, quantity)``; the section inserts it at the selected
 queue position and submits through its existing ``queue_changed`` path.
 
-Auto-build items are standing orders rather than counted builds, so the quantity
-is locked to 1 while one is selected. Ship-design slots come straight from the
-registry; narrowing them to the player's actual designs is the engine's job as
-it serializes designs (tracked separately).
+The quantity honours the original game's modifier convention: holding Shift
+while accepting adds 10, Ctrl adds 100, and both add 1000; with no modifier the
+explicit spin-box amount is used. Auto-build items are standing orders rather
+than counted builds, so the quantity is locked to 1 while one is selected.
+Ship-design slots come straight from the registry; narrowing them to the
+player's actual designs is the engine's job as it serializes designs (tracked
+separately).
 
 :author: Brandon Arrendondo
 :license: MIT, see LICENSE.txt for more details.
@@ -25,6 +28,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
@@ -35,7 +39,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ..info_panel import grouped_buildables
+from ..info_panel import grouped_buildables, modified_quantity
 
 # Qt item-data roles for a buildable row.
 _ROLE_ID = Qt.ItemDataRole.UserRole  # build-object-id (int)
@@ -71,6 +75,10 @@ class ProductionPickerDialog(QDialog):
         qty_row.addWidget(self._qty)
         qty_row.addStretch(1)
         layout.addLayout(qty_row)
+
+        hint = QLabel("Hold Shift to add 10, Ctrl to add 100, both to add 1000.")
+        hint.setEnabled(False)  # dimmed, informational
+        layout.addWidget(hint)
 
         self._buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -138,9 +146,18 @@ class ProductionPickerDialog(QDialog):
         oid = self._current_oid()
         if oid is None:
             return
-        # Auto-build items are standing orders, not counted builds — force 1
-        # regardless of the (locked) spin box.
-        qty = 1 if item.data(_ROLE_CATEGORY) == "auto" else self._qty.value()
+        if item.data(_ROLE_CATEGORY) == "auto":
+            # Auto-build items are standing orders, not counted builds — force 1.
+            qty = 1
+        else:
+            # Shift/Ctrl accelerators mirror the original: Shift=10, Ctrl=100,
+            # both=1000; no modifier uses the explicit spin-box amount.
+            mods = QApplication.keyboardModifiers()
+            qty = modified_quantity(
+                self._qty.value(),
+                bool(mods & Qt.KeyboardModifier.ShiftModifier),
+                bool(mods & Qt.KeyboardModifier.ControlModifier),
+            )
         self._selected = (oid, qty)
         self.item_chosen.emit(oid, qty)
         self.accept()

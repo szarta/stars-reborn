@@ -175,6 +175,21 @@ def insert_queue_entry(entries, index, build_object_id, quantity):
     return out
 
 
+def modified_quantity(base, shift, ctrl):
+    """Quantity to add given the held keyboard modifiers, matching the original
+    game's convention for cargo transfer and production-queue adds: Shift adds
+    10, Control adds 100, both add 1000. With no modifier the explicit ``base``
+    amount (the spin-box value) is used.
+    """
+    if shift and ctrl:
+        return 1000
+    if ctrl:
+        return 100
+    if shift:
+        return 10
+    return base
+
+
 def starbase_field_rows(starbase, names=None):
     """Format a planet's starbase stats into the display strings shown by the
     Starbase section, or ``None`` when the planet has no starbase.
