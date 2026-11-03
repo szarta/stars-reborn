@@ -134,21 +134,34 @@ bit is set in the slot's bitmask.
 Design Validation Rules
 -----------------------
 
-The engine enforces these rules when a design is submitted:
+A design is validated when a ``design.upsert`` order is submitted:
 
+0. **Hull available.** The hull itself must be buildable by the player: its
+   tech requirements met, and its PRT/LRT gate (if any) satisfied by the
+   player's race (e.g. Space Dock needs the ISB LRT, Dreadnought the WM PRT).
 1. **Engine slot must be filled.** Every ship hull has at least one ``Engines``
    slot; it must contain at least one engine to be a valid design. (Exception:
    starbases have no engine slots.)
 2. **Part fits slot.** Each installed part's category bit must appear in the
    slot's ``SlotType`` bitmask.
 3. **Stack count ≤ slot max.** The number of identical parts placed in a single
-   slot cannot exceed the slot's ``maxCount``.
+   slot cannot exceed the slot's ``maxCount``, and every slot index must exist
+   on the hull.
 4. **Tech requirements met.** The player's current tech levels must satisfy
    every requirement of each installed part. Parts that don't meet requirements
    cannot be placed.
 5. **Bleeding Edge Technology.** If the BET LRT is active, any part exactly at
    the player's current tech threshold costs double resources to build (not to
    design).
+
+.. note::
+
+   Enforcement is staged. The engine currently enforces rules 0 and 3 (plus the
+   slot/kind/lock checks). Rules 1, 2, and 4 — the part-level checks — land
+   once the component catalog is complete enough to resolve every part's
+   category and tech requirements (the catalog is still being populated). A
+   production-queue item that names a ship design slot is also rejected unless
+   the player has a design in that slot.
 
 Miniaturization
 ---------------

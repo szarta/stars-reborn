@@ -987,6 +987,14 @@ fn order_error_response(e: OrderError) -> axum::response::Response {
             StatusCode::BAD_REQUEST,
             format!("no {kind:?} hull with id {hull_id}"),
         ),
+        OrderError::DesignHullNotAvailable { kind, hull_id } => (
+            StatusCode::BAD_REQUEST,
+            format!("{kind:?} hull {hull_id} is not available to this player (tech or PRT/LRT)"),
+        ),
+        OrderError::DesignSlotAssignmentInvalid { slot_index } => (
+            StatusCode::BAD_REQUEST,
+            format!("invalid slot assignment at slot index {slot_index}"),
+        ),
         OrderError::DesignSlotLocked { kind, slot } => (
             StatusCode::CONFLICT,
             format!("{kind:?} design slot {slot} is locked (built-count > 0)"),
@@ -994,6 +1002,10 @@ fn order_error_response(e: OrderError) -> axum::response::Response {
         OrderError::DesignNotFound { kind, slot } => (
             StatusCode::NOT_FOUND,
             format!("no {kind:?} design in slot {slot}"),
+        ),
+        OrderError::BuildDesignSlotEmpty { slot } => (
+            StatusCode::BAD_REQUEST,
+            format!("cannot build design slot {slot}: the player has no design there"),
         ),
     };
     (status, Json(json!({"error": msg}))).into_response()

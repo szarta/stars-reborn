@@ -15,9 +15,11 @@ use serde::Deserialize;
 
 use crate::game::objects::buildable::{design_build_object_id, fixed_by_kind};
 use crate::game::objects::planet::BuildItem;
-use crate::game::objects::player::{ShipDesign, ShipDesignKind};
+use crate::game::objects::player::{ShipDesign, ShipDesignKind, TechLevels};
+use crate::game::objects::race::{Lrt, Prt, Race};
 use crate::game::objects::ship_hull_catalog::ship_hull_catalog;
 use crate::game::objects::starbase_hull_catalog::starbase_hull_catalog;
+use crate::game::objects::technology::{HullRequirement, TechRequirements};
 use crate::game::state::GameState;
 
 /// Semantic production-queue item kind — mirrors the `item` object in
@@ -92,11 +94,20 @@ pub enum OrderError {
     DesignSlotOutOfRange { kind: ShipDesignKind, slot: u32 },
     /// A design named a hull id not in the catalog for its kind.
     DesignHullNotFound { kind: ShipDesignKind, hull_id: u32 },
+    /// A design named a hull the player cannot build: its tech requirements are
+    /// not met, or its PRT/LRT gate is not satisfied by the player's race.
+    DesignHullNotAvailable { kind: ShipDesignKind, hull_id: u32 },
+    /// A slot assignment targeted a slot index that does not exist on the hull,
+    /// or placed more parts in a slot than its max count allows.
+    DesignSlotAssignmentInvalid { slot_index: u32 },
     /// An edit/delete targeted a slot whose design is built (built-count > 0);
     /// the slot is locked until the last ship of that design is gone.
     DesignSlotLocked { kind: ShipDesignKind, slot: u32 },
     /// A delete targeted a (kind, slot) with no design.
     DesignNotFound { kind: ShipDesignKind, slot: u32 },
+    /// A production queue item named a ship design slot that the player has no
+    /// design in — there is nothing to build there.
+    BuildDesignSlotEmpty { slot: u32 },
 }
 
 /// Highest valid design slot per kind: ship designs occupy slots 0–15, starbase
@@ -105,6 +116,42 @@ fn max_design_slot(kind: ShipDesignKind) -> u32 {
     match kind {
         ShipDesignKind::Ship => 15,
         ShipDesignKind::Starbase => 9,
+    }
+}
+
+/// True when a player's researched tech levels meet a hull's/part's tech
+/// requirement in every field.
+fn tech_requirements_met(req: &TechRequirements, tech: &TechLevels) -> bool {
+    u32::from(req.energy) <= tech.energy
+        && u32::from(req.weapons) <= tech.weapons
+        && u32::from(req.propulsion) <= tech.propulsion
+        && u32::from(req.construction) <= tech.construction
+        && u32::from(req.electronics) <= tech.electronics
+        && u32::from(req.bio) <= tech.biotechnology
+}
+
+/// True when a player's race satisfies a hull's PRT/LRT gate. `None` is open to
+/// all races. With no race on record (a back-compat game persisted before the
+/// race model) the gate cannot be checked and is treated as satisfied.
+/// Mystery-Trader hulls are not gated on race here — acquisition via an MT
+/// exchange is not modelled yet, so gating them would wrongly block them.
+fn hull_requirement_met(req: Option<HullRequirement>, race: Option<&Race>) -> bool {
+    let Some(req) = req else {
+        return true;
+    };
+    let Some(race) = race else {
+        return true;
+    };
+    match req {
+        HullRequirement::HE => race.prt == Prt::He,
+        HullRequirement::SS => race.prt == Prt::Ss,
+        HullRequirement::WM => race.prt == Prt::Wm,
+        HullRequirement::IS => race.prt == Prt::Is,
+        HullRequirement::SD => race.prt == Prt::Sd,
+        HullRequirement::AR => race.prt == Prt::Ar,
+        HullRequirement::ARM => race.lrts.contains(&Lrt::Arm),
+        HullRequirement::ISB => race.lrts.contains(&Lrt::Isb),
+        HullRequirement::MT => true,
     }
 }
 
@@ -136,7 +183,7 @@ pub fn apply_set_production_queue(
 ) -> Result<(), OrderError> {
     let planet = game
         .planet_states
-        .get_mut(&planet_id)
+        .get(&planet_id)
         .ok_or(OrderError::PlanetNotFound(planet_id))?;
 
     if planet.owner != Some(player_id) {
@@ -150,6 +197,23 @@ pub fn apply_set_production_queue(
             .item
             .build_object_id()
             .ok_or(OrderError::UnknownBuildable)?;
+        // A design-slot item must resolve to a real ship design the player owns
+        // in that slot (production design slots are ship designs, 0–15).
+        if let BuildKind::Design { design_slot } = &it.item {
+            let design_slot = *design_slot;
+            let has_design = game
+                .players
+                .iter()
+                .find(|p| p.id == player_id)
+                .is_some_and(|p| {
+                    p.designs
+                        .iter()
+                        .any(|d| d.kind == ShipDesignKind::Ship && d.slot == design_slot)
+                });
+            if !has_design {
+                return Err(OrderError::BuildDesignSlotEmpty { slot: design_slot });
+            }
+        }
         queue.push(BuildItem {
             build_object_id,
             build_quantity: it.count,
@@ -157,7 +221,10 @@ pub fn apply_set_production_queue(
         });
     }
 
-    planet.build_queue = queue;
+    game.planet_states
+        .get_mut(&planet_id)
+        .expect("planet existence checked above")
+        .build_queue = queue;
     Ok(())
 }
 
@@ -206,23 +273,55 @@ pub fn apply_design_upsert(
 ) -> Result<(), OrderError> {
     let kind = design.kind;
     let slot = design.slot;
+    let hull_id = design.hull_id;
     if slot > max_design_slot(kind) {
         return Err(OrderError::DesignSlotOutOfRange { kind, slot });
     }
-    let hull_known = match kind {
+
+    // Look up the hull in the catalog for its kind, taking the gating and slot
+    // grid we need to validate the design. Unknown id => DesignHullNotFound.
+    let (requirements, requirement, slots) = match kind {
         ShipDesignKind::Ship => ship_hull_catalog()
-            .iter()
-            .any(|h| u32::from(h.id) == design.hull_id),
+            .into_iter()
+            .find(|h| u32::from(h.id) == hull_id)
+            .map(|h| (h.requirements, h.requirement, h.slots)),
         ShipDesignKind::Starbase => starbase_hull_catalog()
-            .iter()
-            .any(|h| u32::from(h.id) == design.hull_id),
-    };
-    if !hull_known {
-        return Err(OrderError::DesignHullNotFound {
-            kind,
-            hull_id: design.hull_id,
-        });
+            .into_iter()
+            .find(|h| u32::from(h.id) == hull_id)
+            .map(|h| (h.requirements, h.requirement, h.slots)),
     }
+    .ok_or(OrderError::DesignHullNotFound { kind, hull_id })?;
+
+    // The hull must be available to this player: tech levels met and the
+    // PRT/LRT gate satisfied by the player's race.
+    let player = game
+        .players
+        .iter()
+        .find(|p| p.id == player_id)
+        .ok_or(OrderError::PlayerNotFound(player_id))?;
+    if !tech_requirements_met(&requirements, &player.tech)
+        || !hull_requirement_met(requirement, player.race.as_ref())
+    {
+        return Err(OrderError::DesignHullNotAvailable { kind, hull_id });
+    }
+
+    // Each slot assignment must target a real slot on the hull and respect its
+    // max count. (Which part kinds a slot accepts is validated once the
+    // component catalog is complete — see docs/mechanics/ship_design.rst.)
+    for sa in &design.slot_assignments {
+        let hull_slot =
+            slots
+                .get(sa.slot_index as usize)
+                .ok_or(OrderError::DesignSlotAssignmentInvalid {
+                    slot_index: sa.slot_index,
+                })?;
+        if sa.count.get() > u32::from(hull_slot.max_count) {
+            return Err(OrderError::DesignSlotAssignmentInvalid {
+                slot_index: sa.slot_index,
+            });
+        }
+    }
+
     // A built design's slot is locked (cannot be edited) until its last ship is
     // gone. built-count is 0 until fleets are modelled, so this never fires yet.
     if design_built_count(game, player_id, kind, slot) > 0 {
@@ -313,6 +412,10 @@ mod tests {
     #[test]
     fn sets_queue_on_owned_planet() {
         let (mut game, hw) = one_player_game();
+        // A design must exist in the ship slot before it can be queued.
+        game.players[0]
+            .designs
+            .push(design(1, ShipDesignKind::Ship, a_ship_hull(), "Scout"));
         let items = vec![
             ProductionItemInput {
                 item: BuildKind::Factory,
@@ -330,6 +433,40 @@ mod tests {
         assert_eq!(q[0].build_quantity, 16);
         assert_eq!(q[0].build_progress, 0);
         assert_eq!(q[1].build_object_id, 1025); // design slot 1
+    }
+
+    #[test]
+    fn rejects_building_an_empty_design_slot() {
+        let (mut game, hw) = one_player_game();
+        // Slot 2 holds no design, so it cannot be built.
+        let err = apply_set_production_queue(
+            &mut game,
+            0,
+            hw,
+            &[ProductionItemInput {
+                item: BuildKind::Design { design_slot: 2 },
+                count: 1,
+            }],
+        )
+        .unwrap_err();
+        assert_eq!(err, OrderError::BuildDesignSlotEmpty { slot: 2 });
+        assert!(game.planet_states[&hw].build_queue.is_empty());
+
+        // Once a design exists in the slot, the same order resolves.
+        game.players[0]
+            .designs
+            .push(design(2, ShipDesignKind::Ship, a_ship_hull(), "Scout"));
+        apply_set_production_queue(
+            &mut game,
+            0,
+            hw,
+            &[ProductionItemInput {
+                item: BuildKind::Design { design_slot: 2 },
+                count: 1,
+            }],
+        )
+        .unwrap();
+        assert_eq!(game.planet_states[&hw].build_queue.len(), 1);
     }
 
     #[test]
@@ -510,6 +647,87 @@ mod tests {
                 hull_id: 254
             }
         );
+        assert!(game.players[0].designs.is_empty());
+    }
+
+    #[test]
+    fn design_upsert_rejects_hull_not_researched() {
+        // Ship hull 167 requires Construction 6; the test player has all-zero
+        // tech, so the hull is in the catalog but not yet available.
+        let (mut game, _) = one_player_game();
+        let err = apply_design_upsert(&mut game, 0, design(0, ShipDesignKind::Ship, 167, "frig"))
+            .unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignHullNotAvailable {
+                kind: ShipDesignKind::Ship,
+                hull_id: 167
+            }
+        );
+        assert!(game.players[0].designs.is_empty());
+    }
+
+    #[test]
+    fn design_upsert_enforces_starbase_prt_lrt_gate() {
+        // Space Dock (158) requires the Improved Starbases LRT. Max out tech so
+        // only the LRT gate can block it; a Joat player without ISB is refused,
+        // and granting the LRT makes it available.
+        let (mut game, _) = one_player_game();
+        game.players[0].tech = TechLevels {
+            energy: 26,
+            weapons: 26,
+            propulsion: 26,
+            construction: 26,
+            electronics: 26,
+            biotechnology: 26,
+        };
+        let err = apply_design_upsert(
+            &mut game,
+            0,
+            design(0, ShipDesignKind::Starbase, 158, "dock"),
+        )
+        .unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignHullNotAvailable {
+                kind: ShipDesignKind::Starbase,
+                hull_id: 158
+            }
+        );
+
+        game.players[0].race.as_mut().unwrap().lrts.push(Lrt::Isb);
+        apply_design_upsert(
+            &mut game,
+            0,
+            design(0, ShipDesignKind::Starbase, 158, "dock"),
+        )
+        .unwrap();
+        assert_eq!(game.players[0].designs.len(), 1);
+    }
+
+    #[test]
+    fn design_upsert_validates_slot_assignments() {
+        let (mut game, _) = one_player_game();
+        let scout = a_ship_hull(); // Scout: slots 0..=2 (engine/general/scanner)
+
+        // A slot index past the hull's slot count is rejected.
+        let mut d = design(0, ShipDesignKind::Ship, scout, "x");
+        d.slot_assignments[0].slot_index = 5;
+        let err = apply_design_upsert(&mut game, 0, d).unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignSlotAssignmentInvalid { slot_index: 5 }
+        );
+
+        // More parts than the slot holds (the Scout engine slot holds one).
+        let mut d = design(0, ShipDesignKind::Ship, scout, "x");
+        d.slot_assignments[0].count = std::num::NonZeroU32::new(2).unwrap();
+        let err = apply_design_upsert(&mut game, 0, d).unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignSlotAssignmentInvalid { slot_index: 0 }
+        );
+
         assert!(game.players[0].designs.is_empty());
     }
 
