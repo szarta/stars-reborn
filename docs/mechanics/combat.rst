@@ -58,6 +58,13 @@ Custom orders allow:
 - Move strategy (maximize damage / minimize losses / maximize net damage)
 - Tactic (attack / hold position / disengage)
 
+The "Attack Who" selector decides which players a fleet will engage by reading
+:doc:`player relations <diplomacy>`: "Enemies" engages only players set to
+Enemy; "Enemies and Neutrals" engages everyone **not** set to Friend;
+"Everyone" engages all; or a single named player. A **Friend** is therefore
+never engaged under the default plans, which is why mutually-Friendly fleets
+co-orbit without fighting.
+
 Battle Grid
 -----------
 

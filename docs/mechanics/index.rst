@@ -36,6 +36,9 @@ contracts for the engine.
    * - Combat
      - :doc:`combat`
      - Community docs only
+   * - Player relations (diplomacy)
+     - :doc:`diplomacy`
+     - Yes
    * - Scanning
      - :doc:`scanning`
      - Partial
@@ -70,6 +73,7 @@ contracts for the engine.
    research
    fleet_movement
    combat
+   diplomacy
    scanning
    wormholes
    ship_design

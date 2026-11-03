@@ -116,7 +116,10 @@ Waypoint orders
    * - Colonize
      - Land colony ship; transfer colonists; claim planet
    * - Remote Mine
-     - Mine a planet remotely (requires mining hull)
+     - Mine a planet remotely (requires mining hull). Yields minerals only on
+       an **unowned** planet; an inhabited planet (any owner, friend or enemy)
+       is rejected. AR is the sole exception. Not relation-gated — see
+       :doc:`diplomacy`.
    * - Unload Cargo
      - Transfer cargo to planet or another fleet
    * - Load Cargo
@@ -208,6 +211,16 @@ turn.  They do not affect ships already in flight.
 
 .. todo:: Confirm whether route chains resolve transitively at build time
    (full path pre-calculated) or hop-by-hop (each planet re-routes on arrival).
+
+Stargate Ownership
+------------------
+
+A fleet may jump through a stargate only if the starbase at **each** end
+(source and destination) is owned by the **fleet's owner** or by a player who
+has set the fleet's owner as a **Friend** (``relations[gateOwner][fleetOwner]``
+is Friend). It is the gate owner's stance toward the traveller that is checked,
+not the reverse. If either end fails, the jump is refused. See
+:doc:`diplomacy`.
 
 Stargate Overgating
 -------------------

@@ -36,8 +36,9 @@ Top-level fields:
      - Primary Racial Trait.  One of: ``CA``, ``JOAT``, ``IT``, ``IS``, ``SD``,
        ``WM``, ``PP``, ``SS``, ``HE``, ``AR``.  Internal byte values: HE=0,
        SS=1, WM=2, CA=3, IS=4, SD=5, PP=6, IT=7, AR=8, JOAT=9 (confirmed from
-       ``analyze_r1.py``; CA=3 inferred, AR=8 pending confirmation — see
-       research task R1.1)
+       ``analyze_r1.py``; CA=3 inferred; AR=8 independently confirmed by the
+       remote-mining PRT check in the original executable — see the player
+       relations research record)
    * - ``lrts``
      - array of string enum
      - Lesser Racial Traits.  Any subset of the valid LRT identifiers.
