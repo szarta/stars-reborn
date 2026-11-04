@@ -38,3 +38,5 @@ file has:
   truth](0003-generate-wire-types-from-json-schema.md)
 - [0004: Keep task ids and internal tracking out of public
   artifacts](0004-keep-task-ids-out-of-public-artifacts.md)
+- [0005: Faithful to the original's mechanics and feel, not its binary
+  files](0005-faithful-to-mechanics-not-binary-compatibility.md)
