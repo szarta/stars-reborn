@@ -1,0 +1,19 @@
+# moldy configuration for the stars-reborn repository.
+#
+# One config now covers every neutral format moldy formats here: JSON, YAML and
+# Markdown (which use moldy's defaults, so they need no section) plus
+# reStructuredText under [rst]. Before moldy 0.9.0 the released binary could not
+# read an [rst] section, so RST ran through a separately-built `moldy-rst`
+# binary with its own `moldy-rst.toml`; 0.9.0 ships RST in the release, so the
+# two configs and the two pre-commit hooks are merged here. See docs/adr/0002.
+#
+# The [rst] options keep the repo's authored conventions; moldy still normalizes
+# layout (indentation, blank lines, wrapping). A file moldy cannot format
+# without changing its meaning, or one with an RST syntax error, is left
+# unchanged and reported (exit 3), failing the hook rather than passing silently.
+[rst]
+indent_width = 3                 # directive options and bodies at 3 spaces
+max_width = 79                   # wrap prose at 79 columns
+heading_style = "preserve"       # keep each title's underline/overline character
+bullet_style = "preserve"        # keep `*` bullets (incl. list-table `* -` rows)
+sentence_spacing = "preserve"    # keep two spaces between sentences

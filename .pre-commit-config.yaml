@@ -68,32 +68,22 @@ repos:
       - id: ruff-format
         exclude: *policy-guards
 
-  # moldy: format the neutral formats (JSON/YAML/Markdown) with one tool.
-  # Rust/Python stay on rustfmt/ruff for now; migrating them to moldy is a
-  # deliberate post-restructure A/B change (see docs/adr/0002).
+  # moldy: format the neutral formats (JSON/YAML/Markdown) and reStructuredText
+  # (docs/*.rst) with one tool. The released moldy (>= 0.9.0) reads the [rst]
+  # section of moldy.toml, so the formerly-separate `moldy-rst` hook and its
+  # `moldy-rst.toml` are folded in here. A file moldy declines (RST syntax error
+  # or a reflow that would change meaning) makes it exit 3 and fails the hook
+  # rather than passing silently. Rust/Python stay on rustfmt/ruff for now;
+  # migrating them to moldy is a deliberate post-restructure A/B change (see
+  # docs/adr/0002).
   - repo: local
     hooks:
       - id: moldy
-        name: moldy (JSON/YAML/Markdown)
-        entry: moldy --in-place
+        name: moldy (JSON/YAML/Markdown/reStructuredText)
+        entry: moldy --in-place --config moldy.toml
         language: system
-        types_or: [json, yaml, markdown]
+        types_or: [json, yaml, markdown, rst]
         exclude: ^engine/tests/data/
-        verbose: true
-
-  # moldy for reStructuredText (docs/*.rst). RST support only exists in an
-  # unreleased moldy branch build, so this runs a locally-built `moldy-rst`
-  # binary with the RST config, separate from the released `moldy` above (which
-  # cannot read an [rst] config). Switch to the released moldy + a merged
-  # moldy.toml once RST ships. A declined file makes moldy exit 3 and fails the
-  # hook rather than passing silently.
-  - repo: local
-    hooks:
-      - id: moldy-rst
-        name: moldy (reStructuredText)
-        entry: moldy-rst --in-place --config moldy-rst.toml
-        language: system
-        types_or: [rst]
         verbose: true
 
   # Project facts: design-doc figures must match the pinned values in

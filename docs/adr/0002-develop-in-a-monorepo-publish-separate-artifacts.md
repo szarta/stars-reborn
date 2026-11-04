@@ -62,9 +62,11 @@ archived read-only with a pointer here.
   `moldy` for the neutral formats (JSON/YAML/Markdown) plus reStructuredText
   (`docs/*.rst`). RST was A/B-tested against the existing docs and adopted with
   the authored conventions preserved (underline headings, bullet style, two-
-  space sentence gaps); its settings live in `moldy-rst.toml` and it runs on a
-  separate `moldy-rst` pre-commit hook because RST support is still an
-  unreleased moldy branch build. Moving Rust and Python onto `moldy` was
+  space sentence gaps); its settings live in the `[rst]` section of
+  `moldy.toml`. RST first shipped only in an unreleased moldy branch build and
+  ran on a separate `moldy-rst` hook and config; moldy 0.9.0 ships RST in the
+  release, so that hook and `moldy-rst.toml` are folded into the single `moldy`
+  hook. Moving Rust and Python onto `moldy` was
   evaluated with the same A/B method and **not adopted**: on the current build
   moldy produces correctness regressions on both languages' sources, so rustfmt
   and ruff are retained for now. This will be revisited once those are resolved
