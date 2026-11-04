@@ -7,16 +7,64 @@
 // other component numbers carry the docs' "needs oracle verification" caveat
 // and are reproduced as-is from that authoritative community source.
 //
-// This is the first catalog slice (task #144): engines, armor, shields, and
-// orbital components (stargates + mass drivers) — the categories the starbase
-// stats (#147) and the design system (#145) need first. The remaining
-// categories (weapons, bombs, scanners, electrical, mechanical, mine-layers,
-// mining-robots, planetary) and the two Mystery-Trader items (MegaPolyShell,
-// LangstonShell) are tracked follow-ups; the catalog grows as they land.
+// The first catalog slice landed engines, armor, shields, and orbital
+// components (stargates + mass drivers) — the categories the starbase stats and
+// the design system need first. This slice adds the non-installable planetary
+// technologies (planetary scanners, planetary defenses, terraforming). The
+// remaining installable ship categories (weapons, bombs, scanners, electrical,
+// mechanical, mine-layers, mining-robots) and the two Mystery-Trader items
+// (MegaPolyShell, LangstonShell) are tracked follow-ups; the catalog grows as
+// they land.
 //
 // Ids match the original game's technology ids (model/enumerations.py).
 
 use super::technology::{FuelTable, TechCost, TechRequirements};
+
+// ---------------------------------------------------------------------------
+// Component id allocation
+// ---------------------------------------------------------------------------
+//
+// Component ids are Stars Reborn's OWN stable scheme, not the original game's
+// (ADR-0005: we are faithful to mechanics, not binary files; the original
+// identifies a design part by (category, sub-index), so there is no original
+// "global id" to match). A part's id is referenced only inside a design's
+// slot-assignments — a namespace separate from hull ids — so a component id may
+// numerically coincide with a hull id without ambiguity. Ids are `u16`.
+//
+// Each category gets a contiguous block so an id is legible at a glance (block
+// = id / 50 for the new categories). The four landed blocks keep the values the
+// first catalog slice assigned; the remaining categories are reserved here and
+// filled in by their own slices.
+//
+//   Landed (defined in this file):
+//     armor          14– 24      shields        25– 33
+//     engines       112–127      orbital       141–156   (stargates + drivers)
+//
+//   Hulls, for reference only (separate catalogs, separate namespace):
+//     starbase hulls 157–161      ship hulls    162–299 (reserved headroom)
+//
+//   Remaining ship components (one block each; filled by later slices):
+pub const BEAM_WEAPON_ID_BASE: u16 = 300; // 300–349
+pub const TORPEDO_ID_BASE: u16 = 350; // 350–399
+pub const BOMB_ID_BASE: u16 = 400; // 400–449
+pub const SCANNER_ID_BASE: u16 = 450; // 450–499
+pub const ELECTRICAL_ID_BASE: u16 = 500; // 500–549
+pub const MECHANICAL_ID_BASE: u16 = 550; // 550–599
+pub const MINE_LAYER_ID_BASE: u16 = 600; // 600–649
+pub const MINING_ROBOT_ID_BASE: u16 = 650; // 650–699
+                                           //     Mystery-Trader items   800–899   (reserved)
+                                           //
+                                           //   Planetary technologies (non-installable, no mass) — this slice. Each kind
+                                           //   gets a sub-range inside the 700–799 planetary reservation:
+pub const PLANETARY_SCANNER_ID_BASE: u16 = 700; // 700–719
+pub const PLANETARY_DEFENSE_ID_BASE: u16 = 720; // 720–739
+pub const TERRAFORMING_ID_BASE: u16 = 740; // 740–799
+                                           //
+                                           // Width per block is 50 — generous headroom over the category's item count; the
+                                           // guard test below holds each landed category inside its range and keeps every
+                                           // id unique, so a later slice that overflows a block fails a test rather than
+                                           // colliding silently.
+pub const COMPONENT_BLOCK_WIDTH: u16 = 50;
 
 /// Trait gate restricting which races may research a component. Mirrors the
 /// `requirement` field of the wire `tech-item` (a null gate = available to any
@@ -26,6 +74,9 @@ use super::technology::{FuelTable, TechCost, TechRequirements};
 pub enum TraitReq {
     /// Restricted to races with this Primary Racial Trait (slug, e.g. "IT").
     Prt(&'static str),
+    /// Restricted to races with this Lesser Racial Trait (slug, e.g. "TT" for
+    /// Total Terraforming). Maps to the wire `{ "lrt": [slug] }` gate.
+    Lrt(&'static str),
 }
 
 /// Category-specific stats, selecting which wire `props-*` shape applies.
@@ -69,6 +120,33 @@ pub enum Props {
     MassDriver {
         warp: u8,
     },
+    /// Planetary technology (planet-only: not ship/starbase-installable and
+    /// carries no mass). `kind` selects the stat shape.
+    Planetary(PlanetaryKind),
+}
+
+/// The three planetary-technology kinds, each with its own stats. Mirrors the
+/// wire `props-planetary` `kind` discriminator (scanner | defense |
+/// terraforming).
+#[derive(Debug, Clone)]
+pub enum PlanetaryKind {
+    /// Planetary scanner: normal scan range and (Snooper series) penetrating
+    /// range, in light-years. A pen range of 0 = no penetrating coverage.
+    Scanner {
+        basic_range: u32,
+        penetrating_range: u32,
+    },
+    /// Planetary defense: per-defense kill probability against a single bomb
+    /// (0.0–1.0); overall protection compounds over the planet's defense count.
+    Defense { base_coverage: f64 },
+    /// Terraforming: max habitability units shiftable per year on each axis.
+    /// Axis-specific items touch one axis (the others are 0); Total Terraform
+    /// shifts all three by the same rate.
+    Terraforming {
+        gravity: u8,
+        temperature: u8,
+        radiation: u8,
+    },
 }
 
 impl Props {
@@ -79,13 +157,18 @@ impl Props {
             Props::Armor { .. } => "armor",
             Props::Shield { .. } => "shields",
             Props::Stargate { .. } | Props::MassDriver { .. } => "orbital",
+            Props::Planetary(_) => "planetary",
         }
     }
 
     /// Whether this component is installable on a ship/starbase (carries mass).
-    /// Orbital structures are not installable on ships and carry no mass.
+    /// Orbital structures and planetary technologies are not installable on
+    /// ships and carry no mass.
     pub fn is_installable(&self) -> bool {
-        !matches!(self, Props::Stargate { .. } | Props::MassDriver { .. })
+        !matches!(
+            self,
+            Props::Stargate { .. } | Props::MassDriver { .. } | Props::Planetary(_)
+        )
     }
 }
 
@@ -139,6 +222,7 @@ pub fn technology_catalog() -> Vec<TechItem> {
     items.extend(armors());
     items.extend(shields());
     items.extend(orbitals());
+    items.extend(planetaries());
     items
 }
 
@@ -920,4 +1004,493 @@ fn orbitals() -> Vec<TechItem> {
             13,
         ),
     ]
+}
+
+// ---------------------------------------------------------------------------
+// Planetary technologies (docs/reference/planetary_tech.rst)
+// ---------------------------------------------------------------------------
+//
+// Non-installable, planet-only: planetary scanners, planetary defenses, and
+// terraforming. None carry mass. Values are confirmed against the Player's
+// Guide help images for scanners and defenses; full oracle verification of the
+// terraforming rates against stars.exe is still recommended.
+//
+// Access gates: the simple TraitReq model expresses single-trait *inclusion*
+// only, so the scanner/defense *exclusion* gates (scanners: all PRTs except AR,
+// Snooper series also removed for NAS; defenses: Laser/Planetary/Neutron shield
+// excluded from WM and AR) are left ungated here — per-race research access is
+// governed by the technology-access system (docs/reference/technology_access
+// .rst), tracked separately. Total Terraform is the one expressible gate: it is
+// granted by the TT (Total Terraforming) Lesser Racial Trait.
+
+fn planetary_scanner(
+    id: u16,
+    slug: &'static str,
+    name: &'static str,
+    tech_requirements: TechRequirements,
+    basic_range: u32,
+    penetrating_range: u32,
+) -> TechItem {
+    TechItem {
+        id,
+        slug,
+        name,
+        requirement: None,
+        mass: None,
+        // All planetary scanners share one cost (planetary_tech.rst).
+        cost: cost(10, 10, 70, 100),
+        tech_requirements,
+        props: Props::Planetary(PlanetaryKind::Scanner {
+            basic_range,
+            penetrating_range,
+        }),
+    }
+}
+
+fn planetary_defense(
+    id: u16,
+    slug: &'static str,
+    name: &'static str,
+    tech_requirements: TechRequirements,
+    base_coverage: f64,
+) -> TechItem {
+    TechItem {
+        id,
+        slug,
+        name,
+        requirement: None,
+        mass: None,
+        // All planetary defenses share one cost (planetary_tech.rst).
+        cost: cost(5, 5, 5, 15),
+        tech_requirements,
+        props: Props::Planetary(PlanetaryKind::Defense { base_coverage }),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn terraform(
+    id: u16,
+    slug: &'static str,
+    name: &'static str,
+    requirement: Option<TraitReq>,
+    cost: TechCost,
+    tech_requirements: TechRequirements,
+    gravity: u8,
+    temperature: u8,
+    radiation: u8,
+) -> TechItem {
+    TechItem {
+        id,
+        slug,
+        name,
+        requirement,
+        mass: None,
+        cost,
+        tech_requirements,
+        props: Props::Planetary(PlanetaryKind::Terraforming {
+            gravity,
+            temperature,
+            radiation,
+        }),
+    }
+}
+
+fn planetaries() -> Vec<TechItem> {
+    let s = PLANETARY_SCANNER_ID_BASE;
+    let d = PLANETARY_DEFENSE_ID_BASE;
+    let t = TERRAFORMING_ID_BASE;
+    // Axis-specific terraform cost; Total Terraform costs less (70 resources).
+    let axis_cost = cost(0, 0, 0, 100);
+    let total_cost = cost(0, 0, 0, 70);
+    let tt = Some(TraitReq::Lrt("TT"));
+    vec![
+        // Planetary scanners (9): basic range, and pen range for Snoopers.
+        planetary_scanner(s, "viewer_50", "Viewer 50", tr(0, 0, 0, 0, 0, 0), 50, 0),
+        planetary_scanner(s + 1, "viewer_90", "Viewer 90", tr(0, 0, 0, 0, 1, 0), 90, 0),
+        planetary_scanner(
+            s + 2,
+            "scoper_150",
+            "Scoper 150",
+            tr(0, 0, 0, 0, 3, 0),
+            150,
+            0,
+        ),
+        planetary_scanner(
+            s + 3,
+            "scoper_220",
+            "Scoper 220",
+            tr(0, 0, 0, 0, 6, 0),
+            220,
+            0,
+        ),
+        planetary_scanner(
+            s + 4,
+            "scoper_280",
+            "Scoper 280",
+            tr(0, 0, 0, 0, 8, 0),
+            280,
+            0,
+        ),
+        planetary_scanner(
+            s + 5,
+            "snooper_320x",
+            "Snooper 320X",
+            tr(3, 0, 0, 0, 10, 3),
+            320,
+            160,
+        ),
+        planetary_scanner(
+            s + 6,
+            "snooper_400x",
+            "Snooper 400X",
+            tr(4, 0, 0, 0, 13, 6),
+            400,
+            200,
+        ),
+        planetary_scanner(
+            s + 7,
+            "snooper_500x",
+            "Snooper 500X",
+            tr(5, 0, 0, 0, 16, 7),
+            500,
+            250,
+        ),
+        planetary_scanner(
+            s + 8,
+            "snooper_620x",
+            "Snooper 620X",
+            tr(7, 0, 0, 0, 23, 9),
+            620,
+            310,
+        ),
+        // Planetary defenses (5): per-defense kill probability vs one bomb.
+        planetary_defense(d, "sdi", "SDI", tr(0, 0, 0, 0, 0, 0), 0.0099),
+        planetary_defense(
+            d + 1,
+            "missile_battery",
+            "Missile Battery",
+            tr(5, 0, 0, 0, 0, 0),
+            0.0199,
+        ),
+        planetary_defense(
+            d + 2,
+            "laser_battery",
+            "Laser Battery",
+            tr(10, 0, 0, 0, 0, 0),
+            0.0239,
+        ),
+        planetary_defense(
+            d + 3,
+            "planetary_shield",
+            "Planetary Shield",
+            tr(16, 0, 0, 0, 0, 0),
+            0.0299,
+        ),
+        planetary_defense(
+            d + 4,
+            "neutron_shield",
+            "Neutron Shield",
+            tr(23, 0, 0, 0, 0, 0),
+            0.0379,
+        ),
+        // Terraforming — Total Terraform (8, TT LRT): all three axes together.
+        terraform(
+            t,
+            "total_terraform_3",
+            "Total Terraform ±3",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 0),
+            3,
+            3,
+            3,
+        ),
+        terraform(
+            t + 1,
+            "total_terraform_5",
+            "Total Terraform ±5",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 3),
+            5,
+            5,
+            5,
+        ),
+        terraform(
+            t + 2,
+            "total_terraform_7",
+            "Total Terraform ±7",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 6),
+            7,
+            7,
+            7,
+        ),
+        terraform(
+            t + 3,
+            "total_terraform_10",
+            "Total Terraform ±10",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 9),
+            10,
+            10,
+            10,
+        ),
+        terraform(
+            t + 4,
+            "total_terraform_15",
+            "Total Terraform ±15",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 13),
+            15,
+            15,
+            15,
+        ),
+        terraform(
+            t + 5,
+            "total_terraform_20",
+            "Total Terraform ±20",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 17),
+            20,
+            20,
+            20,
+        ),
+        terraform(
+            t + 6,
+            "total_terraform_25",
+            "Total Terraform ±25",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 22),
+            25,
+            25,
+            25,
+        ),
+        terraform(
+            t + 7,
+            "total_terraform_30",
+            "Total Terraform ±30",
+            tt,
+            total_cost,
+            tr(0, 0, 0, 0, 0, 25),
+            30,
+            30,
+            30,
+        ),
+        // Terraforming — axis-specific (12, base pool): gravity.
+        terraform(
+            t + 8,
+            "gravity_terraform_3",
+            "Gravity Terraform ±3",
+            None,
+            axis_cost,
+            tr(0, 0, 1, 0, 0, 1),
+            3,
+            0,
+            0,
+        ),
+        terraform(
+            t + 9,
+            "gravity_terraform_7",
+            "Gravity Terraform ±7",
+            None,
+            axis_cost,
+            tr(0, 0, 5, 0, 0, 2),
+            7,
+            0,
+            0,
+        ),
+        terraform(
+            t + 10,
+            "gravity_terraform_11",
+            "Gravity Terraform ±11",
+            None,
+            axis_cost,
+            tr(0, 0, 10, 0, 0, 3),
+            11,
+            0,
+            0,
+        ),
+        terraform(
+            t + 11,
+            "gravity_terraform_15",
+            "Gravity Terraform ±15",
+            None,
+            axis_cost,
+            tr(0, 0, 16, 0, 0, 4),
+            15,
+            0,
+            0,
+        ),
+        // temperature.
+        terraform(
+            t + 12,
+            "temperature_terraform_3",
+            "Temperature Terraform ±3",
+            None,
+            axis_cost,
+            tr(1, 0, 0, 0, 0, 1),
+            0,
+            3,
+            0,
+        ),
+        terraform(
+            t + 13,
+            "temperature_terraform_7",
+            "Temperature Terraform ±7",
+            None,
+            axis_cost,
+            tr(5, 0, 0, 0, 0, 2),
+            0,
+            7,
+            0,
+        ),
+        terraform(
+            t + 14,
+            "temperature_terraform_11",
+            "Temperature Terraform ±11",
+            None,
+            axis_cost,
+            tr(10, 0, 0, 0, 0, 3),
+            0,
+            11,
+            0,
+        ),
+        terraform(
+            t + 15,
+            "temperature_terraform_15",
+            "Temperature Terraform ±15",
+            None,
+            axis_cost,
+            tr(16, 0, 0, 0, 0, 4),
+            0,
+            15,
+            0,
+        ),
+        // radiation.
+        terraform(
+            t + 16,
+            "radiation_terraform_3",
+            "Radiation Terraform ±3",
+            None,
+            axis_cost,
+            tr(0, 1, 0, 0, 0, 1),
+            0,
+            0,
+            3,
+        ),
+        terraform(
+            t + 17,
+            "radiation_terraform_7",
+            "Radiation Terraform ±7",
+            None,
+            axis_cost,
+            tr(0, 5, 0, 0, 0, 2),
+            0,
+            0,
+            7,
+        ),
+        terraform(
+            t + 18,
+            "radiation_terraform_11",
+            "Radiation Terraform ±11",
+            None,
+            axis_cost,
+            tr(0, 10, 0, 0, 0, 3),
+            0,
+            0,
+            11,
+        ),
+        terraform(
+            t + 19,
+            "radiation_terraform_15",
+            "Radiation Terraform ±15",
+            None,
+            axis_cost,
+            tr(0, 16, 0, 0, 0, 4),
+            0,
+            0,
+            15,
+        ),
+    ]
+}
+
+#[cfg(test)]
+mod id_allocation_tests {
+    use super::*;
+
+    #[test]
+    fn catalog_ids_are_unique() {
+        let cat = technology_catalog();
+        let mut ids: Vec<u16> = cat.iter().map(|t| t.id).collect();
+        let n = ids.len();
+        ids.sort_unstable();
+        ids.dedup();
+        assert_eq!(
+            ids.len(),
+            n,
+            "component ids must be unique across the catalog"
+        );
+    }
+
+    #[test]
+    fn landed_categories_stay_in_their_declared_id_ranges() {
+        // (category slug, inclusive id range) — the landed blocks.
+        let ranges: &[(&str, u16, u16)] = &[
+            ("armor", 14, 24),
+            ("shields", 25, 33),
+            ("engines", 112, 127),
+            ("orbital", 141, 156),
+            ("planetary", 700, 799),
+        ];
+        for item in technology_catalog() {
+            let slug = item.props.category();
+            let (_, lo, hi) = ranges
+                .iter()
+                .find(|(s, ..)| *s == slug)
+                .unwrap_or_else(|| panic!("no declared id range for category {slug:?}"));
+            assert!(
+                (*lo..=*hi).contains(&item.id),
+                "{} (id {}) is outside its {} block {}..={}",
+                item.name,
+                item.id,
+                slug,
+                lo,
+                hi
+            );
+        }
+    }
+
+    #[test]
+    fn reserved_component_blocks_are_ordered_and_non_overlapping() {
+        let bases = [
+            BEAM_WEAPON_ID_BASE,
+            TORPEDO_ID_BASE,
+            BOMB_ID_BASE,
+            SCANNER_ID_BASE,
+            ELECTRICAL_ID_BASE,
+            MECHANICAL_ID_BASE,
+            MINE_LAYER_ID_BASE,
+            MINING_ROBOT_ID_BASE,
+        ];
+        // The first new block sits clear of the hull id reservation (157–299).
+        assert!(
+            bases[0] >= 300,
+            "component blocks must start above hull ids"
+        );
+        for w in bases.windows(2) {
+            assert!(
+                w[1] >= w[0] + COMPONENT_BLOCK_WIDTH,
+                "reserved blocks at {} and {} overlap (width {})",
+                w[0],
+                w[1],
+                COMPONENT_BLOCK_WIDTH
+            );
+        }
+    }
 }

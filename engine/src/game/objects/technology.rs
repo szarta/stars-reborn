@@ -38,7 +38,7 @@ impl TechRequirements {
 }
 
 /// Mineral and resource cost to build one unit of a technology.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TechCost {
     pub ironium: u32,
     pub boranium: u32,

@@ -205,25 +205,49 @@ fn engine_output_matches_the_schema() {
         errors.join("\n  ")
     );
 
-    // Guard against a vacuous pass: the slice ships 52 items across four
-    // categories (16 engines, 11 armor, 9 shields, 16 orbital).
+    // Guard against a vacuous pass. The catalog ships 86 items:
+    //   16 engines, 11 armor, 9 shields, 16 orbital  (first slice)
+    //   34 planetary (9 scanners + 5 defenses + 20 terraforming)  (this slice)
     let techs = instance["technologies"]
         .as_array()
         .expect("technologies array");
-    assert_eq!(
-        techs.len(),
-        52,
-        "unexpected catalog size for the #144 slice"
-    );
+    assert_eq!(techs.len(), 86, "unexpected catalog size");
     let has = |cat: &str| techs.iter().any(|t| t["category"] == cat);
-    for cat in ["engines", "armor", "shields", "orbital"] {
+    for cat in ["engines", "armor", "shields", "orbital", "planetary"] {
         assert!(has(cat), "catalog is missing category {cat}");
     }
 
-    // Orbital items carry no mass; installable parts do.
+    // The three planetary kinds are all present.
+    let planetary_kind = |kind: &str| {
+        techs
+            .iter()
+            .filter(|t| t["category"] == "planetary")
+            .filter(|t| t["properties"]["kind"] == kind)
+            .count()
+    };
+    assert_eq!(
+        planetary_kind("scanner"),
+        9,
+        "expected 9 planetary scanners"
+    );
+    assert_eq!(
+        planetary_kind("defense"),
+        5,
+        "expected 5 planetary defenses"
+    );
+    assert_eq!(
+        planetary_kind("terraforming"),
+        20,
+        "expected 20 terraforming items"
+    );
+
+    // Orbital and planetary items carry no mass; installable parts do.
     for t in techs {
-        if t["category"] == "orbital" {
-            assert!(t.get("mass").is_none(), "orbital items must not carry mass");
+        if t["category"] == "orbital" || t["category"] == "planetary" {
+            assert!(
+                t.get("mass").is_none(),
+                "non-installable (orbital/planetary) items must not carry mass"
+            );
         } else {
             assert!(t.get("mass").is_some(), "installable parts must carry mass");
         }

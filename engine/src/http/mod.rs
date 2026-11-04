@@ -55,7 +55,7 @@ use crate::game::objects::{
     starbase_hull_catalog::starbase_hull_catalog,
     starting_tech::starting_tech_levels,
     technology::{ShipHull, StarbaseHull, TechSlot},
-    technology_catalog::{technology_catalog, Props, TechItem, TraitReq},
+    technology_catalog::{technology_catalog, PlanetaryKind, Props, TechItem, TraitReq},
 };
 use crate::game::orders::{
     apply_design_delete, apply_design_upsert, apply_set_production_queue, apply_set_route_target,
@@ -206,11 +206,13 @@ fn tech_item_to_json(t: &TechItem) -> Value {
     obj
 }
 
-/// Trait gate → wire `trait-requirement` (null, or `{ "prt": [slug] }`).
+/// Trait gate → wire `trait-requirement` (null, `{ "prt": [slug] }`, or
+/// `{ "lrt": [slug] }`).
 fn trait_req_to_json(req: Option<TraitReq>) -> Value {
     match req {
         None => Value::Null,
         Some(TraitReq::Prt(prt)) => json!({ "prt": [prt] }),
+        Some(TraitReq::Lrt(lrt)) => json!({ "lrt": [lrt] }),
     }
 }
 
@@ -291,6 +293,30 @@ fn props_to_json(props: &Props) -> Value {
             "kind": "mass-driver",
             "warp": warp,
         }),
+        Props::Planetary(kind) => match kind {
+            PlanetaryKind::Scanner {
+                basic_range,
+                penetrating_range,
+            } => json!({
+                "kind": "scanner",
+                "basic-range": basic_range,
+                "penetrating-range": penetrating_range,
+            }),
+            PlanetaryKind::Defense { base_coverage } => json!({
+                "kind": "defense",
+                "base-coverage": base_coverage,
+            }),
+            PlanetaryKind::Terraforming {
+                gravity,
+                temperature,
+                radiation,
+            } => json!({
+                "kind": "terraforming",
+                "gravity": gravity,
+                "temperature": temperature,
+                "radiation": radiation,
+            }),
+        },
     }
 }
 
