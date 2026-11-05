@@ -137,6 +137,7 @@ pub fn scenario_universe(scenario: &Scenario) -> GeneratedUniverse {
                 population: 0,
                 factories: 0,
                 mines: 0,
+                defenses: 0,
                 build_queue: Vec::new(),
                 route_target: None,
                 starbase_design_slot: None,

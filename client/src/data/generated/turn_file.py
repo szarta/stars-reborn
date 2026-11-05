@@ -464,6 +464,30 @@ class PlanetObserved(BaseModel):
         alias="resources-per-year",
         description="Resources the planet generates per year: floor(population / resource-production) + operated-factories x factory-production (see docs/mechanics/production.rst). A derived value recomputed each turn, present only for a planet the viewing player owns. Absent when the engine cannot compute it (e.g. an Alternate Reality race, whose economy model is not yet implemented).",
     )
+    scanner_type: str | None = Field(
+        None,
+        alias="scanner-type",
+        description="Display name of the planet's effective planetary scanner — the best planetary scanner the owner has researched (empire-wide, automatic; see docs/mechanics/scanning.rst). Present only for an owned planet; absent for an Alternate Reality race (no planetary scanners) and when the race is unknown. Does NOT yet fold in an orbiting starbase's scanner (future work).",
+    )
+    scanner_range: conint(ge=0, le=4294967295) | None = Field(
+        None,
+        alias="scanner-range",
+        description="Normal scan range in light-years of the planet's effective planetary scanner. Present under the same conditions as scanner-type.",
+    )
+    defenses: conint(ge=0, le=100) | None = Field(
+        None,
+        description="Number of planetary defense installations on this planet (0..100). Present only for an owned planet. 0 until defenses production lands.",
+    )
+    defense_type: str | None = Field(
+        None,
+        alias="defense-type",
+        description="Display name of the defense TYPE built here — the best planetary defense the owner has researched (all of a planet's defenses are that type). Present only for an owned planet; absent when the race is unknown.",
+    )
+    defense_coverage: conint(ge=0, le=100) | None = Field(
+        None,
+        alias="defense-coverage",
+        description="Overall colonist protection as an integer percent (0..100): 1 − (1 − base_coverage)^defenses, where base_coverage is the per-defense kill probability of defense-type (docs/reference/planetary_tech.rst). 0 when there are no defenses. Present only for an owned planet. Exact value pending oracle verification.",
+    )
     build_queue: list[BuildItem] = Field(
         ...,
         alias="build-queue",

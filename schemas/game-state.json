@@ -237,6 +237,12 @@
           "type": "integer",
           "format": "uint32"
         },
+        "defenses": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "description": "Planetary defense installations built here (0..100), buildable id 9. Built via production (defenses production is a later slice), so 0 until then. The best-researched defense TYPE and the resulting coverage are derived per-view from the owner's tech, not stored. Absent on pre-existing saves predating the defense model; treated as 0."
+        },
         "build_queue": {
           "type": "array",
           "description": "Ordered production queue for this planet. Items are built top-to-bottom at turn resolution (see docs/mechanics/production.rst). Absent on pre-existing saves predating the queue; treated as empty.",

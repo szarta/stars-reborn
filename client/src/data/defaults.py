@@ -66,6 +66,18 @@ class PlanetData:
     # Status section shows "n/a" while absent.
     resources_per_year: int | None = None
 
+    # Status-section fields for an owned planet (docs/mechanics/scanning.rst,
+    # docs/reference/planetary_tech.rst). Each is None for unowned/unobserved
+    # planets (Status shows "n/a"). scanner_* describe the owner's effective
+    # planetary scanner (best researched; None for an AR race). defenses is the
+    # installed defense count; defense_type/defense_coverage (percent) describe
+    # the best-researched defense type and its compounded colonist protection.
+    scanner_type: str | None = None
+    scanner_range: int | None = None
+    defenses: int | None = None
+    defense_type: str | None = None
+    defense_coverage: int | None = None
+
     # Production queue — present (a list, possibly empty) only for planets the
     # viewing player owns; ``None`` for unowned/unobserved planets, since the
     # engine emits build-queue only for owned planets (production is private).
@@ -117,6 +129,11 @@ class PlanetData:
             mines=p.get("mines", 0),
             value=p.get("value"),
             resources_per_year=p.get("resources-per-year"),
+            scanner_type=p.get("scanner-type"),
+            scanner_range=p.get("scanner-range"),
+            defenses=p.get("defenses"),
+            defense_type=p.get("defense-type"),
+            defense_coverage=p.get("defense-coverage"),
             build_queue=cls._queue_from_wire(p.get("build-queue")),
             route_target=p.get("route-target"),
             starbase=cls._starbase_from_wire(p.get("starbase")),

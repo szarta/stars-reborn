@@ -25,7 +25,7 @@ use crate::game::objects::advantage_points::{
     axis_to_idx, grav_to_idx, planet_habitability, rad_to_idx, temp_to_idx,
 };
 use crate::game::objects::planet::{PlanetState, PlanetStatic};
-use crate::game::objects::race::{Prt, Race};
+use crate::game::objects::race::{Lrt, Prt, Race};
 use crate::game::state::GameState;
 
 // The turn-file wire types (`PlayerView`, `PlanetIntel`, `PlanetObserved`,
@@ -43,9 +43,10 @@ use crate::game::objects::generated::turn_file::{
     ShipDesign as WireShipDesign, ShipDesignKind as WireShipDesignKind,
     SlotAssignment as WireSlotAssignment,
 };
-use crate::game::objects::player::{Player, ShipDesignKind};
+use crate::game::objects::player::{Player, ShipDesignKind, TechLevels};
 use crate::game::objects::starbase_hull_catalog::starbase_hull_catalog;
-use crate::game::objects::technology_catalog::{technology_catalog, Props};
+use crate::game::objects::technology::TechRequirements;
+use crate::game::objects::technology_catalog::{technology_catalog, PlanetaryKind, Props};
 use crate::game::orders::design_built_count;
 
 use crate::game::score;
@@ -415,6 +416,88 @@ fn starbase_status(player: Option<&Player>, s: &PlanetState) -> Option<StarbaseS
     })
 }
 
+/// True when researched tech levels meet a planetary tech's requirement in
+/// every field. (Mirrors `orders::tech_requirements_met`, kept local so the
+/// view does not depend on an orders-module private.)
+fn tech_met(req: &TechRequirements, tech: &TechLevels) -> bool {
+    u32::from(req.energy) <= tech.energy
+        && u32::from(req.weapons) <= tech.weapons
+        && u32::from(req.propulsion) <= tech.propulsion
+        && u32::from(req.construction) <= tech.construction
+        && u32::from(req.electronics) <= tech.electronics
+        && u32::from(req.bio) <= tech.biotechnology
+}
+
+/// Whether a race may field a planetary scanner (docs/reference/planetary_tech.rst
+/// "Access"): Alternate Reality has no planetary scanners at all, and the
+/// penetrating Snooper series is removed for No-Advanced-Scanners races.
+fn scanner_available(race: &Race, penetrating: bool) -> bool {
+    if race.prt == Prt::Ar {
+        return false;
+    }
+    !(penetrating && race.lrts.contains(&Lrt::Nas))
+}
+
+/// Whether a race may field a planetary defense (docs/reference/planetary_tech.rst
+/// "Access"): SDI and Missile Battery are universal; Laser Battery and the two
+/// shields are excluded for War Monger and Alternate Reality.
+fn defense_available(race: &Race, slug: &str) -> bool {
+    let restricted = matches!(
+        slug,
+        "laser_battery" | "planetary_shield" | "neutron_shield"
+    );
+    !(restricted && matches!(race.prt, Prt::Wm | Prt::Ar))
+}
+
+/// The owner's effective planetary scanner: the highest normal-range scanner it
+/// has both researched and may access. Planetary scanners are empire-wide and
+/// automatic (not built per planet), so this depends only on race + tech. Does
+/// NOT yet union with an orbiting starbase's scanner (future work). Returns
+/// `(display name, normal range ly)`, or `None` (e.g. an AR race).
+fn best_planetary_scanner(race: &Race, tech: &TechLevels) -> Option<(&'static str, u32)> {
+    technology_catalog()
+        .into_iter()
+        .filter_map(|item| match &item.props {
+            Props::Planetary(PlanetaryKind::Scanner {
+                basic_range,
+                penetrating_range,
+            }) if scanner_available(race, *penetrating_range > 0)
+                && tech_met(&item.tech_requirements, tech) =>
+            {
+                Some((item.name, *basic_range))
+            }
+            _ => None,
+        })
+        .max_by_key(|(_, range)| *range)
+}
+
+/// The owner's best planetary defense TYPE: the highest-coverage defense it has
+/// both researched and may access. All of a planet's defenses are this type.
+/// Returns `(display name, per-defense base coverage)`, or `None`.
+fn best_planetary_defense(race: &Race, tech: &TechLevels) -> Option<(&'static str, f64)> {
+    technology_catalog()
+        .into_iter()
+        .filter_map(|item| match &item.props {
+            Props::Planetary(PlanetaryKind::Defense { base_coverage })
+                if defense_available(race, item.slug)
+                    && tech_met(&item.tech_requirements, tech) =>
+            {
+                Some((item.name, *base_coverage))
+            }
+            _ => None,
+        })
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+}
+
+/// Overall colonist protection from `count` defenses, each with per-defense kill
+/// probability `base_coverage`, as an integer percent (0..=100). Compounding
+/// form from docs/reference/planetary_tech.rst: `1 − (1 − base_coverage)^count`.
+/// Exact value pending oracle verification.
+fn defense_coverage_percent(base_coverage: f64, count: u32) -> u32 {
+    let protection = 1.0 - (1.0 - base_coverage).powi(count as i32);
+    (protection * 100.0).round() as u32
+}
+
 /// Decide whether `player_id` can currently observe this planet, and emit
 /// the matching `PlanetIntel` variant.
 ///
@@ -432,37 +515,161 @@ fn intel_for(
     let observable = matches!(pstate, Some(s) if s.owner == Some(player_id));
 
     match (observable, pstate) {
-        (true, Some(s)) => PlanetIntel::Observed(PlanetObserved {
-            id: static_.id,
-            name: static_.name.clone(),
-            x: static_.x,
-            y: static_.y,
-            years_since_last_scan: 0,
-            gravity: s.gravity,
-            temperature: s.temperature,
-            radiation: s.radiation,
-            ironium_concentration: s.ironium_concentration,
-            boranium_concentration: s.boranium_concentration,
-            germanium_concentration: s.germanium_concentration,
-            surface_ironium: s.surface_ironium,
-            surface_boranium: s.surface_boranium,
-            surface_germanium: s.surface_germanium,
-            homeworld: s.homeworld,
-            owner: s.owner,
-            population: s.population,
-            factories: s.factories,
-            mines: s.mines,
-            value: compute_value(s, race),
-            resources_per_year: compute_resources_per_year(s, race),
-            build_queue: build_queue_view(s),
-            route_target: s.route_target,
-            starbase: starbase_status(player, s),
-        }),
+        (true, Some(s)) => {
+            // Scanner/defense derive from the OWNER's race + tech. This planet
+            // is observable iff the viewing player owns it, so `player`/`race`
+            // are the owner's.
+            let tech = player.map(|p| &p.tech);
+            let (scanner_type, scanner_range) = match (race, tech) {
+                (Some(r), Some(t)) => match best_planetary_scanner(r, t) {
+                    Some((name, range)) => (Some(name.to_string()), Some(range)),
+                    None => (None, None),
+                },
+                _ => (None, None),
+            };
+            let (defense_type, defense_coverage) = match (race, tech) {
+                (Some(r), Some(t)) => match best_planetary_defense(r, t) {
+                    Some((name, base)) => (
+                        Some(name.to_string()),
+                        Some(defense_coverage_percent(base, s.defenses)),
+                    ),
+                    None => (None, None),
+                },
+                _ => (None, None),
+            };
+            PlanetIntel::Observed(PlanetObserved {
+                id: static_.id,
+                name: static_.name.clone(),
+                x: static_.x,
+                y: static_.y,
+                years_since_last_scan: 0,
+                gravity: s.gravity,
+                temperature: s.temperature,
+                radiation: s.radiation,
+                ironium_concentration: s.ironium_concentration,
+                boranium_concentration: s.boranium_concentration,
+                germanium_concentration: s.germanium_concentration,
+                surface_ironium: s.surface_ironium,
+                surface_boranium: s.surface_boranium,
+                surface_germanium: s.surface_germanium,
+                homeworld: s.homeworld,
+                owner: s.owner,
+                population: s.population,
+                factories: s.factories,
+                mines: s.mines,
+                defenses: Some(s.defenses),
+                value: compute_value(s, race),
+                resources_per_year: compute_resources_per_year(s, race),
+                scanner_type,
+                scanner_range,
+                defense_type,
+                defense_coverage,
+                build_queue: build_queue_view(s),
+                route_target: s.route_target,
+                starbase: starbase_status(player, s),
+            })
+        }
         _ => PlanetIntel::Unobserved(PlanetUnobserved {
             id: static_.id,
             name: static_.name.clone(),
             x: static_.x,
             y: static_.y,
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::game::objects::race_defaults::humanoid;
+
+    fn tech(level: u32) -> TechLevels {
+        TechLevels {
+            energy: level,
+            weapons: level,
+            propulsion: level,
+            construction: level,
+            electronics: level,
+            biotechnology: level,
+        }
+    }
+
+    /// A JOAT (no LRTs) race with the given PRT/LRT overrides.
+    fn race_with(prt: Prt, lrts: Vec<Lrt>) -> Race {
+        let mut r = humanoid();
+        r.prt = prt;
+        r.lrts = lrts;
+        r
+    }
+
+    #[test]
+    fn scanner_at_zero_tech_is_the_basic_viewer() {
+        let r = race_with(Prt::Joat, vec![]);
+        assert_eq!(
+            best_planetary_scanner(&r, &tech(0)),
+            Some(("Viewer 50", 50))
+        );
+    }
+
+    #[test]
+    fn scanner_picks_the_best_researched_and_accessible() {
+        let r = race_with(Prt::Joat, vec![]);
+        // All fields high enough for the top Snooper (En7/El23/Bio9).
+        assert_eq!(
+            best_planetary_scanner(&r, &tech(30)),
+            Some(("Snooper 620X", 620))
+        );
+    }
+
+    #[test]
+    fn nas_cannot_use_penetrating_snoopers() {
+        let r = race_with(Prt::Joat, vec![Lrt::Nas]);
+        // Snoopers (penetrating) are excluded; best normal scanner is Scoper 280.
+        assert_eq!(
+            best_planetary_scanner(&r, &tech(30)),
+            Some(("Scoper 280", 280))
+        );
+    }
+
+    #[test]
+    fn ar_has_no_planetary_scanner() {
+        let r = race_with(Prt::Ar, vec![]);
+        assert_eq!(best_planetary_scanner(&r, &tech(30)), None);
+    }
+
+    #[test]
+    fn defense_at_zero_tech_is_sdi() {
+        let r = race_with(Prt::Joat, vec![]);
+        assert_eq!(best_planetary_defense(&r, &tech(0)), Some(("SDI", 0.0099)));
+    }
+
+    #[test]
+    fn defense_picks_the_best_researched_and_accessible() {
+        let r = race_with(Prt::Joat, vec![]);
+        assert_eq!(
+            best_planetary_defense(&r, &tech(30)),
+            Some(("Neutron Shield", 0.0379))
+        );
+    }
+
+    #[test]
+    fn war_monger_and_ar_are_capped_at_missile_battery() {
+        // Laser Battery and the shields are excluded for WM and AR, so even at
+        // high tech the best defense is the Missile Battery (En 5).
+        for prt in [Prt::Wm, Prt::Ar] {
+            let r = race_with(prt, vec![]);
+            assert_eq!(
+                best_planetary_defense(&r, &tech(30)),
+                Some(("Missile Battery", 0.0199))
+            );
+        }
+    }
+
+    #[test]
+    fn coverage_compounds_over_the_defense_count() {
+        // No defenses => no protection.
+        assert_eq!(defense_coverage_percent(0.0099, 0), 0);
+        // 100 x SDI (0.0099): 1 - 0.9901^100 ~= 63.3% -> 63.
+        assert_eq!(defense_coverage_percent(0.0099, 100), 63);
     }
 }

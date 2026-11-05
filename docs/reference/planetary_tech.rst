@@ -247,3 +247,30 @@ Axis-Specific Terraforming (base pool — all races)
    * - RadiationTerraform15
      - We 16 / Bio 4
      - Radiation ±15 steps/yr
+
+Engine serialization (planet Status fields)
+-------------------------------------------
+
+``player_view`` derives the owned-planet Status-section fields from the owner's
+race and researched tech levels, against the planetary catalog above:
+
+* **Scanner Type / Range** — the best planetary scanner the owner has
+  researched and may access (empire-wide and automatic, not built per planet).
+  Access rules from `Planetary Scanners`_: Alternate Reality gets none; the
+  penetrating Snooper series is excluded for No-Advanced-Scanners races. This
+  does **not** yet union with an orbiting starbase's scanner (future work,
+  gated on starbase scanner components).
+* **Defenses** — the installed count (``game-state``
+  ``planet-state.defenses``), built via production (a later slice), so 0 until
+  then.
+* **Defense Type** — the best planetary defense the owner has researched and
+  may access (`Planetary Defenses`_ access: Laser Battery and the shields are
+  excluded for War Monger and Alternate Reality). All of a planet's defenses
+  are this one type.
+* **Defense Coverage** — overall colonist protection as an integer percent, ``1
+  − (1 − base_coverage)^defenses`` for the defense type's per-unit
+  ``base_coverage``. Pending oracle verification of the exact rounding/display.
+
+Not yet serialized: **Resource Capacity** (the "of N" in "Resources/Year X of
+N") — its exact semantics (resources at full factory capacity for current pop?)
+are unconfirmed and left for a follow-up rather than guessed.

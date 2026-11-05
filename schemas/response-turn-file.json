@@ -173,6 +173,35 @@
           "maximum": 4294967295,
           "format": "uint32"
         },
+        "scanner-type": {
+          "description": "Display name of the planet's effective planetary scanner — the best planetary scanner the owner has researched (empire-wide, automatic; see docs/mechanics/scanning.rst). Present only for an owned planet; absent for an Alternate Reality race (no planetary scanners) and when the race is unknown. Does NOT yet fold in an orbiting starbase's scanner (future work).",
+          "type": "string"
+        },
+        "scanner-range": {
+          "description": "Normal scan range in light-years of the planet's effective planetary scanner. Present under the same conditions as scanner-type.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "defenses": {
+          "description": "Number of planetary defense installations on this planet (0..100). Present only for an owned planet. 0 until defenses production lands.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "format": "uint32"
+        },
+        "defense-type": {
+          "description": "Display name of the defense TYPE built here — the best planetary defense the owner has researched (all of a planet's defenses are that type). Present only for an owned planet; absent when the race is unknown.",
+          "type": "string"
+        },
+        "defense-coverage": {
+          "description": "Overall colonist protection as an integer percent (0..100): 1 − (1 − base_coverage)^defenses, where base_coverage is the per-defense kill probability of defense-type (docs/reference/planetary_tech.rst). 0 when there are no defenses. Present only for an owned planet. Exact value pending oracle verification.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "format": "uint32"
+        },
         "build-queue": {
           "description": "The planet's production queue, in build order. Present only for planets the viewing player owns (production is private); empty array when the queue is empty.",
           "type": "array",
