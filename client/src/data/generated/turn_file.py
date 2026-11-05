@@ -141,6 +141,44 @@ class PlanetUnobserved(BaseModel):
     y: int
 
 
+class StarbaseStatus(BaseModel):
+    """
+    Aggregated display stats for a planet's starbase, derived from its design (hull + installed components).
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    dock_capacity: int | None = Field(
+        ...,
+        alias="dock-capacity",
+        description="Maximum mass (kT) of a ship this starbase can build or repair: 0 = cannot build/repair (Orbital Fort), a finite value, or null for unlimited (Space Station and larger).",
+    )
+    armor: int = Field(
+        ...,
+        description="Total armor damage-points (hull base armor plus armor contributed by installed components).",
+    )
+    shields: int = Field(
+        ...,
+        description="Total shield damage-points from installed shield (and shield-bearing armor) components.",
+    )
+    damage_percent: conint(ge=0, le=100) = Field(
+        ...,
+        alias="damage-percent",
+        description="Battle damage as a percent 0-100; 0 for an undamaged starbase. (Battle damage is not modelled yet, so currently always 0.)",
+    )
+    mass_driver: int | None = Field(
+        ...,
+        alias="mass-driver",
+        description="Launch warp (5-13) of the installed mass driver, or null if none is installed.",
+    )
+    packet_target: int | None = Field(
+        ...,
+        alias="packet-target",
+        description="Planet id this starbase's mineral packets are launched toward, or null if no target is set.",
+    )
+
+
 class BuildItem(BaseModel):
     """
     One entry in an owned planet's production queue. build-object-id indexes the buildable registry (GET /model/buildables): 7=factory, 8=mine, 9=defenses, 1024+N=design slot N. See docs/mechanics/production.rst.
@@ -435,6 +473,10 @@ class PlanetObserved(BaseModel):
         None,
         alias="route-target",
         description='Planet id this owned planet routes arriving fleets to (the "Route To" destination), or null for no route. Present only for owned planets, since routing is private to the owner.',
+    )
+    starbase: StarbaseStatus | None = Field(
+        None,
+        description="This planet's starbase display stats, present only when the planet has a starbase. Derived from the owner's starbase design (hull + installed components); see docs/mechanics/starbase_design.rst. Absent when the planet has no starbase.",
     )
 
 

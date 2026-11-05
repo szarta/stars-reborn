@@ -102,6 +102,7 @@ fn sample_game_state() -> GameState {
         planet_states,
         players,
         year: 2400,
+        player_messages: Default::default(),
     }
 }
 

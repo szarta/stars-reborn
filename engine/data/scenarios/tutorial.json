@@ -1,0 +1,423 @@
+{
+  "_comment": "Tutorial Game fixed universe + fixed players. Source: knowledge/findings/tutorial_game_initial_state(.rst/.json) in stars-reborn-research, captured from a real stars.exe tutorial (deterministic). Coords are LOGICAL 0-origin ly (stars.exe internal map-dump coords minus the 1000 origin offset). hab *_idx fields are the original 0-100 axis indices (idx_to_grav/idx_to_temp/idx_to_rad convert to physical). Planet ids are the oracle planet_index (0-23); homeworlds are id 13 (P0 Humanoid/JOAT, human) and id 10 (P1 Berserker/SS, AI - name from the AI race-name pool). players[] races are in race.json shape. The homeworld hab is NOT re-randomized by the builder: the captured homeworld hab is already the race-fitted 100%-value world.",
+  "name": "Tutorial Game",
+  "size": 0,
+  "width": 400,
+  "height": 400,
+  "year": 2400,
+  "planets": [
+    {
+      "id": 0,
+      "name": "Lever",
+      "x": 26,
+      "y": 55,
+      "gravity_idx": 38,
+      "temperature_idx": 39,
+      "radiation_idx": 46,
+      "ironium_concentration": 24,
+      "boranium_concentration": 70,
+      "germanium_concentration": 84
+    },
+    {
+      "id": 1,
+      "name": "Speed Bump",
+      "x": 74,
+      "y": 31,
+      "gravity_idx": 75,
+      "temperature_idx": 21,
+      "radiation_idx": 59,
+      "ironium_concentration": 57,
+      "boranium_concentration": 72,
+      "germanium_concentration": 64
+    },
+    {
+      "id": 2,
+      "name": "Oxygen",
+      "x": 85,
+      "y": 213,
+      "gravity_idx": 34,
+      "temperature_idx": 76,
+      "radiation_idx": 13,
+      "ironium_concentration": 89,
+      "boranium_concentration": 92,
+      "germanium_concentration": 88
+    },
+    {
+      "id": 3,
+      "name": "No Vacancy",
+      "x": 105,
+      "y": 271,
+      "gravity_idx": 80,
+      "temperature_idx": 57,
+      "radiation_idx": 98,
+      "ironium_concentration": 85,
+      "boranium_concentration": 46,
+      "germanium_concentration": 43
+    },
+    {
+      "id": 4,
+      "name": "Mozart",
+      "x": 118,
+      "y": 143,
+      "gravity_idx": 61,
+      "temperature_idx": 78,
+      "radiation_idx": 27,
+      "ironium_concentration": 83,
+      "boranium_concentration": 22,
+      "germanium_concentration": 13
+    },
+    {
+      "id": 5,
+      "name": "Wallaby",
+      "x": 121,
+      "y": 197,
+      "gravity_idx": 81,
+      "temperature_idx": 54,
+      "radiation_idx": 92,
+      "ironium_concentration": 80,
+      "boranium_concentration": 100,
+      "germanium_concentration": 61
+    },
+    {
+      "id": 6,
+      "name": "La Te Da",
+      "x": 127,
+      "y": 31,
+      "gravity_idx": 14,
+      "temperature_idx": 62,
+      "radiation_idx": 32,
+      "ironium_concentration": 20,
+      "boranium_concentration": 72,
+      "germanium_concentration": 2
+    },
+    {
+      "id": 7,
+      "name": "Mohlodi",
+      "x": 130,
+      "y": 372,
+      "gravity_idx": 91,
+      "temperature_idx": 41,
+      "radiation_idx": 44,
+      "ironium_concentration": 25,
+      "boranium_concentration": 26,
+      "germanium_concentration": 18
+    },
+    {
+      "id": 8,
+      "name": "Slime",
+      "x": 131,
+      "y": 216,
+      "gravity_idx": 26,
+      "temperature_idx": 35,
+      "radiation_idx": 13,
+      "ironium_concentration": 4,
+      "boranium_concentration": 2,
+      "germanium_concentration": 6
+    },
+    {
+      "id": 9,
+      "name": "Hiho",
+      "x": 148,
+      "y": 296,
+      "gravity_idx": 67,
+      "temperature_idx": 68,
+      "radiation_idx": 9,
+      "ironium_concentration": 68,
+      "boranium_concentration": 77,
+      "germanium_concentration": 23
+    },
+    {
+      "id": 10,
+      "name": "Hacker",
+      "x": 149,
+      "y": 135,
+      "gravity_idx": 58,
+      "temperature_idx": 35,
+      "radiation_idx": 65,
+      "ironium_concentration": 25,
+      "boranium_concentration": 70,
+      "germanium_concentration": 84
+    },
+    {
+      "id": 11,
+      "name": "Neil",
+      "x": 157,
+      "y": 145,
+      "gravity_idx": 31,
+      "temperature_idx": 10,
+      "radiation_idx": 82,
+      "ironium_concentration": 4,
+      "boranium_concentration": 84,
+      "germanium_concentration": 103
+    },
+    {
+      "id": 12,
+      "name": "Prune",
+      "x": 190,
+      "y": 288,
+      "gravity_idx": 52,
+      "temperature_idx": 90,
+      "radiation_idx": 62,
+      "ironium_concentration": 87,
+      "boranium_concentration": 41,
+      "germanium_concentration": 109
+    },
+    {
+      "id": 13,
+      "name": "Stove Top",
+      "x": 237,
+      "y": 273,
+      "gravity_idx": 50,
+      "temperature_idx": 50,
+      "radiation_idx": 50,
+      "ironium_concentration": 25,
+      "boranium_concentration": 70,
+      "germanium_concentration": 84
+    },
+    {
+      "id": 14,
+      "name": "Shaggy Dog",
+      "x": 263,
+      "y": 130,
+      "gravity_idx": 64,
+      "temperature_idx": 55,
+      "radiation_idx": 74,
+      "ironium_concentration": 82,
+      "boranium_concentration": 44,
+      "germanium_concentration": 91
+    },
+    {
+      "id": 15,
+      "name": "Alexander",
+      "x": 263,
+      "y": 214,
+      "gravity_idx": 3,
+      "temperature_idx": 31,
+      "radiation_idx": 7,
+      "ironium_concentration": 95,
+      "boranium_concentration": 11,
+      "germanium_concentration": 8
+    },
+    {
+      "id": 16,
+      "name": "90210",
+      "x": 295,
+      "y": 269,
+      "gravity_idx": 69,
+      "temperature_idx": 20,
+      "radiation_idx": 44,
+      "ironium_concentration": 85,
+      "boranium_concentration": 82,
+      "germanium_concentration": 62
+    },
+    {
+      "id": 17,
+      "name": "Sea Squared",
+      "x": 320,
+      "y": 106,
+      "gravity_idx": 21,
+      "temperature_idx": 19,
+      "radiation_idx": 19,
+      "ironium_concentration": 107,
+      "boranium_concentration": 96,
+      "germanium_concentration": 47
+    },
+    {
+      "id": 18,
+      "name": "Red Storm",
+      "x": 352,
+      "y": 146,
+      "gravity_idx": 64,
+      "temperature_idx": 29,
+      "radiation_idx": 48,
+      "ironium_concentration": 96,
+      "boranium_concentration": 71,
+      "germanium_concentration": 76
+    },
+    {
+      "id": 19,
+      "name": "Mobius",
+      "x": 366,
+      "y": 347,
+      "gravity_idx": 9,
+      "temperature_idx": 67,
+      "radiation_idx": 86,
+      "ironium_concentration": 85,
+      "boranium_concentration": 72,
+      "germanium_concentration": 97
+    },
+    {
+      "id": 20,
+      "name": "Castle",
+      "x": 366,
+      "y": 385,
+      "gravity_idx": 3,
+      "temperature_idx": 93,
+      "radiation_idx": 39,
+      "ironium_concentration": 70,
+      "boranium_concentration": 92,
+      "germanium_concentration": 21
+    },
+    {
+      "id": 21,
+      "name": "Dwarte",
+      "x": 382,
+      "y": 302,
+      "gravity_idx": 82,
+      "temperature_idx": 76,
+      "radiation_idx": 98,
+      "ironium_concentration": 98,
+      "boranium_concentration": 61,
+      "germanium_concentration": 53
+    },
+    {
+      "id": 22,
+      "name": "Kalamazoo",
+      "x": 385,
+      "y": 204,
+      "gravity_idx": 16,
+      "temperature_idx": 26,
+      "radiation_idx": 79,
+      "ironium_concentration": 4,
+      "boranium_concentration": 93,
+      "germanium_concentration": 50
+    },
+    {
+      "id": 23,
+      "name": "Bloop",
+      "x": 386,
+      "y": 182,
+      "gravity_idx": 61,
+      "temperature_idx": 84,
+      "radiation_idx": 34,
+      "ironium_concentration": 102,
+      "boranium_concentration": 20,
+      "germanium_concentration": 62
+    }
+  ],
+  "players": [
+    {
+      "id": 0,
+      "is_cpu": false,
+      "homeworld_planet_id": 13,
+      "starting_tech": {
+        "energy": 3,
+        "weapons": 3,
+        "propulsion": 3,
+        "construction": 3,
+        "electronics": 3,
+        "biotechnology": 3
+      },
+      "race": {
+        "format_version": 1,
+        "name": "Humanoid",
+        "plural_name": "Humanoids",
+        "prt": "JOAT",
+        "lrts": [],
+        "hab": {
+          "gravity": {
+            "immune": false,
+            "min": 0.22,
+            "max": 4.4
+          },
+          "temperature": {
+            "immune": false,
+            "min": -140.0,
+            "max": 140.0
+          },
+          "radiation": {
+            "immune": false,
+            "min": 15.0,
+            "max": 85.0
+          }
+        },
+        "economy": {
+          "resource_production": 1000,
+          "factory_production": 10,
+          "factory_cost": 10,
+          "factory_cheap_germanium": false,
+          "colonists_operate_factories": 10,
+          "mine_production": 10,
+          "mine_cost": 5,
+          "colonists_operate_mines": 10,
+          "growth_rate": 15
+        },
+        "research_costs": {
+          "energy": "normal",
+          "weapons": "normal",
+          "propulsion": "normal",
+          "construction": "normal",
+          "electronics": "normal",
+          "biotechnology": "normal",
+          "expensive_tech_boost": false
+        },
+        "leftover_spend": "surface_minerals",
+        "icon_index": 0
+      }
+    },
+    {
+      "id": 1,
+      "is_cpu": true,
+      "homeworld_planet_id": 10,
+      "starting_tech": {
+        "energy": 0,
+        "weapons": 0,
+        "propulsion": 0,
+        "construction": 0,
+        "electronics": 5,
+        "biotechnology": 0
+      },
+      "race": {
+        "format_version": 1,
+        "name": "Berserker",
+        "plural_name": "Berserkers",
+        "prt": "SS",
+        "lrts": [
+          "IFE",
+          "ARM",
+          "MA",
+          "RS"
+        ],
+        "hab": {
+          "gravity": {
+            "immune": false,
+            "min": 0.52,
+            "max": 5.36
+          },
+          "temperature": {
+            "immune": false,
+            "min": -172.0,
+            "max": 52.0
+          },
+          "radiation": {
+            "immune": false,
+            "min": 35.0,
+            "max": 95.0
+          }
+        },
+        "economy": {
+          "resource_production": 1000,
+          "factory_production": 9,
+          "factory_cost": 10,
+          "factory_cheap_germanium": false,
+          "colonists_operate_factories": 9,
+          "mine_production": 9,
+          "mine_cost": 5,
+          "colonists_operate_mines": 8,
+          "growth_rate": 14
+        },
+        "research_costs": {
+          "energy": "normal",
+          "weapons": "expensive",
+          "propulsion": "normal",
+          "construction": "normal",
+          "electronics": "normal",
+          "biotechnology": "expensive",
+          "expensive_tech_boost": false
+        },
+        "leftover_spend": "surface_minerals",
+        "icon_index": 31
+      }
+    }
+  ]
+}

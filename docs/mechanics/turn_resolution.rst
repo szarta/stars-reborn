@@ -159,3 +159,28 @@ Notes
 
    These remaining sub-steps are flagged for oracle confirmation against the
    original game.
+
+Engine implementation
+---------------------
+
+``resolve_turn`` (``engine/src/game/turn/mod.rs``) is the orchestrator: it runs
+every turn-resolution step that has been built so far, in the canonical order
+above, then advances ``year``.  The full Phase 0–14 sequence is being built one
+step at a time; today only **Phase 6 — Production**
+(``production::run_production``) is wired in.  The host exposes it through
+``POST /games/{id}/turns/{year}/advance`` (the single-player / hotseat
+"Generate" action; orders are applied to the ground-truth state as they are
+submitted, and gating multiplayer generation on all-players-submitted waits on
+per-player submission tracking).
+
+**Per-turn messages.**  Most of the Stars! message catalogue is generated as a
+side-effect of resolution.  The host keeps a per-player message store
+(``game-state.player_messages``) that each step appends to via
+``turn::push_message``.  Messages are strictly per-turn: ``resolve_turn``
+clears the store before any step runs, so the events a step records this year
+are the ones the players read in next year's turn file.  ``player_view`` merges
+that store with the messages it derives fresh from current state (the
+empty-production-queue nudge) and assigns each a contiguous turn-file id.  Each
+message family lands with the mechanic that produces it; Phase 6 production of
+factories and mines emits none in the original game, so the store lifecycle
+runs today with no family yet attached.

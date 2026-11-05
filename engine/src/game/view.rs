@@ -36,13 +36,16 @@ use crate::game::state::GameState;
 // file. `PlanetIntel` is untagged: a client tells observed from unobserved by
 // whether the contents fields are present. See `docs/adr/0003`.
 pub use crate::game::objects::generated::turn_file::{
-    BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, TurnMessage, TurnScore,
+    BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, StarbaseStatus,
+    TurnMessage, TurnScore,
 };
 use crate::game::objects::generated::turn_file::{
     ShipDesign as WireShipDesign, ShipDesignKind as WireShipDesignKind,
     SlotAssignment as WireSlotAssignment,
 };
-use crate::game::objects::player::ShipDesignKind;
+use crate::game::objects::player::{Player, ShipDesignKind};
+use crate::game::objects::starbase_hull_catalog::starbase_hull_catalog;
+use crate::game::objects::technology_catalog::{technology_catalog, Props};
 use crate::game::orders::design_built_count;
 
 use crate::game::score;
@@ -64,7 +67,7 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         .filter_map(|id| {
             let static_ = state.universe.planets.get(&id)?;
             let pstate = state.planet_states.get(&id);
-            Some(intel_for(static_, pstate, player_id, race))
+            Some(intel_for(static_, pstate, player_id, player, race))
         })
         .collect();
 
@@ -204,21 +207,42 @@ fn compute_score(state: &GameState, player_id: u32) -> TurnScore {
 /// Build this player's messages for the current turn.
 ///
 /// Messages are per-turn — recomputed on every turn file, never accumulated.
-/// Today the engine only produces the messages derivable from the state it
-/// already models at turn-file generation time; the bulk of the message
-/// catalogue (combat, bombing, colonisation, growth, mining, research,
-/// minefields, packets, random events) is generated during turn resolution,
-/// which is still a stub, so those land with their mechanics (see the
-/// turn-resolution step tasks). The result is ordered deterministically and
-/// each message's `id` is its 0-based position in the list.
+/// They come from two places, merged here in this order:
+///
+///   1. Resolution-time events, read from the host-side per-player store on
+///      `GameState` that each turn-resolution step appends to (see
+///      `turn::push_message` / `turn::resolve_turn`). The bulk of the message
+///      catalogue (combat, bombing, colonisation, growth, mining, research,
+///      minefields, packets, random events) lands here as its mechanic is
+///      built; today no built step emits one.
+///   2. View-time messages, derived fresh from the current state on every
+///      projection — the production-queue-empty nudge is the only one so far.
+///
+/// `id` is assigned last as the 0-based position in the merged list, so it is
+/// contiguous across both sources and stable within this turn file.
 fn turn_messages(state: &GameState, player_id: u32) -> Vec<TurnMessage> {
     let mut messages: Vec<TurnMessage> = Vec::new();
 
-    // Production-queue-empty: for each world this player owns whose build queue
-    // is empty, nudge the player to queue production (message 063 in the
-    // original catalogue, "The production queue on <planet> is empty."). A
-    // freshly founded homeworld starts with an empty queue, so this is the
-    // first message a new game shows.
+    // (1) Resolution-time events recorded for this player during the last
+    //     turn resolution. `id` is overwritten below.
+    if let Some(stored) = state.player_messages.get(&player_id) {
+        for m in stored {
+            messages.push(TurnMessage {
+                id: 0,
+                message: m.message.clone(),
+                message_type: m.message_type.clone(),
+                related_object: m.related_object,
+                related_battle: m.related_battle,
+                important: m.important,
+            });
+        }
+    }
+
+    // (2) Production-queue-empty: for each world this player owns whose build
+    //     queue is empty, nudge the player to queue production (message 063 in
+    //     the original catalogue, "The production queue on <planet> is
+    //     empty."). A freshly founded homeworld starts with an empty queue, so
+    //     this is the first message a new game shows.
     let mut owned: Vec<(&u32, &PlanetState)> = state
         .planet_states
         .iter()
@@ -234,13 +258,18 @@ fn turn_messages(state: &GameState, player_id: u32) -> Vec<TurnMessage> {
             .map(|p| p.name.as_str())
             .unwrap_or("this planet");
         messages.push(TurnMessage {
-            id: messages.len() as u16,
+            id: 0,
             message: format!("The production queue on {name} is empty."),
             message_type: "PlanetProductionQueueEmpty".to_string(),
             related_object: Some(*id),
             related_battle: None,
             important: true,
         });
+    }
+
+    // Contiguous 0-based ids across both sources, in final order.
+    for (i, m) in messages.iter_mut().enumerate() {
+        m.id = i as u16;
     }
 
     messages
@@ -315,6 +344,77 @@ fn build_queue_view(s: &PlanetState) -> Vec<BuildItem> {
         .collect()
 }
 
+/// Aggregate a planet's starbase design into the display stats the client's
+/// Starbase section consumes, or `None` if the planet has no starbase. Only an
+/// owned planet reaches here, so the design is the owning player's own.
+///
+/// Derived from the starbase hull (dock capacity, base armor) plus the
+/// installed components (armor and shield damage-points, mass-driver warp).
+/// Battle damage and packet targeting are not modelled yet, so `damage-percent`
+/// is 0 and `packet-target` is null. A hull-only starting starbase therefore
+/// reports just the hull's armor and unlimited/finite dock capacity, with zero
+/// shields and no mass driver, until its component loadout is filled in.
+fn starbase_status(player: Option<&Player>, s: &PlanetState) -> Option<StarbaseStatus> {
+    let slot = s.starbase_design_slot?;
+    let player = player?;
+    let design = player
+        .designs
+        .iter()
+        .find(|d| d.kind == ShipDesignKind::Starbase && d.slot == slot)?;
+    let hull = starbase_hull_catalog()
+        .into_iter()
+        .find(|h| u32::from(h.id) == design.hull_id)?;
+
+    let catalog = technology_catalog();
+    let mut armor = hull.armor;
+    let mut shields: u32 = 0;
+    let mut mass_driver: Option<u32> = None;
+    for sa in &design.slot_assignments {
+        let Some(item) = catalog.iter().find(|t| u32::from(t.id) == sa.part_id) else {
+            continue;
+        };
+        let count = sa.count.get();
+        match &item.props {
+            Props::Armor {
+                armor_value,
+                shield_value,
+                ..
+            } => {
+                armor += armor_value * count;
+                shields += shield_value * count;
+            }
+            Props::Shield {
+                shield_value,
+                armor_value,
+                ..
+            } => {
+                shields += shield_value * count;
+                armor += armor_value * count;
+            }
+            // The displayed rating is the driver tier's rated warp. A starbase
+            // may hold at most two IDENTICAL drivers, so the max across
+            // installed drivers is that shared rating — correct for display.
+            // (Dual drivers' benefits — catch +1 warp, gentler overfling decay
+            // — and the player-selected launch warp are packet-flight
+            // behaviors, not this rating; see the mass-driver/packet finding.)
+            Props::MassDriver { warp } => {
+                let w = u32::from(*warp);
+                mass_driver = Some(mass_driver.map_or(w, |cur| cur.max(w)));
+            }
+            _ => {}
+        }
+    }
+
+    Some(StarbaseStatus {
+        dock_capacity: hull.dock_capacity,
+        armor,
+        shields,
+        damage_percent: 0,
+        mass_driver,
+        packet_target: s.packet_target,
+    })
+}
+
 /// Decide whether `player_id` can currently observe this planet, and emit
 /// the matching `PlanetIntel` variant.
 ///
@@ -326,6 +426,7 @@ fn intel_for(
     static_: &PlanetStatic,
     pstate: Option<&PlanetState>,
     player_id: u32,
+    player: Option<&Player>,
     race: Option<&Race>,
 ) -> PlanetIntel {
     let observable = matches!(pstate, Some(s) if s.owner == Some(player_id));
@@ -355,6 +456,7 @@ fn intel_for(
             resources_per_year: compute_resources_per_year(s, race),
             build_queue: build_queue_view(s),
             route_target: s.route_target,
+            starbase: starbase_status(player, s),
         }),
         _ => PlanetIntel::Unobserved(PlanetUnobserved {
             id: static_.id,

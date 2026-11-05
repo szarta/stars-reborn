@@ -20,6 +20,8 @@ use rand::{Rng, SeedableRng};
 use crate::game::objects::planet::{PlanetState, PlanetStatic};
 use crate::game::objects::universe::Universe;
 
+pub mod scenario;
+
 /// The two halves produced by `generate_universe`: the static, shared map and
 /// the initial mutable per-planet state. The caller (typically `create_game`)
 /// stores the universe inside `GameState::universe` and the state map inside
@@ -167,6 +169,8 @@ fn generate_planet(
         mines: 0,
         build_queue: Vec::new(),
         route_target: None,
+        starbase_design_slot: None,
+        packet_target: None,
     };
     (static_, state)
 }

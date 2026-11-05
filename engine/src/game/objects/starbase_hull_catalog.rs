@@ -21,6 +21,14 @@ use super::technology::{
     HullRequirement, SlotPosition, SlotType, StarbaseHull, TechCost, TechRequirements, TechSlot,
 };
 
+/// Hull id of the starbase every race begins with over its homeworld: a
+/// **Space Station** (id 159). The original game gives all PRTs a Space Station
+/// "Starbase" at the homeworld (docs/new_game/initial_state.rst summary table);
+/// its weapon/shield loadout and the IT/PP stargate/mass-driver variations
+/// follow once the component catalog lands. The Space Station hull has no tech
+/// or trait gate, so every race can hold it from turn 1.
+pub const HOMEWORLD_STARBASE_HULL_ID: u32 = 159;
+
 fn req(construction: u8) -> TechRequirements {
     TechRequirements {
         construction,

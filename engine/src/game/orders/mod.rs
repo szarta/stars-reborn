@@ -20,6 +20,7 @@ use crate::game::objects::race::{Lrt, Prt, Race};
 use crate::game::objects::ship_hull_catalog::ship_hull_catalog;
 use crate::game::objects::starbase_hull_catalog::starbase_hull_catalog;
 use crate::game::objects::technology::{HullRequirement, TechRequirements};
+use crate::game::objects::technology_catalog::{technology_catalog, Props};
 use crate::game::state::GameState;
 
 /// Semantic production-queue item kind — mirrors the `item` object in
@@ -108,6 +109,11 @@ pub enum OrderError {
     /// A production queue item named a ship design slot that the player has no
     /// design in — there is nothing to build there.
     BuildDesignSlotEmpty { slot: u32 },
+    /// A set-packet-target order named a destination planet that does not exist.
+    PacketTargetNotFound(u32),
+    /// A set-packet-target order targeted a planet whose starbase has no mass
+    /// driver installed, so it cannot launch mineral packets.
+    StarbaseHasNoMassDriver(u32),
 }
 
 /// Highest valid design slot per kind: ship designs occupy slots 0–15, starbase
@@ -260,6 +266,72 @@ pub fn apply_set_route_target(
     Ok(())
 }
 
+/// Whether `player_id`'s starbase on `planet` has a mass driver installed — the
+/// requirement for launching mineral packets. Resolves the planet's starbase
+/// design (in the owner's design pool) and checks its components against the
+/// technology catalog for a `MassDriver` part.
+fn starbase_has_mass_driver(
+    game: &GameState,
+    player_id: u32,
+    planet: &crate::game::objects::planet::PlanetState,
+) -> bool {
+    let Some(slot) = planet.starbase_design_slot else {
+        return false;
+    };
+    let Some(player) = game.players.iter().find(|p| p.id == player_id) else {
+        return false;
+    };
+    let Some(design) = player
+        .designs
+        .iter()
+        .find(|d| d.kind == ShipDesignKind::Starbase && d.slot == slot)
+    else {
+        return false;
+    };
+    let catalog = technology_catalog();
+    design.slot_assignments.iter().any(|sa| {
+        catalog
+            .iter()
+            .find(|t| u32::from(t.id) == sa.part_id)
+            .is_some_and(|t| matches!(t.props, Props::MassDriver { .. }))
+    })
+}
+
+/// Apply a `planet.set_packet_target` order: aim the planet's mass driver at a
+/// destination planet (mirrors `apply_set_route_target`). Validates that the
+/// submitting player owns the planet, the destination planet exists, and the
+/// planet's starbase has a mass driver to launch with. Stores a plain planet
+/// id; packet flight/decay/arrival are resolved separately, and the original's
+/// packed destination encoding (binary type-35) is still oracle-gated.
+pub fn apply_set_packet_target(
+    game: &mut GameState,
+    player_id: u32,
+    planet_id: u32,
+    target_planet_id: u32,
+) -> Result<(), OrderError> {
+    if !game.planet_states.contains_key(&target_planet_id) {
+        return Err(OrderError::PacketTargetNotFound(target_planet_id));
+    }
+
+    let planet = game
+        .planet_states
+        .get(&planet_id)
+        .ok_or(OrderError::PlanetNotFound(planet_id))?;
+    if planet.owner != Some(player_id) {
+        return Err(OrderError::PlanetNotOwned(planet_id));
+    }
+    if !starbase_has_mass_driver(game, player_id, planet) {
+        return Err(OrderError::StarbaseHasNoMassDriver(planet_id));
+    }
+
+    // Re-borrow mutably now that all checks have passed.
+    game.planet_states
+        .get_mut(&planet_id)
+        .expect("planet existence checked above")
+        .packet_target = Some(target_planet_id);
+    Ok(())
+}
+
 /// Apply a `design.upsert` order: create or replace the submitting player's
 /// design in `design.slot` (a ship slot 0–15 or a starbase slot 0–9, by
 /// `design.kind`). Validates before writing: the slot must be in range for its
@@ -405,6 +477,7 @@ mod tests {
                 designs: vec![],
             }],
             year: 2400,
+            player_messages: Default::default(),
         };
         (game, hw)
     }
@@ -767,5 +840,88 @@ mod tests {
         assert_eq!(d.hull_id, hull);
         // No fleets yet, so nothing is built.
         assert_eq!(d.built_count, 0);
+    }
+
+    /// A Space Station starbase design carrying one Mass Driver 5 (part 148),
+    /// in starbase slot 0.
+    fn starbase_with_driver() -> ShipDesign {
+        ShipDesign {
+            slot: 0,
+            kind: ShipDesignKind::Starbase,
+            name: "Driver Base".into(),
+            hull_id: 159, // Space Station
+            slot_assignments: vec![crate::game::objects::player::SlotAssignment {
+                slot_index: 0,
+                part_id: 148, // Mass Driver 5
+                count: std::num::NonZeroU32::new(1).unwrap(),
+            }],
+        }
+    }
+
+    #[test]
+    fn set_packet_target_requires_a_mass_driver() {
+        let (mut game, hw) = one_player_game();
+        let mut ids: Vec<u32> = game.planet_states.keys().copied().collect();
+        ids.sort();
+        let target = ids[1];
+
+        // No starbase at all -> rejected.
+        assert!(matches!(
+            apply_set_packet_target(&mut game, 0, hw, target),
+            Err(OrderError::StarbaseHasNoMassDriver(p)) if p == hw
+        ));
+
+        // A starbase present but with no mass driver (hull-only) -> still rejected.
+        game.planet_states
+            .get_mut(&hw)
+            .unwrap()
+            .starbase_design_slot = Some(0);
+        game.players[0].designs.push(ShipDesign {
+            slot: 0,
+            kind: ShipDesignKind::Starbase,
+            name: "Bare Base".into(),
+            hull_id: 159,
+            slot_assignments: vec![],
+        });
+        assert!(matches!(
+            apply_set_packet_target(&mut game, 0, hw, target),
+            Err(OrderError::StarbaseHasNoMassDriver(_))
+        ));
+        assert_eq!(game.planet_states[&hw].packet_target, None);
+    }
+
+    #[test]
+    fn set_packet_target_rejects_unknown_target_and_unowned_planet() {
+        let (mut game, hw) = one_player_game();
+        // Unknown destination planet.
+        assert!(matches!(
+            apply_set_packet_target(&mut game, 0, hw, 999_999),
+            Err(OrderError::PacketTargetNotFound(999_999))
+        ));
+        // A real destination, but submitted by a non-owner.
+        let mut ids: Vec<u32> = game.planet_states.keys().copied().collect();
+        ids.sort();
+        let target = ids[1];
+        assert!(matches!(
+            apply_set_packet_target(&mut game, 1, hw, target),
+            Err(OrderError::PlanetNotOwned(p)) if p == hw
+        ));
+    }
+
+    #[test]
+    fn set_packet_target_sets_destination_with_a_mass_driver() {
+        let (mut game, hw) = one_player_game();
+        let mut ids: Vec<u32> = game.planet_states.keys().copied().collect();
+        ids.sort();
+        let target = ids[1];
+
+        game.planet_states
+            .get_mut(&hw)
+            .unwrap()
+            .starbase_design_slot = Some(0);
+        game.players[0].designs.push(starbase_with_driver());
+
+        assert!(apply_set_packet_target(&mut game, 0, hw, target).is_ok());
+        assert_eq!(game.planet_states[&hw].packet_target, Some(target));
     }
 }

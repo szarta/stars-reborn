@@ -261,6 +261,7 @@ mod tests {
                 designs: vec![],
             }],
             year: 2400,
+            player_messages: Default::default(),
         };
         (game, hw)
     }

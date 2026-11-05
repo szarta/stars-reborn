@@ -187,9 +187,70 @@
             "null"
           ],
           "format": "uint32"
+        },
+        "starbase": {
+          "description": "This planet's starbase display stats, present only when the planet has a starbase. Derived from the owner's starbase design (hull + installed components); see docs/mechanics/starbase_design.rst. Absent when the planet has no starbase.",
+          "$ref": "#/definitions/starbase-status"
         }
       },
       "title": "PlanetObserved"
+    },
+    "starbase-status": {
+      "description": "Aggregated display stats for a planet's starbase, derived from its design (hull + installed components).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dock-capacity",
+        "armor",
+        "shields",
+        "damage-percent",
+        "mass-driver",
+        "packet-target"
+      ],
+      "properties": {
+        "dock-capacity": {
+          "description": "Maximum mass (kT) of a ship this starbase can build or repair: 0 = cannot build/repair (Orbital Fort), a finite value, or null for unlimited (Space Station and larger).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32"
+        },
+        "armor": {
+          "description": "Total armor damage-points (hull base armor plus armor contributed by installed components).",
+          "type": "integer",
+          "format": "uint32"
+        },
+        "shields": {
+          "description": "Total shield damage-points from installed shield (and shield-bearing armor) components.",
+          "type": "integer",
+          "format": "uint32"
+        },
+        "damage-percent": {
+          "description": "Battle damage as a percent 0-100; 0 for an undamaged starbase. (Battle damage is not modelled yet, so currently always 0.)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "format": "uint32"
+        },
+        "mass-driver": {
+          "description": "Launch warp (5-13) of the installed mass driver, or null if none is installed.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32"
+        },
+        "packet-target": {
+          "description": "Planet id this starbase's mineral packets are launched toward, or null if no target is set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32"
+        }
+      },
+      "title": "StarbaseStatus"
     },
     "build-item": {
       "description": "One entry in an owned planet's production queue. build-object-id indexes the buildable registry (GET /model/buildables): 7=factory, 8=mine, 9=defenses, 1024+N=design slot N. See docs/mechanics/production.rst.",

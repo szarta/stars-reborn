@@ -15,4 +15,4 @@
 // from the same schema and re-exported from their hand-written modules, which
 // carry the behavior. To change the shape edit the schema, never this file.
 // See `docs/adr/0003`.
-pub use crate::game::objects::generated::game_state::GameState;
+pub use crate::game::objects::generated::game_state::{GameState, PlayerMessage};

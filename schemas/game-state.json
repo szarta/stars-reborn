@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/game-state.json",
-  "version": 2,
+  "version": 3,
   "definitions": {
     "game-state": {
       "type": "object",
@@ -44,6 +44,52 @@
           "type": "integer",
           "format": "uint32",
           "description": "Current game year."
+        },
+        "player_messages": {
+          "type": "object",
+          "default": {},
+          "x-rust-map-key": "uint32",
+          "description": "Host-only per-turn message accumulator, keyed by player id (stringified u32). Each turn-resolution step appends to the owning player's list (see resolve_turn in engine/src/game/turn/mod.rs); the list is cleared at the start of every resolution so messages are strictly per-turn, never accumulated across years. player_view() merges this with the view-time messages it derives (e.g. the empty-production-queue nudge) to build the player's turn file. Absent on pre-existing saves predating the message store; treated as empty. See docs/mechanics/turn_resolution.rst.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/player-message"
+            }
+          }
+        }
+      }
+    },
+    "player-message": {
+      "type": "object",
+      "description": "One host-side turn-resolution message queued for a player, before projection into that player's turn file. Mirrors the turn-file turn-message shape (schemas/response-turn-file.json) WITHOUT the id — player_view() assigns a contiguous 0-based id at projection time, since ids are only meaningful within the turn file a message is projected into.",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "message-type",
+        "important"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "The rendered display text. The turn-file wire type (schemas/response-turn-file.json) documents the original client's 1024-char cap; the engine keeps messages well under it, so this host-side store leaves the length unconstrained."
+        },
+        "message-type": {
+          "type": "string",
+          "description": "Stable tag for the kind of message (the turn-message-type family in schemas/turn.json), e.g. 'PlanetProductionQueueEmpty'. A client treats it as an opaque tag and never derives importance from it."
+        },
+        "related-object": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Universe-wide space-object id (a planet or fleet) this message is about — the client's 'Goto' subject. Absent for a message with no on-map subject."
+        },
+        "related-battle": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Id of the battle this message reports on, when it is a combat message. Absent otherwise."
+        },
+        "important": {
+          "type": "boolean",
+          "description": "Whether this message survives the player's 'hide unimportant messages' filter. The engine classifies importance when the message is produced; a client never derives it from message-type."
         }
       }
     },
@@ -205,6 +251,24 @@
           ],
           "format": "uint32",
           "description": "Planet id that arriving route-flagged fleets are forwarded to, or null for no route (the planet's \"Route To\" destination). Absent on pre-existing saves predating routing; treated as null."
+        },
+        "starbase_design_slot": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0,
+          "maximum": 9,
+          "description": "The owning player's starbase-design slot (0–9) whose design is built in orbit here, or null for no starbase. A planet has at most one starbase (docs/mechanics/starbase_design.rst). Host-only ground truth; its derived stats are projected into the turn file separately. Absent on pre-existing saves predating the starbase model; treated as null."
+        },
+        "packet_target": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "description": "Planet id this planet's mass driver launches mineral packets toward, or null for no target (set via the planet.set_packet_target order; requires a mass driver on the planet's starbase). Packet flight/decay/arrival are resolved separately. Absent on pre-existing saves predating packet targeting; treated as null."
         }
       }
     },

@@ -46,23 +46,25 @@ use crate::game::objects::generated::ship_hulls as wire;
 use crate::game::objects::generated::starbase_hulls as sb_wire;
 use crate::game::objects::{
     advantage_points::advantage_points,
-    player::Player,
+    planet::PlanetState,
+    player::{Player, ShipDesign, ShipDesignKind},
     race::Race,
     race_defaults::default_race_by_name,
     ship_hull_catalog::{
         hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
     },
-    starbase_hull_catalog::starbase_hull_catalog,
+    starbase_hull_catalog::{starbase_hull_catalog, HOMEWORLD_STARBASE_HULL_ID},
     starting_tech::starting_tech_levels,
     technology::{ShipHull, StarbaseHull, TechSlot},
     technology_catalog::{technology_catalog, PlanetaryKind, Props, TechItem, TraitReq},
 };
 use crate::game::orders::{
-    apply_design_delete, apply_design_upsert, apply_set_production_queue, apply_set_route_target,
-    OrderError, ProductionItemInput,
+    apply_design_delete, apply_design_upsert, apply_set_packet_target, apply_set_production_queue,
+    apply_set_route_target, OrderError, ProductionItemInput,
 };
 use crate::game::state::GameState;
 use crate::game::universe::generate_universe;
+use crate::game::universe::scenario::{load_tutorial, scenario_universe};
 use crate::game::view::player_view;
 
 // ---------------------------------------------------------------------------
@@ -113,6 +115,7 @@ pub fn router(state: AppState) -> Router {
         .route("/race/validate", post(race_validate))
         // Game endpoints (stateful)
         .route("/games", post(create_game))
+        .route("/games/tutorial", post(create_tutorial_game))
         .route("/games/:game_id", get(get_game).delete(delete_game))
         .route("/games/:game_id/turns/:year/status", get(turn_status))
         .route(
@@ -128,6 +131,7 @@ pub fn router(state: AppState) -> Router {
             "/games/:game_id/turns/:year/ai-orders/:pid",
             get(get_ai_orders),
         )
+        .route("/games/:game_id/turns/:year/advance", post(advance_turn))
         .with_state(state)
 }
 
@@ -650,6 +654,113 @@ fn resolve_race(v: &Value) -> Option<Race> {
     }
 }
 
+/// The starbase-design slot every race's starting homeworld starbase occupies.
+/// Slot 0 of the player's 10-slot starbase design pool (see
+/// docs/mechanics/starbase_design.rst).
+const STARTING_STARBASE_SLOT: u32 = 0;
+
+/// Give a freshly placed homeworld its starting starbase.
+///
+/// Every race begins with a Space Station "Starbase" in orbit over its
+/// homeworld (docs/new_game/initial_state.rst). The design is written into the
+/// player's first starbase design slot and the planet records that slot — a
+/// planet holds at most one starbase (docs/mechanics/starbase_design.rst). The
+/// design is hull-only for now; the faithful weapon/shield loadout (and the
+/// IT/PP stargate / mass-driver variants) wait on the component catalog. This
+/// is host-only ground truth — the starbase's derived combat stats are
+/// projected into the turn file separately.
+fn place_homeworld_starbase(designs: &mut Vec<ShipDesign>, homeworld: &mut PlanetState) {
+    designs.push(ShipDesign {
+        slot: STARTING_STARBASE_SLOT,
+        kind: ShipDesignKind::Starbase,
+        name: "Starbase".to_string(),
+        hull_id: HOMEWORLD_STARBASE_HULL_ID,
+        slot_assignments: Vec::new(),
+    });
+    homeworld.starbase_design_slot = Some(STARTING_STARBASE_SLOT);
+}
+
+/// Homeworld starting population, in colonists — the engine's standard fresh
+/// homeworld (shared with `create_game`). The captured tutorial `.hst` records
+/// a different raw figure whose unit relative to this colonist count is not yet
+/// reconciled; that is a faithfulness-diff item, not a thin-slice blocker.
+const HOMEWORLD_POPULATION: u32 = 25_000;
+
+/// Build the deterministic Tutorial Game from the embedded scenario: the fixed
+/// Tiny universe, both fixed players (human Humanoid/JOAT, AI Berserker/SS),
+/// their homeworlds (owned, populated, with the starting starbase), and their
+/// starting tech. The homeworld's hab is left exactly as the scenario carries
+/// it — the captured homeworld hab is already the race-fitted 100%-value world,
+/// so it is not re-randomized the way a procedural game's homeworld is.
+///
+/// Thin slice: starting fleets, the faithful starbase/ship component loadout,
+/// and the AI player's CPU/difficulty modelling are not set here (they accrete
+/// as the fleet model, component catalog and settings model land). Game
+/// settings (victory/play flags) are not persisted — `GameState` has no
+/// settings field yet; that is the game-settings-persistence task.
+fn build_tutorial_game() -> GameState {
+    let scenario = load_tutorial();
+    let generated = scenario_universe(&scenario);
+    let mut planet_states = generated.planet_states;
+
+    let mut players: Vec<Player> = Vec::with_capacity(scenario.players.len());
+    for sp in &scenario.players {
+        let hw = sp.homeworld_planet_id;
+        let mut designs: Vec<ShipDesign> = Vec::new();
+        if let Some(state) = planet_states.get_mut(&hw) {
+            state.homeworld = true;
+            state.owner = Some(sp.id);
+            state.population = HOMEWORLD_POPULATION;
+            state.factories = 10;
+            state.mines = 10;
+            // Hab intentionally left as loaded (captured race-fit); see above.
+            place_homeworld_starbase(&mut designs, state);
+        }
+        players.push(Player {
+            id: sp.id,
+            race_name: sp.race.name.clone(),
+            homeworld_id: Some(hw),
+            tech: sp.starting_tech.clone(),
+            race: Some(sp.race.clone()),
+            designs,
+        });
+    }
+
+    GameState {
+        id: uuid::Uuid::new_v4().to_string(),
+        name: scenario.name.clone(),
+        universe: generated.universe,
+        planet_states,
+        players,
+        year: scenario.year,
+        player_messages: Default::default(),
+    }
+}
+
+/// POST /games/tutorial — create the deterministic Tutorial Game.
+///
+/// Takes no body: the tutorial is a fixed scenario. Persists and registers the
+/// new game and returns its id, mirroring `POST /games`.
+async fn create_tutorial_game(State(state): State<AppState>) -> impl IntoResponse {
+    let game = build_tutorial_game();
+    let game_id = game.id.clone();
+
+    if let Err(e) = crate::store::save_game(&game) {
+        log::error!("Failed to persist tutorial game {}: {}", game_id, e);
+    }
+    state.games.write().unwrap().insert(game_id.clone(), game);
+
+    (
+        StatusCode::CREATED,
+        Json(CreateGameResponse {
+            request_is_valid: true,
+            created_game: Some(CreatedGame { id: game_id }),
+            failure_reason: None,
+        }),
+    )
+        .into_response()
+}
+
 /// POST /games — create a new game
 async fn create_game(
     State(state): State<AppState>,
@@ -711,6 +822,7 @@ async fn create_game(
             }
         };
         let homeworld_id = planet_ids.get(slot).copied();
+        let mut designs: Vec<ShipDesign> = Vec::new();
         if let Some(hw_id) = homeworld_id {
             if let Some(state) = planet_states.get_mut(&hw_id) {
                 state.homeworld = true;
@@ -719,6 +831,7 @@ async fn create_game(
                 state.factories = 10;
                 state.mines = 10;
                 state.set_homeworld_hab(&race);
+                place_homeworld_starbase(&mut designs, state);
             }
         }
         players.push(Player {
@@ -727,7 +840,7 @@ async fn create_game(
             homeworld_id,
             tech: starting_tech_levels(&race),
             race: Some(race),
-            designs: vec![],
+            designs,
         });
     }
 
@@ -740,6 +853,7 @@ async fn create_game(
         let race =
             default_race_by_name("Humanoid").expect("Humanoid is always in the default registry");
         let homeworld_id = planet_ids.get(slot).copied();
+        let mut designs: Vec<ShipDesign> = Vec::new();
         if let Some(hw_id) = homeworld_id {
             if let Some(state) = planet_states.get_mut(&hw_id) {
                 state.homeworld = true;
@@ -748,6 +862,7 @@ async fn create_game(
                 state.factories = 10;
                 state.mines = 10;
                 state.set_homeworld_hab(&race);
+                place_homeworld_starbase(&mut designs, state);
             }
         }
         players.push(Player {
@@ -756,7 +871,7 @@ async fn create_game(
             homeworld_id,
             tech: starting_tech_levels(&race),
             race: Some(race),
-            designs: vec![],
+            designs,
         });
     }
 
@@ -768,6 +883,7 @@ async fn create_game(
         planet_states,
         players,
         year: 2400,
+        player_messages: Default::default(),
     };
 
     if let Err(e) = crate::store::save_game(&game) {
@@ -931,6 +1047,66 @@ async fn get_turn_file(
     Json(view).into_response()
 }
 
+/// POST /games/{game_id}/turns/{year}/advance — resolve the turn, advance year.
+///
+/// Host-driven turn generation: runs `resolve_turn` (every implemented
+/// turn-resolution step, then bumps the year) and persists the result. This is
+/// the single-player / hotseat "Generate" action; orders are already applied to
+/// the ground-truth state as they are submitted, so there is nothing to collect
+/// here. Gating multiplayer generation on all-players-submitted waits on
+/// per-player submission tracking (`turn_status` is still a stub) — a follow-up.
+///
+/// The `{year}` in the path must be the game's current year, or the request is
+/// rejected as stale (CONFLICT) — this keeps a double-submit or a client on an
+/// old turn from silently resolving the turn twice.
+async fn advance_turn(
+    State(state): State<AppState>,
+    Path((game_id, year)): Path<(String, u32)>,
+) -> impl IntoResponse {
+    let mut games = state.games.write().unwrap();
+    let game = match games.get_mut(&game_id) {
+        Some(g) => g,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "game not found"})),
+            )
+                .into_response()
+        }
+    };
+
+    if game.year != year {
+        return (
+            StatusCode::CONFLICT,
+            Json(json!({
+                "error": format!(
+                    "year {year} is not the current turn ({})",
+                    game.year
+                ),
+            })),
+        )
+            .into_response();
+    }
+
+    crate::game::turn::resolve_turn(game);
+    let new_year = game.year;
+
+    if let Err(e) = crate::store::save_game(game) {
+        log::error!("Failed to persist game {game_id} after advance: {e}");
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "failed to persist game"})),
+        )
+            .into_response();
+    }
+
+    (
+        StatusCode::OK,
+        Json(json!({ "game_id": game_id, "year": new_year, "turn_processed": true })),
+    )
+        .into_response()
+}
+
 /// Submit-orders request body (schemas/request-submit-orders.json). Orders are
 /// kept as raw JSON and dispatched per `kind` below, since only a subset of the
 /// schema's order kinds is applied today.
@@ -958,6 +1134,15 @@ struct SetRouteTargetOrder {
     planet_id: u32,
     #[serde(default)]
     target_planet_id: Option<u32>,
+}
+
+/// The `planet.set_packet_target` order payload (minus its `kind` tag). Unlike
+/// a route target, `target_planet_id` is required — the order only sets a
+/// destination (schemas/request-submit-orders.json).
+#[derive(Deserialize)]
+struct SetPacketTargetOrder {
+    planet_id: u32,
+    target_planet_id: u32,
 }
 
 /// The `design.upsert` order payload (minus its `kind` tag): the target slot
@@ -1032,6 +1217,14 @@ fn order_error_response(e: OrderError) -> axum::response::Response {
         OrderError::BuildDesignSlotEmpty { slot } => (
             StatusCode::BAD_REQUEST,
             format!("cannot build design slot {slot}: the player has no design there"),
+        ),
+        OrderError::PacketTargetNotFound(id) => (
+            StatusCode::NOT_FOUND,
+            format!("packet target planet {id} not found"),
+        ),
+        OrderError::StarbaseHasNoMassDriver(id) => (
+            StatusCode::BAD_REQUEST,
+            format!("planet {id} cannot launch mineral packets: its starbase has no mass driver"),
         ),
     };
     (status, Json(json!({"error": msg}))).into_response()
@@ -1122,6 +1315,26 @@ async fn submit_orders(
                 };
                 if let Err(e) =
                     apply_set_route_target(game, pid, parsed.planet_id, parsed.target_planet_id)
+                {
+                    return order_error_response(e);
+                }
+                orders_applied += 1;
+            }
+            "planet.set_packet_target" => {
+                let parsed: SetPacketTargetOrder = match serde_json::from_value(order.clone()) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({
+                                "error": format!("invalid planet.set_packet_target order: {e}"),
+                            })),
+                        )
+                            .into_response()
+                    }
+                };
+                if let Err(e) =
+                    apply_set_packet_target(game, pid, parsed.planet_id, parsed.target_planet_id)
                 {
                     return order_error_response(e);
                 }
@@ -1243,5 +1456,115 @@ mod tests {
         ids.sort_unstable();
         ids.dedup();
         assert_eq!(ids.len(), n, "build-object-ids must be unique");
+    }
+
+    #[test]
+    fn homeworld_gets_a_space_station_starbase() {
+        let generated = generate_universe(0, 1, 1, Some(7));
+        let mut planet_states = generated.planet_states;
+        let hw_id = *planet_states.keys().min().expect("at least one planet");
+
+        let mut designs: Vec<ShipDesign> = Vec::new();
+        {
+            let hw = planet_states.get_mut(&hw_id).expect("homeworld state");
+            assert_eq!(
+                hw.starbase_design_slot, None,
+                "no starbase before placement"
+            );
+            place_homeworld_starbase(&mut designs, hw);
+            assert_eq!(hw.starbase_design_slot, Some(STARTING_STARBASE_SLOT));
+        }
+
+        assert_eq!(designs.len(), 1, "exactly one starting starbase design");
+        let sb = &designs[0];
+        assert_eq!(sb.kind, ShipDesignKind::Starbase);
+        assert_eq!(sb.slot, STARTING_STARBASE_SLOT);
+        assert_eq!(sb.name, "Starbase");
+        assert_eq!(sb.hull_id, HOMEWORLD_STARBASE_HULL_ID);
+        assert!(
+            sb.slot_assignments.is_empty(),
+            "hull-only until the component catalog lands"
+        );
+
+        // The hull id resolves to a real, gate-free starbase hull (Space Station):
+        // every race can hold it from turn 1.
+        let hull = starbase_hull_catalog()
+            .into_iter()
+            .find(|h| u32::from(h.id) == sb.hull_id)
+            .expect("starting starbase hull is in the catalog");
+        assert_eq!(hull.slug, "space_station");
+        assert!(hull.requirement.is_none(), "no PRT/LRT gate");
+    }
+
+    #[test]
+    fn tutorial_game_has_both_fixed_players_and_owned_homeworlds() {
+        let game = build_tutorial_game();
+        assert_eq!(game.name, "Tutorial Game");
+        assert_eq!(game.year, 2400);
+        assert_eq!(game.universe.planet_count(), 24);
+        assert_eq!(game.players.len(), 2);
+
+        // P0: human Humanoid/JOAT, homeworld planet 13.
+        let p0 = game.players.iter().find(|p| p.id == 0).expect("player 0");
+        assert_eq!(p0.race_name, "Humanoid");
+        assert_eq!(p0.homeworld_id, Some(13));
+        assert_eq!(p0.tech.energy, 3);
+        // P1: AI Berserker/SS, homeworld planet 10.
+        let p1 = game.players.iter().find(|p| p.id == 1).expect("player 1");
+        assert_eq!(p1.race_name, "Berserker");
+        assert_eq!(p1.homeworld_id, Some(10));
+        assert_eq!(p1.tech.electronics, 5);
+
+        // Both homeworlds are owned, populated, and carry a starting starbase.
+        for (pid, hw) in [(0u32, 13u32), (1u32, 10u32)] {
+            let st = &game.planet_states[&hw];
+            assert_eq!(st.owner, Some(pid));
+            assert!(st.homeworld);
+            assert_eq!(st.population, HOMEWORLD_POPULATION);
+            assert_eq!((st.factories, st.mines), (10, 10));
+            assert_eq!(st.starbase_design_slot, Some(0));
+        }
+        // Each player has the starting Space Station starbase design.
+        for p in &game.players {
+            assert!(p
+                .designs
+                .iter()
+                .any(|d| d.kind == ShipDesignKind::Starbase && d.slot == 0));
+        }
+
+        // The homeworld hab is the captured race-fit, NOT re-randomized: P0's
+        // Stove Top stays a dead-centre 1.00 g / 0 C / 50 mR world.
+        let hw0 = &game.planet_states[&13];
+        assert!((hw0.gravity - 1.00).abs() < 1e-6);
+        assert_eq!((hw0.temperature, hw0.radiation), (0, 50));
+
+        // Every non-homeworld planet is unowned.
+        let owned = game
+            .planet_states
+            .values()
+            .filter(|s| s.owner.is_some())
+            .count();
+        assert_eq!(owned, 2);
+    }
+
+    #[test]
+    fn tutorial_p0_turn_file_carries_the_homeworld_starbase_stats() {
+        let game = build_tutorial_game();
+        let view = crate::game::view::player_view(&game, 0);
+        let hw = view
+            .planets
+            .iter()
+            .find_map(|p| match p {
+                crate::game::view::PlanetIntel::Observed(o) if o.id == 13 => Some(o),
+                _ => None,
+            })
+            .expect("P0 observes its homeworld");
+        let sb = hw.starbase.as_ref().expect("homeworld has a starbase");
+        // Hull-only Space Station: base hull armor, no shields/driver yet.
+        assert_eq!(sb.dock_capacity, None, "Space Station dock is unlimited");
+        assert_eq!(sb.shields, 0);
+        assert_eq!(sb.mass_driver, None);
+        assert_eq!(sb.damage_percent, 0);
+        assert!(sb.armor > 0, "at least the hull's base armor");
     }
 }
