@@ -44,5 +44,9 @@ jobs:
         run: |
           python3 scripts/generate_types.py
           git diff --exit-code -- client/src/data/generated
+      # Only the schema-contract tests run here: they validate the generated
+      # wire types against schemas/ and need no GUI toolkit. The rest of
+      # client/tests exercises the PySide6 UI and runs where Qt is installed
+      # (the client's own dev/test environment), not in this lightweight job.
       - name: Schema contract tests
-        run: python3 -m pytest client/tests -q
+        run: python3 -m pytest client/tests/test_*_contract.py -q
