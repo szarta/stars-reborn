@@ -98,6 +98,7 @@ mod tests {
             }],
             year: 2400,
             player_messages: Default::default(),
+            fleets: Default::default(),
         };
         (game, hw)
     }

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/response-turn-file.json",
   "description": "Per-player turn file (the .m equivalent) returned by GET /games/{game-id}/turns/{year}/players/{player-id}. The engine derives this from its host-side ground truth via a single choke point so no host-only data leaks. See stars-reborn-design/docs/architecture.rst (Per-Player Visibility).",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "definitions": {
     "planet-unobserved": {
       "description": "A planet the player has never observed. Only identity (id, name, position) is known \u2014 these come from the shared .xy data. No contents fields appear.",
@@ -483,6 +483,265 @@
       ],
       "title": "PlanetIntel"
     },
+    "fleet": {
+      "description": "One of the viewing player's own fleets, in full. A fleet is a named group of ships at a map location with an ordered waypoint list. Its id shares the universe-wide space-object id space with planets, so it is a valid 'Goto' / related-object subject. Only the player's OWN fleets appear here; other players' fleets detected by scanning appear in scanned-fleets with partial info. See docs/gameplay/fleets.rst.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "owner",
+        "x",
+        "y",
+        "ship-stacks",
+        "fuel",
+        "cargo",
+        "waypoints",
+        "repeat-orders"
+      ],
+      "properties": {
+        "id": {
+          "description": "Universe-wide space-object id, unique across every planet and fleet.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "description": "Owning player id (always the viewing player for an own fleet; present for uniformity with scanned-fleets).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "x": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "orbiting-planet-id": {
+          "description": "Planet id this fleet orbits. Absent when the fleet is in deep space; when present, (x, y) equals that planet's position.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "ship-stacks": {
+          "description": "Ship composition: one entry per ship design the fleet contains, with how many ships of that design.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ship-stack"
+          }
+        },
+        "fuel": {
+          "description": "Fuel on board (mg), shared across the whole fleet.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "cargo": {
+          "$ref": "#/definitions/fleet-cargo"
+        },
+        "waypoints": {
+          "description": "Ordered list of future destinations, each with a travel warp and an order to run on arrival. Empty for an idle fleet. The fleet's current position is (x, y), not a waypoint.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fleet-waypoint"
+          }
+        },
+        "repeat-orders": {
+          "description": "When true the waypoint chain cycles back to the first waypoint after the last waypoint's order runs (automated freighter loops).",
+          "type": "boolean"
+        }
+      },
+      "title": "Fleet"
+    },
+    "ship-stack": {
+      "description": "A group of identical ships in a fleet: `count` ships built from the owner's ship design in slot `design-slot`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "design-slot",
+        "count"
+      ],
+      "properties": {
+        "design-slot": {
+          "description": "The owner's ship-design slot (0-15) these ships are built from. For an own fleet it indexes the player's own ship-designs.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "format": "uint32"
+        },
+        "count": {
+          "description": "Number of ships of this design in the fleet.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295,
+          "format": "uint32"
+        }
+      },
+      "title": "ShipStack"
+    },
+    "fleet-cargo": {
+      "description": "Minerals and colonists carried by a fleet, in kT.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ironium",
+        "boranium",
+        "germanium",
+        "colonists"
+      ],
+      "properties": {
+        "ironium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "boranium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "germanium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "colonists": {
+          "description": "Colonists aboard, in kT.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        }
+      },
+      "title": "FleetCargo"
+    },
+    "fleet-waypoint": {
+      "description": "One destination in a fleet's route: where to go, how fast, and what to do on arrival. See docs/mechanics/fleet_movement.rst 'Waypoints'.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "warp",
+        "task"
+      ],
+      "properties": {
+        "x": {
+          "description": "Destination X coordinate (light years).",
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "target-planet-id": {
+          "description": "Planet id this waypoint targets, when the destination is a planet (its position equals x, y). Absent for a bare-coordinate waypoint.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "warp": {
+          "description": "Warp speed to travel to this waypoint (0-10; 10 is the ramscoop free 'safe speed'). Distance covered is warp-squared ly per year.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "format": "uint32"
+        },
+        "task": {
+          "$ref": "#/definitions/fleet-waypoint-task"
+        }
+      },
+      "title": "FleetWaypoint"
+    },
+    "fleet-waypoint-task": {
+      "description": "Order a fleet runs on reaching a waypoint. See docs/mechanics/fleet_movement.rst 'Waypoint orders'.",
+      "enum": [
+        "none",
+        "colonize",
+        "remote-mine",
+        "unload-cargo",
+        "load-cargo",
+        "load-fuel",
+        "patrol",
+        "transfer-fleet",
+        "merge-fleet",
+        "scrap-fleet",
+        "lay-mines"
+      ],
+      "title": "FleetWaypointTask"
+    },
+    "scanned-fleet": {
+      "description": "Another player's fleet the viewing player has detected within scanner coverage. Partial and scan-depth gated: position and owner are known from any detection; the exact ship composition is never exposed here (only an aggregate ship-count, when the scan is close enough). Like planet and design intel, fields hold the values as of the last scan; years-since-last-scan = 0 means detected this turn, higher is a stale snapshot. Empty until the engine models fleet scanning — the growth point that mirrors the planet observed/unobserved split (game/view.rs). See docs/mechanics/scanning.rst.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner-player-id",
+        "x",
+        "y",
+        "years-since-last-scan"
+      ],
+      "properties": {
+        "id": {
+          "description": "Universe-wide space-object id of the detected fleet.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "owner-player-id": {
+          "description": "Player id that owns the detected fleet.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        },
+        "x": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "orbiting-planet-id": {
+          "description": "Planet id the detected fleet orbits, when known. Absent in deep space.",
+          "type": "integer",
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "name": {
+          "description": "The owner's fleet name, when revealed by the scan. Absent at coarse scan depth.",
+          "type": "string"
+        },
+        "ship-count": {
+          "description": "Aggregate number of ships in the detected fleet, when the scan is close enough to count them. Absent otherwise. The per-design breakdown is never exposed.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "format": "uint32"
+        },
+        "years-since-last-scan": {
+          "description": "0 = detected this turn (current). Higher = a stale snapshot from an earlier detection.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "format": "uint32"
+        }
+      },
+      "title": "ScannedFleet"
+    },
     "turn-message": {
       "description": "One message shown in the player's turn for this year. Messages are per-turn (regenerated each year, not accumulated). Mirrors the design-target turn-message shape in schemas/turn.json.",
       "type": "object",
@@ -528,7 +787,7 @@
       "title": "TurnMessage"
     },
     "turn-score": {
-      "description": "The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. Categories for objects the engine does not model yet read 0 (starbases, #147; ships, #155).",
+      "description": "The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. The ship categories read 0 until ship combat-power classification lands (the fleet model exists, but a ship's power rating is a combat-model concern).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -567,7 +826,7 @@
           "format": "uint32"
         },
         "starbase-count": {
-          "description": "Starbases owned (Orbital Forts excluded). 0 until the starbase model lands (#147).",
+          "description": "Starbases owned (Orbital Forts excluded). 0 until starbase score-counting lands.",
           "type": "integer",
           "maximum": 4294967295,
           "format": "uint32"
@@ -578,7 +837,7 @@
           "format": "uint32"
         },
         "unarmed-count": {
-          "description": "Unarmed ships (power rating 0). 0 until the fleet model lands (#155).",
+          "description": "Unarmed ships (power rating 0). 0 until ship combat-power classification lands.",
           "type": "integer",
           "maximum": 4294967295,
           "format": "uint32"
@@ -589,7 +848,7 @@
           "format": "uint32"
         },
         "escort-count": {
-          "description": "Escort ships (power rating 1..1999). 0 until the fleet model lands (#155).",
+          "description": "Escort ships (power rating 1..1999). 0 until ship combat-power classification lands.",
           "type": "integer",
           "maximum": 4294967295,
           "format": "uint32"
@@ -600,7 +859,7 @@
           "format": "uint32"
         },
         "capital-count": {
-          "description": "Capital ships (power rating >= 2000). 0 until the fleet model lands (#155).",
+          "description": "Capital ships (power rating >= 2000). 0 until ship combat-power classification lands.",
           "type": "integer",
           "maximum": 4294967295,
           "format": "uint32"
@@ -644,6 +903,8 @@
     "game-name",
     "player-id",
     "planets",
+    "fleets",
+    "scanned-fleets",
     "ship-designs",
     "scanned-designs",
     "messages",
@@ -680,6 +941,20 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/planet-intel"
+      }
+    },
+    "fleets": {
+      "description": "The viewing player's own fleets, each in full. Always the player's own fleets (never another player's), mirroring ship-designs. Empty when the player has no fleets. Sorted by fleet id.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/fleet"
+      }
+    },
+    "scanned-fleets": {
+      "description": "Other players' fleets this player has detected within scanner coverage (partial info; see the scanned-fleet definition). Never includes the viewing player's own fleets. Empty until the engine models fleet scanning.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scanned-fleet"
       }
     },
     "ship-designs": {

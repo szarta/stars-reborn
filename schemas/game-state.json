@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.stars-reborn.com/schemas/game-state.json",
-  "version": 3,
+  "version": 4,
   "definitions": {
     "game-state": {
       "type": "object",
@@ -56,8 +56,202 @@
               "$ref": "#/definitions/player-message"
             }
           }
+        },
+        "fleets": {
+          "type": "object",
+          "default": {},
+          "x-rust-map-key": "uint32",
+          "description": "All fleets in the game, keyed by fleet id (stringified u32) — host-side ground truth. Fleet ids share the universe-wide space-object id space with planet ids: a planet id and a fleet id are never equal within a game, so a message's related-object and a client 'Goto' address either kind by the one id (see docs/architecture.rst). Per-player turn files expose only the fleets a player may see (own in full; others within scanner coverage), derived in game/view.rs; raw state is never sent to a non-host client. Absent on pre-existing saves predating the fleet model; treated as empty.",
+          "additionalProperties": {
+            "$ref": "#/definitions/fleet"
+          }
         }
       }
+    },
+    "fleet": {
+      "type": "object",
+      "description": "A named group of ships at a location, with an ordered waypoint list — host-side ground truth. A fleet holds only ship designs (kind=ship); starbases live on planets, not in fleets. See docs/gameplay/fleets.rst and docs/mechanics/fleet_movement.rst.",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "owner",
+        "x",
+        "y",
+        "ship_stacks",
+        "fuel",
+        "cargo",
+        "waypoints",
+        "repeat_orders"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Universe-wide space-object id, unique across every planet and fleet in this game."
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Owning player id."
+        },
+        "x": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Current X coordinate (light years). Equals the orbited planet's X when orbiting_planet_id is set."
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "orbiting_planet_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "description": "Planet id this fleet orbits, or null when in deep space. When set, (x, y) equals that planet's position."
+        },
+        "ship_stacks": {
+          "type": "array",
+          "description": "Ship composition: one entry per ship design the fleet contains, with how many ships of that design.",
+          "items": {
+            "$ref": "#/definitions/ship-stack"
+          }
+        },
+        "fuel": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Fuel on board (mg), shared across the whole fleet. Bounded in play by the summed tank capacity of the fleet's designs; the stored value is ground truth."
+        },
+        "cargo": {
+          "$ref": "#/definitions/fleet-cargo"
+        },
+        "waypoints": {
+          "type": "array",
+          "description": "Ordered list of future destinations, each with a travel warp and an order to run on arrival. Empty for an idle fleet with no pending orders. The fleet's current position is (x, y), not a waypoint.",
+          "items": {
+            "$ref": "#/definitions/fleet-waypoint"
+          }
+        },
+        "repeat_orders": {
+          "type": "boolean",
+          "description": "When true the waypoint chain cycles back to the first waypoint after the last waypoint's order runs (automated freighter loops). See docs/mechanics/fleet_movement.rst 'Repeat Orders'."
+        }
+      }
+    },
+    "ship-stack": {
+      "type": "object",
+      "description": "A group of identical ships in a fleet: `count` ships built from the owner's ship design in slot `design_slot`.",
+      "additionalProperties": false,
+      "required": [
+        "design_slot",
+        "count"
+      ],
+      "properties": {
+        "design_slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "format": "uint32",
+          "description": "The owner's ship-design slot (0–15) these ships are built from."
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "format": "uint32",
+          "description": "Number of ships of this design in the fleet (≥1; an emptied stack is removed)."
+        }
+      }
+    },
+    "fleet-cargo": {
+      "type": "object",
+      "description": "Minerals and colonists carried by a fleet, in kT. Bounded in play by the fleet's cargo capacity; the stored value is ground truth.",
+      "additionalProperties": false,
+      "required": [
+        "ironium",
+        "boranium",
+        "germanium",
+        "colonists"
+      ],
+      "properties": {
+        "ironium": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "boranium": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "germanium": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "colonists": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Colonists aboard, in kT (the original tracks colonists in units of 100; cargo here is kT)."
+        }
+      }
+    },
+    "fleet-waypoint": {
+      "type": "object",
+      "description": "One destination in a fleet's route: where to go, how fast, and what to do on arrival. See docs/mechanics/fleet_movement.rst 'Waypoints'.",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "warp",
+        "task"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Destination X coordinate (light years)."
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "target_planet_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "description": "Planet id this waypoint targets, when the destination is a planet (its position equals x, y). Null for a bare-coordinate waypoint."
+        },
+        "warp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "format": "uint32",
+          "description": "Warp speed to travel to this waypoint (0–10; 10 is the ramscoop free 'safe speed'). Distance covered is warp² ly per year."
+        },
+        "task": {
+          "$ref": "#/definitions/fleet-waypoint-task"
+        }
+      }
+    },
+    "fleet-waypoint-task": {
+      "description": "Order a fleet runs on reaching a waypoint. See docs/mechanics/fleet_movement.rst 'Waypoint orders'.",
+      "enum": [
+        "none",
+        "colonize",
+        "remote-mine",
+        "unload-cargo",
+        "load-cargo",
+        "load-fuel",
+        "patrol",
+        "transfer-fleet",
+        "merge-fleet",
+        "scrap-fleet",
+        "lay-mines"
+      ]
     },
     "player-message": {
       "type": "object",

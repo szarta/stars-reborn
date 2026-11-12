@@ -8,8 +8,13 @@
 // build.rs via its bundler; here we do the equivalent merge so the validator
 // sees one self-contained schema.
 
+use std::num::NonZeroU32;
+
 use serde_json::{json, Value};
 
+use stars_engine::game::objects::fleet::{
+    Fleet, FleetCargo, FleetWaypoint, FleetWaypointTask, ShipStack,
+};
 use stars_engine::game::objects::player::{Player, TechLevels};
 use stars_engine::game::objects::race_defaults::default_race_by_name;
 use stars_engine::game::state::GameState;
@@ -95,6 +100,46 @@ fn sample_game_state() -> GameState {
         });
     }
 
+    // A fleet owned by player 0, orbiting its homeworld, carrying a ship stack,
+    // cargo, and a pending waypoint — exercises every fleet field on the wire.
+    let mut fleets = std::collections::HashMap::new();
+    let hw0 = planet_ids[0];
+    let (hx, hy) = universe
+        .planets
+        .get(&hw0)
+        .map(|p| (p.x, p.y))
+        .unwrap_or((0, 0));
+    fleets.insert(
+        10_001,
+        Fleet {
+            id: 10_001,
+            name: "Santa Maria".to_string(),
+            owner: 0,
+            x: hx,
+            y: hy,
+            orbiting_planet_id: Some(hw0),
+            ship_stacks: vec![ShipStack {
+                design_slot: 0,
+                count: NonZeroU32::new(3).unwrap(),
+            }],
+            fuel: 120,
+            cargo: FleetCargo {
+                ironium: 10,
+                boranium: 0,
+                germanium: 5,
+                colonists: 0,
+            },
+            waypoints: vec![FleetWaypoint {
+                x: hx + 20,
+                y: hy - 5,
+                target_planet_id: Some(planet_ids[1]),
+                warp: 7,
+                task: FleetWaypointTask::Colonize,
+            }],
+            repeat_orders: false,
+        },
+    );
+
     GameState {
         id: "11111111-1111-4111-8111-111111111111".to_string(),
         name: "Contract Test".to_string(),
@@ -103,6 +148,7 @@ fn sample_game_state() -> GameState {
         players,
         year: 2400,
         player_messages: Default::default(),
+        fleets,
     }
 }
 

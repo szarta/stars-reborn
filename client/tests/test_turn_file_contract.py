@@ -65,6 +65,34 @@ TURN_FILE = {
             ],
         },
     ],
+    # The viewing player's own fleets, in full. One orbiting a planet with a
+    # pending waypoint, exercising the fleet / ship-stack / cargo / waypoint
+    # wire shapes. scanned-fleets (other players' detected fleets) is emitted
+    # empty today, mirroring scanned-designs.
+    "fleets": [
+        {
+            "id": 100,
+            "name": "Santa Maria",
+            "owner": 0,
+            "x": 182,
+            "y": 117,
+            "orbiting-planet-id": 1,
+            "ship-stacks": [{"design-slot": 0, "count": 3}],
+            "fuel": 120,
+            "cargo": {"ironium": 10, "boranium": 0, "germanium": 5, "colonists": 0},
+            "waypoints": [
+                {
+                    "x": 365,
+                    "y": 298,
+                    "target-planet-id": 2,
+                    "warp": 7,
+                    "task": "colonize",
+                }
+            ],
+            "repeat-orders": False,
+        }
+    ],
+    "scanned-fleets": [],
     "planets": [
         {
             "id": 1,
@@ -199,6 +227,22 @@ def test_turn_file_parses_through_generated_model() -> None:
     assert observed.resources_per_year == 125
     assert observed.route_target == 2
     assert unobserved.name == "Quixote"
+
+    # Own fleets project in full; scanned-fleets is empty until scanning lands.
+    assert len(view.fleets) == 1
+    fleet = view.fleets[0]
+    assert fleet.id == 100
+    assert fleet.owner == 0
+    assert fleet.orbiting_planet_id == 1
+    assert fleet.ship_stacks[0].design_slot == 0
+    assert fleet.ship_stacks[0].count == 3
+    assert fleet.cargo.ironium == 10
+    assert fleet.fuel == 120
+    assert fleet.waypoints[0].target_planet_id == 2
+    assert fleet.waypoints[0].warp == 7
+    assert fleet.waypoints[0].task.value == "colonize"
+    assert fleet.repeat_orders is False
+    assert len(view.scanned_fleets) == 0
 
     assert len(view.ship_designs) == 1
     design = view.ship_designs[0]

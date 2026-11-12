@@ -161,17 +161,29 @@ fn hull_requirement_met(req: Option<HullRequirement>, race: Option<&Race>) -> bo
     }
 }
 
-/// Number of ships of a given design currently in existence across the player's
-/// fleets. The engine does not model fleets yet, so this is always 0 (no design
-/// is ever built, so no slot is ever locked). When fleets land, count ships
-/// whose design matches `(kind, slot)`. See docs/mechanics/ship_design.rst.
+/// Number of ships of a given design currently in existence, used to lock a
+/// design slot while any ship of it is built (docs/mechanics/ship_design.rst).
+///
+/// Ships live in fleets, so a `Ship` design's count is the number of ships
+/// across the player's fleets whose stack references that design slot.
+/// Starbases are not carried in fleets (they orbit planets), and starbase
+/// score/lock counting is a separate concern, so a `Starbase` query returns 0
+/// for now.
 pub fn design_built_count(
-    _game: &GameState,
-    _player_id: u32,
-    _kind: ShipDesignKind,
-    _slot: u32,
+    game: &GameState,
+    player_id: u32,
+    kind: ShipDesignKind,
+    slot: u32,
 ) -> u32 {
-    0
+    match kind {
+        ShipDesignKind::Ship => game
+            .fleets
+            .values()
+            .filter(|f| f.owner == player_id)
+            .map(|f| f.ships_of_design(slot))
+            .sum(),
+        ShipDesignKind::Starbase => 0,
+    }
 }
 
 /// Apply a `planet.set_production_queue` order: replace the entire production
@@ -478,6 +490,7 @@ mod tests {
             }],
             year: 2400,
             player_messages: Default::default(),
+            fleets: Default::default(),
         };
         (game, hw)
     }
@@ -840,6 +853,78 @@ mod tests {
         assert_eq!(d.hull_id, hull);
         // No fleets yet, so nothing is built.
         assert_eq!(d.built_count, 0);
+    }
+
+    #[test]
+    fn fleet_ships_drive_built_count_and_lock_the_slot() {
+        use crate::game::objects::fleet::{Fleet, FleetCargo, ShipStack};
+
+        let (mut game, _) = one_player_game();
+        let hull = a_ship_hull();
+        apply_design_upsert(&mut game, 0, design(4, ShipDesignKind::Ship, hull, "Scout")).unwrap();
+
+        // No fleets yet: the slot is free to edit.
+        assert_eq!(design_built_count(&game, 0, ShipDesignKind::Ship, 4), 0);
+        apply_design_upsert(
+            &mut game,
+            0,
+            design(4, ShipDesignKind::Ship, hull, "Scout II"),
+        )
+        .expect("unbuilt slot is editable");
+
+        // Give player 0 a fleet holding 3 ships of design slot 4.
+        game.fleets.insert(
+            7001,
+            Fleet {
+                id: 7001,
+                name: "Patrol".into(),
+                owner: 0,
+                x: 0,
+                y: 0,
+                orbiting_planet_id: None,
+                ship_stacks: vec![ShipStack {
+                    design_slot: 4,
+                    count: std::num::NonZeroU32::new(3).unwrap(),
+                }],
+                fuel: 0,
+                cargo: FleetCargo {
+                    ironium: 0,
+                    boranium: 0,
+                    germanium: 0,
+                    colonists: 0,
+                },
+                waypoints: vec![],
+                repeat_orders: false,
+            },
+        );
+
+        // Built-count now reflects the fleet, the view reports it, and the slot
+        // is locked against edit/delete.
+        assert_eq!(design_built_count(&game, 0, ShipDesignKind::Ship, 4), 3);
+        let view = crate::game::view::player_view(&game, 0);
+        let d = view.ship_designs.iter().find(|d| d.slot == 4).unwrap();
+        assert_eq!(d.built_count, 3);
+
+        let err = apply_design_upsert(&mut game, 0, design(4, ShipDesignKind::Ship, hull, "No"))
+            .unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignSlotLocked {
+                kind: ShipDesignKind::Ship,
+                slot: 4
+            }
+        );
+        let err = apply_design_delete(&mut game, 0, ShipDesignKind::Ship, 4).unwrap_err();
+        assert_eq!(
+            err,
+            OrderError::DesignSlotLocked {
+                kind: ShipDesignKind::Ship,
+                slot: 4
+            }
+        );
+
+        // Another player's fleet of the same slot does not count for player 0.
+        assert_eq!(design_built_count(&game, 1, ShipDesignKind::Ship, 4), 0);
     }
 
     /// A Space Station starbase design carrying one Mass Driver 5 (part 148),

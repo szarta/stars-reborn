@@ -734,6 +734,7 @@ fn build_tutorial_game() -> GameState {
         players,
         year: scenario.year,
         player_messages: Default::default(),
+        fleets: Default::default(),
     }
 }
 
@@ -884,6 +885,7 @@ async fn create_game(
         players,
         year: 2400,
         player_messages: Default::default(),
+        fleets: Default::default(),
     };
 
     if let Err(e) = crate::store::save_game(&game) {

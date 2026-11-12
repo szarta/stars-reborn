@@ -63,6 +63,7 @@ fn two_player_game() -> GameState {
         ],
         year: 2400,
         player_messages: Default::default(),
+        fleets: Default::default(),
     }
 }
 

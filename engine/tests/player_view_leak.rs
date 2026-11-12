@@ -12,6 +12,9 @@
 // client, so we check unobserved planets contain only identity fields in
 // the wire payload.
 
+use std::num::NonZeroU32;
+
+use stars_engine::game::objects::fleet::{Fleet, FleetCargo, ShipStack};
 use stars_engine::game::objects::player::{Player, TechLevels};
 use stars_engine::game::objects::race_defaults::humanoid;
 use stars_engine::game::state::GameState;
@@ -45,6 +48,13 @@ fn two_player_game() -> GameState {
         s.set_homeworld_hab(&race);
     }
 
+    // One fleet per player, each orbiting its homeworld.
+    let mut fleets = std::collections::HashMap::new();
+    for (fid, owner, hw) in [(5000u32, PLAYER_0, hw0), (5001u32, PLAYER_1, hw1)] {
+        let p = &universe.planets[&hw];
+        fleets.insert(fid, simple_fleet(fid, owner, hw, p.x, p.y));
+    }
+
     GameState {
         id: "test-game".to_string(),
         name: "Leak Test".to_string(),
@@ -70,6 +80,32 @@ fn two_player_game() -> GameState {
         ],
         year: 2400,
         player_messages: Default::default(),
+        fleets,
+    }
+}
+
+/// A one-stack fleet orbiting planet `hw`, owned by `owner`.
+fn simple_fleet(id: u32, owner: u32, hw: u32, x: i32, y: i32) -> Fleet {
+    Fleet {
+        id,
+        name: format!("Fleet {id}"),
+        owner,
+        x,
+        y,
+        orbiting_planet_id: Some(hw),
+        ship_stacks: vec![ShipStack {
+            design_slot: 0,
+            count: NonZeroU32::new(1).unwrap(),
+        }],
+        fuel: 100,
+        cargo: FleetCargo {
+            ironium: 0,
+            boranium: 0,
+            germanium: 0,
+            colonists: 0,
+        },
+        waypoints: vec![],
+        repeat_orders: false,
     }
 }
 
@@ -270,6 +306,73 @@ fn view_planets_are_sorted_by_id() {
     let mut sorted = ids.clone();
     sorted.sort();
     assert_eq!(ids, sorted, "view.planets must be sorted by id");
+}
+
+#[test]
+fn own_fleets_appear_in_full_opponents_do_not() {
+    let game = two_player_game();
+    let view = player_view(&game, PLAYER_0);
+
+    // Player 0 sees only its own fleet (id 5000), in full.
+    assert_eq!(
+        view.fleets.len(),
+        1,
+        "player 0 should see only its own fleet"
+    );
+    let f = &view.fleets[0];
+    assert_eq!(f.id, 5000);
+    assert_eq!(f.owner, PLAYER_0);
+    assert_eq!(
+        f.orbiting_planet_id,
+        Some(game.players[0].homeworld_id.unwrap())
+    );
+    assert_eq!(f.ship_stacks.len(), 1);
+    assert_eq!(f.ship_stacks[0].design_slot, 0);
+    assert_eq!(f.ship_stacks[0].count.get(), 1);
+
+    // No enemy fleet leaks through either list (scanning is not modelled).
+    assert!(
+        view.fleets.iter().all(|f| f.owner == PLAYER_0),
+        "player 0's fleets list must contain only its own fleets"
+    );
+    assert!(
+        view.scanned_fleets.is_empty(),
+        "no foreign-fleet intel until scanning is modelled"
+    );
+
+    // Player 1 symmetrically sees only fleet 5001.
+    let view1 = player_view(&game, PLAYER_1);
+    assert_eq!(view1.fleets.len(), 1);
+    assert_eq!(view1.fleets[0].id, 5001);
+}
+
+#[test]
+fn opponent_fleet_never_serializes_into_a_players_turn_file() {
+    let game = two_player_game();
+    let json = serde_json::to_value(player_view(&game, PLAYER_0)).expect("serialise");
+
+    let fleets = json["fleets"].as_array().expect("fleets is array");
+    for f in fleets {
+        assert_eq!(
+            f["owner"].as_u64().unwrap() as u32,
+            PLAYER_0,
+            "player 0's turn file leaked a non-owned fleet: {f}"
+        );
+    }
+    // The opponent's fleet id (5001) must appear nowhere in the payload.
+    assert!(
+        !json.to_string().contains("5001"),
+        "opponent fleet id leaked into player 0's turn file"
+    );
+    assert!(json["scanned-fleets"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn phantom_caller_sees_no_fleets() {
+    let game = two_player_game();
+    let view = player_view(&game, 99);
+    assert!(view.fleets.is_empty());
+    assert!(view.scanned_fleets.is_empty());
 }
 
 #[test]

@@ -315,6 +315,93 @@ class ScannedDesign(BaseModel):
     )
 
 
+class ShipStack(BaseModel):
+    """
+    A group of identical ships in a fleet: `count` ships built from the owner's ship design in slot `design-slot`.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    design_slot: conint(ge=0, le=15) = Field(
+        ...,
+        alias="design-slot",
+        description="The owner's ship-design slot (0-15) these ships are built from. For an own fleet it indexes the player's own ship-designs.",
+    )
+    count: conint(ge=1, le=4294967295) = Field(
+        ..., description="Number of ships of this design in the fleet."
+    )
+
+
+class FleetCargo(BaseModel):
+    """
+    Minerals and colonists carried by a fleet, in kT.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    ironium: conint(ge=0, le=4294967295)
+    boranium: conint(ge=0, le=4294967295)
+    germanium: conint(ge=0, le=4294967295)
+    colonists: conint(ge=0, le=4294967295) = Field(..., description="Colonists aboard, in kT.")
+
+
+class FleetWaypointTask(Enum):
+    """
+    Order a fleet runs on reaching a waypoint. See docs/mechanics/fleet_movement.rst 'Waypoint orders'.
+    """
+
+    none = "none"
+    colonize = "colonize"
+    remote_mine = "remote-mine"
+    unload_cargo = "unload-cargo"
+    load_cargo = "load-cargo"
+    load_fuel = "load-fuel"
+    patrol = "patrol"
+    transfer_fleet = "transfer-fleet"
+    merge_fleet = "merge-fleet"
+    scrap_fleet = "scrap-fleet"
+    lay_mines = "lay-mines"
+
+
+class ScannedFleet(BaseModel):
+    """
+    Another player's fleet the viewing player has detected within scanner coverage. Partial and scan-depth gated: position and owner are known from any detection; the exact ship composition is never exposed here (only an aggregate ship-count, when the scan is close enough). Like planet and design intel, fields hold the values as of the last scan; years-since-last-scan = 0 means detected this turn, higher is a stale snapshot. Empty until the engine models fleet scanning — the growth point that mirrors the planet observed/unobserved split (game/view.rs). See docs/mechanics/scanning.rst.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: conint(le=4294967295) = Field(
+        ..., description="Universe-wide space-object id of the detected fleet."
+    )
+    owner_player_id: conint(ge=0, le=65535) = Field(
+        ..., alias="owner-player-id", description="Player id that owns the detected fleet."
+    )
+    x: int
+    y: int
+    orbiting_planet_id: conint(le=4294967295) | None = Field(
+        None,
+        alias="orbiting-planet-id",
+        description="Planet id the detected fleet orbits, when known. Absent in deep space.",
+    )
+    name: str | None = Field(
+        None,
+        description="The owner's fleet name, when revealed by the scan. Absent at coarse scan depth.",
+    )
+    ship_count: conint(ge=0, le=4294967295) | None = Field(
+        None,
+        alias="ship-count",
+        description="Aggregate number of ships in the detected fleet, when the scan is close enough to count them. Absent otherwise. The per-design breakdown is never exposed.",
+    )
+    years_since_last_scan: conint(ge=0, le=65535) = Field(
+        ...,
+        alias="years-since-last-scan",
+        description="0 = detected this turn (current). Higher = a stale snapshot from an earlier detection.",
+    )
+
+
 class TurnMessage(BaseModel):
     """
     One message shown in the player's turn for this year. Messages are per-turn (regenerated each year, not accumulated). Mirrors the design-target turn-message shape in schemas/turn.json.
@@ -354,7 +441,7 @@ class TurnMessage(BaseModel):
 
 class TurnScore(BaseModel):
     """
-    The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. Categories for objects the engine does not model yet read 0 (starbases, #147; ships, #155).
+    The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. The ship categories read 0 until ship combat-power classification lands (the fleet model exists, but a ship's power rating is a combat-model concern).
     """
 
     model_config = ConfigDict(
@@ -370,25 +457,25 @@ class TurnScore(BaseModel):
     starbase_count: conint(le=4294967295) = Field(
         ...,
         alias="starbase-count",
-        description="Starbases owned (Orbital Forts excluded). 0 until the starbase model lands (#147).",
+        description="Starbases owned (Orbital Forts excluded). 0 until starbase score-counting lands.",
     )
     starbase_points: conint(le=4294967295) = Field(..., alias="starbase-points")
     unarmed_count: conint(le=4294967295) = Field(
         ...,
         alias="unarmed-count",
-        description="Unarmed ships (power rating 0). 0 until the fleet model lands (#155).",
+        description="Unarmed ships (power rating 0). 0 until ship combat-power classification lands.",
     )
     unarmed_points: conint(le=4294967295) = Field(..., alias="unarmed-points")
     escort_count: conint(le=4294967295) = Field(
         ...,
         alias="escort-count",
-        description="Escort ships (power rating 1..1999). 0 until the fleet model lands (#155).",
+        description="Escort ships (power rating 1..1999). 0 until ship combat-power classification lands.",
     )
     escort_points: conint(le=4294967295) = Field(..., alias="escort-points")
     capital_count: conint(le=4294967295) = Field(
         ...,
         alias="capital-count",
-        description="Capital ships (power rating >= 2000). 0 until the fleet model lands (#155).",
+        description="Capital ships (power rating >= 2000). 0 until ship combat-power classification lands.",
     )
     capital_points: conint(le=4294967295) = Field(..., alias="capital-points")
     tech_level_sum: conint(le=4294967295) = Field(
@@ -512,6 +599,28 @@ class PlanetIntel(RootModel[PlanetObserved | PlanetUnobserved]):
     )
 
 
+class FleetWaypoint(BaseModel):
+    """
+    One destination in a fleet's route: where to go, how fast, and what to do on arrival. See docs/mechanics/fleet_movement.rst 'Waypoints'.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    x: int = Field(..., description="Destination X coordinate (light years).")
+    y: int
+    target_planet_id: conint(le=4294967295) | None = Field(
+        None,
+        alias="target-planet-id",
+        description="Planet id this waypoint targets, when the destination is a planet (its position equals x, y). Absent for a bare-coordinate waypoint.",
+    )
+    warp: conint(ge=0, le=10) = Field(
+        ...,
+        description="Warp speed to travel to this waypoint (0-10; 10 is the ramscoop free 'safe speed'). Distance covered is warp-squared ly per year.",
+    )
+    task: FleetWaypointTask
+
+
 class Race(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -526,6 +635,49 @@ class Race(BaseModel):
     research_costs: ResearchCosts
     leftover_spend: LeftoverSpend | None = "surface_minerals"
     icon_index: conint(ge=0)
+
+
+class Fleet(BaseModel):
+    """
+    One of the viewing player's own fleets, in full. A fleet is a named group of ships at a map location with an ordered waypoint list. Its id shares the universe-wide space-object id space with planets, so it is a valid 'Goto' / related-object subject. Only the player's OWN fleets appear here; other players' fleets detected by scanning appear in scanned-fleets with partial info. See docs/gameplay/fleets.rst.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: conint(le=4294967295) = Field(
+        ..., description="Universe-wide space-object id, unique across every planet and fleet."
+    )
+    name: str
+    owner: conint(ge=0, le=65535) = Field(
+        ...,
+        description="Owning player id (always the viewing player for an own fleet; present for uniformity with scanned-fleets).",
+    )
+    x: int
+    y: int
+    orbiting_planet_id: conint(le=4294967295) | None = Field(
+        None,
+        alias="orbiting-planet-id",
+        description="Planet id this fleet orbits. Absent when the fleet is in deep space; when present, (x, y) equals that planet's position.",
+    )
+    ship_stacks: list[ShipStack] = Field(
+        ...,
+        alias="ship-stacks",
+        description="Ship composition: one entry per ship design the fleet contains, with how many ships of that design.",
+    )
+    fuel: conint(ge=0, le=4294967295) = Field(
+        ..., description="Fuel on board (mg), shared across the whole fleet."
+    )
+    cargo: FleetCargo
+    waypoints: list[FleetWaypoint] = Field(
+        ...,
+        description="Ordered list of future destinations, each with a travel warp and an order to run on arrival. Empty for an idle fleet. The fleet's current position is (x, y), not a waypoint.",
+    )
+    repeat_orders: bool = Field(
+        ...,
+        alias="repeat-orders",
+        description="When true the waypoint chain cycles back to the first waypoint after the last waypoint's order runs (automated freighter loops).",
+    )
 
 
 class PlayerView(BaseModel):
@@ -548,6 +700,15 @@ class PlayerView(BaseModel):
     planets: list[PlanetIntel] = Field(
         ...,
         description="Every planet in the universe, sorted by id. Each entry is either observed (full contents) or unobserved (identity only).",
+    )
+    fleets: list[Fleet] = Field(
+        ...,
+        description="The viewing player's own fleets, each in full. Always the player's own fleets (never another player's), mirroring ship-designs. Empty when the player has no fleets. Sorted by fleet id.",
+    )
+    scanned_fleets: list[ScannedFleet] = Field(
+        ...,
+        alias="scanned-fleets",
+        description="Other players' fleets this player has detected within scanner coverage (partial info; see the scanned-fleet definition). Never includes the viewing player's own fleets. Empty until the engine models fleet scanning.",
     )
     ship_designs: list[ShipDesign] = Field(
         ...,

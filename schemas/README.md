@@ -32,8 +32,21 @@ rationale behind each one, see `docs/` (the Sphinx design guide).
 > `game-state.json` references `race.json` (`player.race`). typify cannot follow
 > a cross-file `$ref`, so `engine/build.rs` bundles referenced files' definitions
 > into one self-contained schema before generating. That bundler is the shared
-> infrastructure the remaining interdependent schemas (fleets, wormholes, etc.)
-> will reuse as they are added.
+> infrastructure the remaining interdependent schemas (wormholes, minefields,
+> etc.) reuse as they are added.
+>
+> Fleets are modelled in both schemas. `game-state.json` carries the host
+> ground truth as `fleets` (a `fleet` map keyed by fleet id; fleet ids share the
+> universe-wide space-object id space with planet ids), where a `fleet` holds a
+> ship composition (`ship-stack` list → design slot + count), `fleet-cargo`,
+> `fuel`, and a `fleet-waypoint` list (each with a destination, warp, and
+> `fleet-waypoint-task`). `response-turn-file.json` projects fog-of-war-filtered
+> copies: `fleets` are the viewing player's own fleets in full (mirroring
+> `ship-designs`), and `scanned-fleets` is the partial, scan-gated view of other
+> players' fleets — defined but emitted empty until fleet scanning is modelled,
+> the growth point mirroring the planet observed/unobserved split. The
+> projection choke point is `engine/src/game/view.rs`; both shapes are guarded
+> by the existing turn-file and game-state contract tests.
 >
 > A cross-file `$ref` to a shape that already has a hand-written Rust home is
 > _redirected_ rather than re-generated: adding an `x-rust-type` sibling to the

@@ -35,9 +35,12 @@ use crate::game::state::GameState;
 // names, ranges, which fields are observed-only — edit the schema, not this
 // file. `PlanetIntel` is untagged: a client tells observed from unobserved by
 // whether the contents fields are present. See `docs/adr/0003`.
+use crate::game::objects::fleet::{Fleet, FleetWaypointTask};
 pub use crate::game::objects::generated::turn_file::{
-    BuildItem, PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, StarbaseStatus,
-    TurnMessage, TurnScore,
+    BuildItem, Fleet as WireFleet, FleetCargo as WireFleetCargo,
+    FleetWaypoint as WireFleetWaypoint, FleetWaypointTask as WireFleetWaypointTask, PlanetIntel,
+    PlanetObserved, PlanetUnobserved, PlayerView, ScannedFleet, ShipStack as WireShipStack,
+    StarbaseStatus, TurnMessage, TurnScore,
 };
 use crate::game::objects::generated::turn_file::{
     ShipDesign as WireShipDesign, ShipDesignKind as WireShipDesignKind,
@@ -79,10 +82,23 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         player_id,
         homeworld_id: player.and_then(|p| p.homeworld_id),
         planets,
+        // The viewing player's OWN fleets, in full, sorted by id. Fog-of-war
+        // mirrors the planet observed/unobserved split: a player sees its own
+        // fleets completely; other players' fleets appear only within scanner
+        // coverage, as partial `scanned_fleets`. See `fleet_view`.
+        fleets: own_fleets(state, player_id),
+        // Other players' fleets this player has scanned. The engine does not
+        // model fleet scanning yet, so there is no foreign-fleet intel to
+        // project; emit an empty list. The wire shape is defined
+        // (schemas/response-turn-file.json scanned-fleet) so the client's map
+        // overlays have a stable field to read. This is the growth point that
+        // mirrors a planet becoming Observed. See docs/mechanics/scanning.rst.
+        scanned_fleets: vec![],
         // The viewing player's own ship/starbase designs, edited via
-        // design.upsert / design.delete orders. built-count derives from the
-        // player's live fleets (always 0 until fleets are modelled, so no slot
-        // is ever locked). See docs/mechanics/ship_design.rst.
+        // design.upsert / design.delete orders. A ship design's built-count is
+        // the number of ships of it across the player's fleets (0 for a design
+        // with no ships, so its slot stays editable). See
+        // docs/mechanics/ship_design.rst and `orders::design_built_count`.
         ship_designs: player
             .map(|p| {
                 p.designs
@@ -130,8 +146,9 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
 /// public-player-scores game flag, which `GameState` does not model yet. The
 /// categories the engine can measure today are planets (owned populations),
 /// tech (the player's six tech levels), and resources (the sum of each owned
-/// planet's resources/year). Starbase and ship categories read 0 until those
-/// models land (#147, #155), so `total` grows automatically as they do.
+/// planet's resources/year). Starbase and ship categories read 0 until
+/// starbase score-counting and ship combat-power classification land, so
+/// `total` grows automatically as they do.
 fn compute_score(state: &GameState, player_id: u32) -> TurnScore {
     let player = state.players.iter().find(|p| p.id == player_id);
 
@@ -173,7 +190,9 @@ fn compute_score(state: &GameState, player_id: u32) -> TurnScore {
         .map(score::tech_field_points)
         .sum();
 
-    // Not modelled yet (#147 starbases, #155 fleets): counts and points are 0.
+    // Not counted yet: starbase score-counting, and ship combat-power
+    // classification (unarmed/escort/capital). The fleet model exists, but a
+    // ship's power rating is a combat-model concern. Counts and points are 0.
     let (starbase_count, unarmed_count, escort_count, capital_count) = (0, 0, 0, 0);
     let starbase_points = score::starbase_points(starbase_count);
     let unarmed_points = score::unarmed_points(unarmed_count, planet_count);
@@ -496,6 +515,80 @@ fn best_planetary_defense(race: &Race, tech: &TechLevels) -> Option<(&'static st
 fn defense_coverage_percent(base_coverage: f64, count: u32) -> u32 {
     let protection = 1.0 - (1.0 - base_coverage).powi(count as i32);
     (protection * 100.0).round() as u32
+}
+
+/// The viewing player's own fleets, projected to the full turn-file wire
+/// shape and sorted by id.
+///
+/// Own fleets are always fully visible to their owner — the fleet analogue of
+/// an owned planet being Observed with current ground truth. A fleet owned by
+/// another player is never emitted here; it reaches the player (partially) only
+/// through `scanned_fleets` once fleet scanning is modelled.
+fn own_fleets(state: &GameState, player_id: u32) -> Vec<WireFleet> {
+    let mut fleets: Vec<&Fleet> = state
+        .fleets
+        .values()
+        .filter(|f| f.owner == player_id)
+        .collect();
+    fleets.sort_by_key(|f| f.id);
+    fleets.into_iter().map(fleet_view).collect()
+}
+
+/// Project one host-side `Fleet` into the turn-file wire `Fleet`. Used only for
+/// a fleet the viewing player owns, so every field is exposed.
+fn fleet_view(f: &Fleet) -> WireFleet {
+    WireFleet {
+        id: f.id,
+        name: f.name.clone(),
+        owner: f.owner,
+        x: f.x,
+        y: f.y,
+        orbiting_planet_id: f.orbiting_planet_id,
+        ship_stacks: f
+            .ship_stacks
+            .iter()
+            .map(|s| WireShipStack {
+                design_slot: s.design_slot,
+                count: s.count,
+            })
+            .collect(),
+        fuel: f.fuel,
+        cargo: WireFleetCargo {
+            ironium: f.cargo.ironium,
+            boranium: f.cargo.boranium,
+            germanium: f.cargo.germanium,
+            colonists: f.cargo.colonists,
+        },
+        waypoints: f
+            .waypoints
+            .iter()
+            .map(|w| WireFleetWaypoint {
+                x: w.x,
+                y: w.y,
+                target_planet_id: w.target_planet_id,
+                warp: w.warp,
+                task: waypoint_task_view(&w.task),
+            })
+            .collect(),
+        repeat_orders: f.repeat_orders,
+    }
+}
+
+/// Map the host waypoint-task enum to the identical turn-file enum.
+fn waypoint_task_view(task: &FleetWaypointTask) -> WireFleetWaypointTask {
+    match task {
+        FleetWaypointTask::None => WireFleetWaypointTask::None,
+        FleetWaypointTask::Colonize => WireFleetWaypointTask::Colonize,
+        FleetWaypointTask::RemoteMine => WireFleetWaypointTask::RemoteMine,
+        FleetWaypointTask::UnloadCargo => WireFleetWaypointTask::UnloadCargo,
+        FleetWaypointTask::LoadCargo => WireFleetWaypointTask::LoadCargo,
+        FleetWaypointTask::LoadFuel => WireFleetWaypointTask::LoadFuel,
+        FleetWaypointTask::Patrol => WireFleetWaypointTask::Patrol,
+        FleetWaypointTask::TransferFleet => WireFleetWaypointTask::TransferFleet,
+        FleetWaypointTask::MergeFleet => WireFleetWaypointTask::MergeFleet,
+        FleetWaypointTask::ScrapFleet => WireFleetWaypointTask::ScrapFleet,
+        FleetWaypointTask::LayMines => WireFleetWaypointTask::LayMines,
+    }
 }
 
 /// Decide whether `player_id` can currently observe this planet, and emit

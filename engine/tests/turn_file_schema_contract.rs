@@ -3,7 +3,12 @@
 // wire types are generated from). If the engine output and the schema ever
 // disagree, this fails — the anti-drift guard for the turn file.
 
+use std::num::NonZeroU32;
+
 use serde_json::Value;
+use stars_engine::game::objects::fleet::{
+    Fleet, FleetCargo, FleetWaypoint, FleetWaypointTask, ShipStack,
+};
 use stars_engine::game::objects::player::{Player, TechLevels};
 use stars_engine::game::objects::race_defaults::humanoid;
 use stars_engine::game::state::GameState;
@@ -75,6 +80,64 @@ fn two_player_game() -> GameState {
         s.set_homeworld_hab(&race);
     }
 
+    // Player 0 owns a fleet orbiting its homeworld; it must project into the
+    // turn file in full and validate against the fleet wire shape. A deep-space
+    // fleet (no orbiting planet, empty waypoints) checks the absent-field path.
+    let mut fleets = std::collections::HashMap::new();
+    let (hx, hy) = (universe.planets[&hw0].x, universe.planets[&hw0].y);
+    fleets.insert(
+        9001,
+        Fleet {
+            id: 9001,
+            name: "Pilgrim".to_string(),
+            owner: 0,
+            x: hx,
+            y: hy,
+            orbiting_planet_id: Some(hw0),
+            ship_stacks: vec![ShipStack {
+                design_slot: 1,
+                count: NonZeroU32::new(2).unwrap(),
+            }],
+            fuel: 200,
+            cargo: FleetCargo {
+                ironium: 0,
+                boranium: 0,
+                germanium: 0,
+                colonists: 50,
+            },
+            waypoints: vec![FleetWaypoint {
+                x: hx + 10,
+                y: hy + 10,
+                target_planet_id: None,
+                warp: 9,
+                task: FleetWaypointTask::None,
+            }],
+            repeat_orders: true,
+        },
+    );
+    // A fleet owned by player 1 — must NOT appear in player 0's turn file.
+    fleets.insert(
+        9002,
+        Fleet {
+            id: 9002,
+            name: "Intruder".to_string(),
+            owner: 1,
+            x: universe.planets[&hw1].x,
+            y: universe.planets[&hw1].y,
+            orbiting_planet_id: Some(hw1),
+            ship_stacks: vec![],
+            fuel: 0,
+            cargo: FleetCargo {
+                ironium: 0,
+                boranium: 0,
+                germanium: 0,
+                colonists: 0,
+            },
+            waypoints: vec![],
+            repeat_orders: false,
+        },
+    );
+
     GameState {
         id: "11111111-1111-4111-8111-111111111111".to_string(),
         name: "Contract Test".to_string(),
@@ -100,6 +163,7 @@ fn two_player_game() -> GameState {
         ],
         year: 2400,
         player_messages: Default::default(),
+        fleets,
     }
 }
 
