@@ -41,6 +41,7 @@ _COLOR_UNKNOWN = QColor(0x60, 0x60, 0x60)  # dark grey — never seen
 _COLOR_TARGET = QColor(0xFF, 0xFF, 0x00)  # primary/secondary target arrow
 _COLOR_BG = QColor(0x00, 0x00, 0x00)
 _COLOR_TEXT = QColor(0xFF, 0xFF, 0xFF)
+_COLOR_ROUTE = QColor(0x50, 0x90, 0xF0)  # fleet route-path overlay line
 
 # Arrow marker geometry — primary is the larger arrow, secondary smaller.
 _TARGET_PRIMARY_HEIGHT = 9.0
@@ -86,6 +87,23 @@ def _planet_value(planet) -> int:
     return getattr(planet, "value", 0)
 
 
+def fleet_path_points(fleet) -> list[tuple[float, float]]:
+    """World-coordinate polyline for a fleet's route, or ``[]`` when it has no
+    waypoints (an idle fleet draws no path).
+
+    The path starts at the fleet's current position and threads each waypoint
+    in order: ``[(fleet.x, fleet.y), (wp0.x, wp0.y), (wp1.x, wp1.y), ...]``.
+    The current position is the fleet's own ``(x, y)``, never a waypoint — see
+    docs/mechanics/fleet_movement.rst.
+    """
+    waypoints = getattr(fleet, "waypoints", None) or []
+    if not waypoints:
+        return []
+    pts = [(float(fleet.x), float(fleet.y))]
+    pts.extend((float(w.x), float(w.y)) for w in waypoints)
+    return pts
+
+
 # ── widget ─────────────────────────────────────────────────────────────────
 
 
@@ -114,6 +132,11 @@ class SpaceMap(QWidget):
         self._show_names: bool = True
         self._view_mode: int = 0  # 0 = Normal (PlanetView.Normal)
 
+        # The viewing player's own fleets (FleetData), used by the Fleet Paths
+        # overlay. Empty until a universe with fleets is loaded.
+        self._fleets: list = []
+        self._show_routes: bool = False
+
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.StrongFocus)
         self._apply_size()
@@ -135,6 +158,21 @@ class SpaceMap(QWidget):
         self._primary_id = None
         self._secondary_id = None
         self._apply_size()
+        self.update()
+
+    def set_fleets(self, fleets):
+        """Load the viewing player's own fleets (FleetData), used by the Fleet
+        Paths overlay. Repaints when the overlay is on."""
+        self._fleets = list(fleets)
+        if self._show_routes:
+            self.update()
+
+    def set_show_routes(self, enabled: bool):
+        """Toggle the Fleet Paths overlay — route polylines for every own fleet
+        that has waypoints."""
+        if self._show_routes == enabled:
+            return
+        self._show_routes = enabled
         self.update()
 
     def set_show_names(self, enabled: bool):
@@ -263,6 +301,11 @@ class SpaceMap(QWidget):
         vx0, vy0 = visible.left() - margin, visible.top() - margin
         vx1, vy1 = visible.right() + margin, visible.bottom() + margin
 
+        # Fleet route lines sit beneath the planet glyphs so the dots and their
+        # target arrows always read on top.
+        if self._show_routes:
+            self._draw_fleet_routes(painter)
+
         painter.setFont(QFont("Arial", 9))
         for planet in self._planets:
             wx, wy = _planet_pos(planet)
@@ -307,6 +350,18 @@ class SpaceMap(QWidget):
                 Qt.AlignHCenter | Qt.AlignTop,
                 planet.name,
             )
+
+    def _draw_fleet_routes(self, painter: QPainter):
+        """Draw a route polyline for each own fleet that has waypoints. Idle
+        fleets (no waypoints) contribute nothing."""
+        painter.setPen(QPen(_COLOR_ROUTE, 1.0))
+        painter.setBrush(Qt.NoBrush)
+        for fleet in self._fleets:
+            pts = fleet_path_points(fleet)
+            if len(pts) < 2:
+                continue
+            poly = QPolygonF([QPointF(x * self._scale, y * self._scale) for x, y in pts])
+            painter.drawPolyline(poly)
 
     def _draw_target_arrows(self, painter: QPainter):
         # Secondary first so primary draws on top when both ids match the

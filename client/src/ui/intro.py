@@ -25,7 +25,13 @@ import requests
 from PySide6.QtGui import QBrush, QPalette, QPixmap
 from PySide6.QtWidgets import QBoxLayout, QDialog, QFileDialog, QMessageBox, QPushButton
 
-from ..data.defaults import MessageData, PlanetData, ScoreData, build_new_game_request
+from ..data.defaults import (
+    FleetData,
+    MessageData,
+    PlanetData,
+    ScoreData,
+    build_new_game_request,
+)
 from ..data.loader import Language_Map
 from ..data.r1_parser import load_race_file, save_race_json
 from ..rendering.enumerations import ResourcePaths
@@ -214,6 +220,7 @@ class IntroUI(QDialog):
         # Build planet list from the turn file (player's fog-of-war view).
         # Positions come from the turn file; the xy file is saved as-is for the engine to serve.
         planets = [PlanetData.from_turn_planet(p) for p in turn["planets"]]
+        fleets = [FleetData.from_turn_fleet(f) for f in turn.get("fleets", [])]
         messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
         score = ScoreData.from_turn_score(turn.get("score"))
 
@@ -231,6 +238,7 @@ class IntroUI(QDialog):
             messages=messages,
             score=score,
             race=turn.get("race"),
+            fleets=fleets,
         )
         self._main_window.show()
         self.hide()
@@ -271,6 +279,7 @@ class IntroUI(QDialog):
                 log.warning("Could not read %s: %s", xy_path, exc)
 
         planets = [PlanetData.from_turn_planet(p) for p in turn.get("planets", [])]
+        fleets = [FleetData.from_turn_fleet(f) for f in turn.get("fleets", [])]
         messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
         score = ScoreData.from_turn_score(turn.get("score"))
 
@@ -286,6 +295,7 @@ class IntroUI(QDialog):
             messages=messages,
             score=score,
             race=turn.get("race"),
+            fleets=fleets,
         )
         self._main_window.show()
         self.hide()

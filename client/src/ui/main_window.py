@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..data.defaults import planets_with_idle_fleets
 from ..rendering.enumerations import NeverSeenPlanet, PlanetView, ResourcePaths, ZoomLevel
 from .info_panel import LeftPanel, build_buildables_map
 from .planet_summary import PlanetSummaryWidget
@@ -107,9 +108,14 @@ class MainWindow(QMainWindow):
         messages=(),
         score=None,
         race=None,
+        fleets=(),
     ):
         super().__init__()
         self._planets = list(planets)
+        # The viewing player's own fleets (FleetData). Drives the Fleet Paths
+        # overlay and the Idle Fleets filter. Empty until the engine serializes
+        # fleets into the turn file (then populated by the loader in intro.py).
+        self._fleets = list(fleets)
         # The viewing player's race (raw turn-file dict), shown by the F8 Race
         # view, or None when the turn file carries no race.
         self._race = race
@@ -141,6 +147,11 @@ class MainWindow(QMainWindow):
         self._awaiting_route_target: int | None = None
         # Same, for a starbase mass-driver packet destination.
         self._awaiting_packet_target: int | None = None
+        # Idle Fleets filter: when active, only planets that have an idle fleet
+        # in orbit stay clickable on the space map. The id set is recomputed
+        # from the current fleets each time the filter is switched on.
+        self._idle_filter_active: bool = False
+        self._idle_planet_ids: set[int] = set()
 
         self._init_ui()
         self._init_menu()
@@ -214,6 +225,7 @@ class MainWindow(QMainWindow):
             self._universe_h,
             self._player_id,
         )
+        self._space_map.set_fleets(self._fleets)
         self._space_map.set_show_names(self._view_opts.planet_names_overlay)
         self._space_map.set_zoom(ZoomLevel.multipliers()[self._view_opts.zoom_level])
         self._select_initial_target()
@@ -445,7 +457,7 @@ class MainWindow(QMainWindow):
         tb.addWidget(self._names_btn)
 
         self._idle_fleets_btn = self._toolbar_btn(
-            ResourcePaths.IdleFleetsIcon, "Idle Fleets Filter"
+            ResourcePaths.IdleFleetsIcon, "Idle Fleets Filter", checkable=True
         )
         self._idle_fleets_btn.clicked.connect(self._handle_idle_fleets)
         tb.addWidget(self._idle_fleets_btn)
@@ -554,6 +566,12 @@ class MainWindow(QMainWindow):
         # While picking a route or packet target, the click is consumed by
         # _on_map_clicked.
         if self._awaiting_route_target is not None or self._awaiting_packet_target is not None:
+            return
+
+        # Idle Fleets filter: ignore clicks on planets that have no idle fleet
+        # in orbit, so the user can step only through worlds that need orders.
+        if self._idle_filter_active and pid not in self._idle_planet_ids:
+            self.statusBar().showMessage("Idle fleets filter: no idle fleet here.", 2000)
             return
 
         planet = next((p for p in self._planets if p.id == pid), None)
@@ -782,13 +800,43 @@ class MainWindow(QMainWindow):
             self._handle_zoom(new_level)
 
     def _handle_add_waypoints(self):
-        self.statusBar().showMessage("Waypoint mode — not yet implemented.")
+        # Arming waypoint-add means letting a map click append a waypoint to the
+        # selected fleet — a fleet order. The engine models no fleet orders yet
+        # (only planet.* orders exist; fleets are read-only in the turn file),
+        # so there is nothing to submit. Kept honest rather than faked; tracked
+        # as a follow-up (engine fleet waypoint order + fleet selection on the
+        # map).
+        self.statusBar().showMessage(
+            "Add Waypoints needs fleet orders from the engine — not available yet.", 4000
+        )
 
     def _handle_fleet_paths(self):
-        self.statusBar().showMessage("Fleet paths overlay — not yet implemented.")
+        """Fleet Paths overlay: draw every own fleet's route on the space map."""
+        enabled = self._routes_btn.isChecked()
+        self._space_map.set_show_routes(enabled)
+        if not enabled:
+            self.statusBar().showMessage("Fleet paths overlay off.", 2000)
+        elif any(f.waypoints for f in self._fleets):
+            self.statusBar().showMessage("Fleet paths overlay on.", 2000)
+        else:
+            self.statusBar().showMessage("Fleet paths overlay on — no fleets have routes.", 3000)
 
     def _handle_idle_fleets(self):
-        self.statusBar().showMessage("Idle fleets filter — not yet implemented.")
+        """Idle Fleets filter: while active, only planets with an idle fleet in
+        orbit stay clickable on the space map."""
+        self._idle_filter_active = self._idle_fleets_btn.isChecked()
+        if not self._idle_filter_active:
+            self._idle_planet_ids = set()
+            self.statusBar().showMessage("Idle fleets filter off.", 2000)
+            return
+        self._idle_planet_ids = planets_with_idle_fleets(self._fleets)
+        if self._idle_planet_ids:
+            self.statusBar().showMessage(
+                f"Idle fleets filter on — {len(self._idle_planet_ids)} planet(s) with idle fleets.",
+                3000,
+            )
+        else:
+            self.statusBar().showMessage("Idle fleets filter on — no idle fleets.", 3000)
 
     def _handle_enemy_ship_filter(self):
         self.statusBar().showMessage("Enemy ship filter — not yet implemented.")

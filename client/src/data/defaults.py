@@ -215,6 +215,94 @@ class MessageData:
 
 
 @dataclass
+class WaypointData:
+    """One destination in a fleet's route (mirrors the turn file's
+    ``fleet-waypoint``): a map point, an optional target planet id when the
+    destination is a planet, the travel ``warp``, and the ``task`` to run on
+    arrival. The fleet's *current* position is the fleet's ``(x, y)``, not a
+    waypoint — see docs/mechanics/fleet_movement.rst."""
+
+    x: float
+    y: float
+    target_planet_id: int | None = None
+    warp: int = 0
+    task: str = "none"
+
+    @classmethod
+    def from_turn_waypoint(cls, w: dict) -> WaypointData:
+        return cls(
+            x=float(w["x"]),
+            y=float(w["y"]),
+            target_planet_id=w.get("target-planet-id"),
+            warp=w.get("warp", 0),
+            task=w.get("task", "none"),
+        )
+
+
+@dataclass
+class FleetData:
+    """Duck-typed fleet object understood by SpaceMap and the turn editor.
+
+    Field shape mirrors the engine's per-player turn file (PlayerView
+    ``fleets`` entry): only the viewing player's OWN fleets appear in full
+    here. Other players' detected fleets arrive separately as partial
+    ``scanned-fleets`` (position + owner only) and are not parsed into this
+    class — they carry no waypoints, so they take part in neither the Fleet
+    Paths overlay nor the Idle Fleets filter.
+
+    See docs/gameplay/fleets.rst.
+    """
+
+    id: int
+    name: str
+    owner: int
+    x: float
+    y: float
+    orbiting_planet_id: int | None = None
+    waypoints: list[WaypointData] = field(default_factory=list)
+    repeat_orders: bool = False
+    fuel: int = 0
+    ship_stacks: list[dict] = field(default_factory=list)
+    cargo: dict | None = None
+
+    @property
+    def is_idle(self) -> bool:
+        """A fleet with no waypoints has no orders — it sits where it is until
+        the player gives it somewhere to go (docs/gameplay/fleets.rst)."""
+        return not self.waypoints
+
+    @classmethod
+    def from_turn_fleet(cls, f: dict) -> FleetData:
+        """Build a ``FleetData`` from one entry in the turn file's ``fleets``
+        array. Wire field names are kebab-case per the project schema
+        convention (schemas/response-turn-file.json)."""
+        return cls(
+            id=f["id"],
+            name=f.get("name", ""),
+            owner=f.get("owner", 0),
+            x=float(f["x"]),
+            y=float(f["y"]),
+            orbiting_planet_id=f.get("orbiting-planet-id"),
+            waypoints=[WaypointData.from_turn_waypoint(w) for w in f.get("waypoints", [])],
+            repeat_orders=f.get("repeat-orders", False),
+            fuel=f.get("fuel", 0),
+            ship_stacks=list(f.get("ship-stacks", [])),
+            cargo=f.get("cargo"),
+        )
+
+
+def planets_with_idle_fleets(fleets) -> set[int]:
+    """The ids of planets that have at least one idle fleet in orbit.
+
+    Drives the Idle Fleets toolbar filter: only these planets stay clickable
+    on the space map while the filter is active. A fleet counts only when it
+    is both idle (no waypoints) and orbiting a planet — an idle fleet sitting
+    in deep space has no planet to attach the filter to.
+    """
+    return {f.orbiting_planet_id for f in fleets if f.is_idle and f.orbiting_planet_id is not None}
+
+
+@dataclass
 class ScoreData:
     """The viewing player's F10 score breakdown from the turn file (see
     docs/mechanics/victory.rst).
