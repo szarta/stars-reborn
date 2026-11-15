@@ -42,6 +42,10 @@ use crate::game::objects::buildable::{
     design_build_object_id, Category, DESIGN_SLOTS, FIXED_BUILDABLES,
 };
 use crate::game::objects::generated::buildables as bld_wire;
+use crate::game::objects::generated::game_state::{
+    GameSettings, GameSettingsDensity, GameSettingsPlayerStartingDistance, GameSettingsSize,
+    PlayerDifficulty, VictoryConditions,
+};
 use crate::game::objects::generated::ship_hulls as wire;
 use crate::game::objects::generated::starbase_hulls as sb_wire;
 use crate::game::objects::{
@@ -66,6 +70,7 @@ use crate::game::state::GameState;
 use crate::game::universe::generate_universe;
 use crate::game::universe::scenario::{load_tutorial, scenario_universe};
 use crate::game::view::player_view;
+use std::num::NonZeroU32;
 
 // ---------------------------------------------------------------------------
 // Shared application state
@@ -570,7 +575,6 @@ struct HumanPlayerRequest {
 
 #[derive(Deserialize)]
 struct AiPlayerRequest {
-    #[allow(dead_code)]
     difficulty: String,
 }
 
@@ -588,11 +592,40 @@ struct GameParams {
     human_players: Vec<HumanPlayerRequest>,
     ai_players: Option<Vec<AiPlayerRequest>>,
     universe: UniverseParams,
-    // The 'Public Player Scores' option. Other game-setup flags are not modelled
-    // yet (see the game-settings persistence follow-up); this one gates the F10
-    // scoreboard, so it is plumbed into GameState. Absent in a request = off.
+    // Game-creation settings, persisted into GameState.settings so the client can
+    // display them (Game Parameters). Each flag absent in a request = off.
+    player_starting_distance: Option<String>,
+    #[serde(default)]
+    random_events: bool,
+    #[serde(default)]
+    ai_alliances: bool,
+    #[serde(default)]
+    accelerated_play: bool,
     #[serde(default)]
     public_player_scores: bool,
+    #[serde(default)]
+    maximum_minerals: bool,
+    #[serde(default)]
+    slow_tech_advances: bool,
+    #[serde(default)]
+    galaxy_clumping: bool,
+    victory_conditions: Option<VictoryConditionsReq>,
+}
+
+/// The create-game request's victory-conditions block (kebab-case), mapped into
+/// the snake-case stored `VictoryConditions` by `build_victory_conditions`.
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+struct VictoryConditionsReq {
+    minimum_years: Option<u32>,
+    number_of_conditions_met: Option<u32>,
+    percent_planets: Option<u32>,
+    tech_level_required: Option<u32>,
+    tech_fields: Option<u32>,
+    production_capacity: Option<u32>,
+    capital_ships: Option<u32>,
+    score_exceeds: Option<u32>,
+    exceeds_second_place_by_percent: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -644,6 +677,83 @@ fn parse_density(s: &str) -> Option<u32> {
         "dense" => Some(2),
         "packed" => Some(3),
         _ => None,
+    }
+}
+
+/// Map the lowercase request labels to the stored settings enums.
+fn size_label(s: &str) -> Option<GameSettingsSize> {
+    match s {
+        "tiny" => Some(GameSettingsSize::Tiny),
+        "small" => Some(GameSettingsSize::Small),
+        "medium" => Some(GameSettingsSize::Medium),
+        "large" => Some(GameSettingsSize::Large),
+        "huge" => Some(GameSettingsSize::Huge),
+        _ => None,
+    }
+}
+
+fn density_label(s: &str) -> Option<GameSettingsDensity> {
+    match s {
+        "sparse" => Some(GameSettingsDensity::Sparse),
+        "normal" => Some(GameSettingsDensity::Normal),
+        "dense" => Some(GameSettingsDensity::Dense),
+        "packed" => Some(GameSettingsDensity::Packed),
+        _ => None,
+    }
+}
+
+fn starting_distance_label(s: &str) -> Option<GameSettingsPlayerStartingDistance> {
+    match s {
+        "close" => Some(GameSettingsPlayerStartingDistance::Close),
+        "moderate" => Some(GameSettingsPlayerStartingDistance::Moderate),
+        "farther" => Some(GameSettingsPlayerStartingDistance::Farther),
+        "distant" => Some(GameSettingsPlayerStartingDistance::Distant),
+        _ => None,
+    }
+}
+
+fn difficulty_label(s: &str) -> Option<PlayerDifficulty> {
+    match s {
+        "easy" => Some(PlayerDifficulty::Easy),
+        "normal" => Some(PlayerDifficulty::Normal),
+        "tough" => Some(PlayerDifficulty::Tough),
+        "expert" => Some(PlayerDifficulty::Expert),
+        _ => None,
+    }
+}
+
+/// Build the persisted `GameSettings` from the create-game request.
+fn build_game_settings(gp: &GameParams) -> GameSettings {
+    GameSettings {
+        size: size_label(&gp.universe.size),
+        density: density_label(&gp.universe.density),
+        player_starting_distance: gp
+            .player_starting_distance
+            .as_deref()
+            .and_then(starting_distance_label),
+        random_events: gp.random_events,
+        ai_alliances: gp.ai_alliances,
+        accelerated_play: gp.accelerated_play,
+        public_player_scores: gp.public_player_scores,
+        maximum_minerals: gp.maximum_minerals,
+        slow_tech_advances: gp.slow_tech_advances,
+        galaxy_clumping: gp.galaxy_clumping,
+        victory_conditions: gp.victory_conditions.as_ref().map(build_victory_conditions),
+    }
+}
+
+/// Map the kebab-case request victory-conditions into the stored snake-case shape.
+fn build_victory_conditions(v: &VictoryConditionsReq) -> VictoryConditions {
+    VictoryConditions {
+        minimum_years: v.minimum_years,
+        number_of_conditions_met: v.number_of_conditions_met.and_then(NonZeroU32::new),
+        percent_planets: v.percent_planets,
+        tech_level_required: v.tech_level_required,
+        tech_fields: v.tech_fields,
+        production_capacity: v.production_capacity,
+        capital_ships: v.capital_ships,
+        score_exceeds: v.score_exceeds,
+        exceeds_second_place_by_percent: v.exceeds_second_place_by_percent,
     }
 }
 
@@ -728,6 +838,7 @@ fn build_tutorial_game() -> GameState {
             tech: sp.starting_tech.clone(),
             race: Some(sp.race.clone()),
             designs,
+            difficulty: None,
         });
     }
 
@@ -740,7 +851,7 @@ fn build_tutorial_game() -> GameState {
         year: scenario.year,
         player_messages: Default::default(),
         fleets: Default::default(),
-        public_player_scores: false,
+        settings: None,
     }
 }
 
@@ -848,13 +959,14 @@ async fn create_game(
             tech: starting_tech_levels(&race),
             race: Some(race),
             designs,
+            difficulty: None,
         });
     }
 
     // Assign homeworlds to AI players. AI races default to Humanoid until the
     // AI difficulty selector is wired through to a race choice.
     let human_count = gp.human_players.len();
-    for (ai_slot, _ai) in gp.ai_players.as_ref().unwrap_or(&vec![]).iter().enumerate() {
+    for (ai_slot, ai) in gp.ai_players.as_ref().unwrap_or(&vec![]).iter().enumerate() {
         let slot = human_count + ai_slot;
         let ai_id = slot as u32;
         let race =
@@ -879,10 +991,13 @@ async fn create_game(
             tech: starting_tech_levels(&race),
             race: Some(race),
             designs,
+            difficulty: difficulty_label(&ai.difficulty),
         });
     }
 
     let game_id = uuid::Uuid::new_v4().to_string();
+    // Build settings before moving gp.name into the GameState literal.
+    let settings = build_game_settings(&gp);
     let game = GameState {
         id: game_id.clone(),
         name: gp.name,
@@ -892,7 +1007,7 @@ async fn create_game(
         year: 2400,
         player_messages: Default::default(),
         fleets: Default::default(),
-        public_player_scores: gp.public_player_scores,
+        settings: Some(settings),
     };
 
     if let Err(e) = crate::store::save_game(&game) {
@@ -1575,5 +1690,80 @@ mod tests {
         assert_eq!(sb.mass_driver, None);
         assert_eq!(sb.damage_percent, 0);
         assert!(sb.armor > 0, "at least the hull's base armor");
+    }
+
+    #[test]
+    fn create_game_settings_are_built_from_the_request() {
+        let json = serde_json::json!({
+            "name": "S",
+            "human-players": [{"id": 0, "race": "Humanoid"}],
+            "universe": {"size": "small", "density": "dense"},
+            "player-starting-distance": "farther",
+            "random-events": true,
+            "ai-alliances": false,
+            "accelerated-play": true,
+            "public-player-scores": true,
+            "maximum-minerals": false,
+            "slow-tech-advances": true,
+            "galaxy-clumping": true,
+            "victory-conditions": {
+                "number-of-conditions-met": 2,
+                "minimum-years": 100,
+                "percent-planets": 60
+            }
+        });
+        let gp: GameParams = serde_json::from_value(json).expect("parse game params");
+        let s = build_game_settings(&gp);
+
+        assert_eq!(s.size, Some(GameSettingsSize::Small));
+        assert_eq!(s.density, Some(GameSettingsDensity::Dense));
+        assert_eq!(
+            s.player_starting_distance,
+            Some(GameSettingsPlayerStartingDistance::Farther)
+        );
+        assert!(s.random_events);
+        assert!(s.accelerated_play);
+        assert!(s.public_player_scores);
+        assert!(s.slow_tech_advances);
+        assert!(s.galaxy_clumping);
+        assert!(!s.ai_alliances);
+        assert!(!s.maximum_minerals);
+
+        let vc = s.victory_conditions.expect("victory conditions present");
+        assert_eq!(vc.number_of_conditions_met.map(|n| n.get()), Some(2));
+        assert_eq!(vc.minimum_years, Some(100));
+        assert_eq!(vc.percent_planets, Some(60));
+        // A condition that was not enabled stays absent.
+        assert_eq!(vc.capital_ships, None);
+    }
+
+    #[test]
+    fn absent_settings_default_off() {
+        // A minimal request yields all flags off, no victory conditions, no distance.
+        let json = serde_json::json!({
+            "name": "S",
+            "human-players": [{"id": 0, "race": "Humanoid"}],
+            "universe": {"size": "tiny", "density": "normal"}
+        });
+        let gp: GameParams = serde_json::from_value(json).expect("parse game params");
+        let s = build_game_settings(&gp);
+
+        assert!(!s.public_player_scores);
+        assert!(!s.random_events);
+        assert!(!s.galaxy_clumping);
+        assert!(s.victory_conditions.is_none());
+        assert_eq!(s.player_starting_distance, None);
+        // Size/density labels are always captured from the universe block.
+        assert_eq!(s.size, Some(GameSettingsSize::Tiny));
+        assert_eq!(s.density, Some(GameSettingsDensity::Normal));
+    }
+
+    #[test]
+    fn ai_difficulty_labels_map_every_level() {
+        assert_eq!(difficulty_label("easy"), Some(PlayerDifficulty::Easy));
+        assert_eq!(difficulty_label("normal"), Some(PlayerDifficulty::Normal));
+        assert_eq!(difficulty_label("tough"), Some(PlayerDifficulty::Tough));
+        assert_eq!(difficulty_label("expert"), Some(PlayerDifficulty::Expert));
+        assert_eq!(difficulty_label("bogus"), None);
     }
 }

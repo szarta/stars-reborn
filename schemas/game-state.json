@@ -66,10 +66,140 @@
             "$ref": "#/definitions/fleet"
           }
         },
+        "settings": {
+          "$ref": "#/definitions/game-settings",
+          "description": "The game-creation settings (victory conditions, play flags, universe size/density labels, player-starting-distance) — immutable game config set once at create_game, persisted so the client can display them (Game Parameters). Absent on pre-existing saves predating settings persistence; treated as all-default."
+        }
+      }
+    },
+    "game-settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Immutable game-creation settings persisted in GameState. The create-game request (request-create-new-game.json) is the design target for which options exist; this is where the engine keeps the ones it has chosen to honour. Universe dimensions live in `universe`; the size/density labels here are the named buckets the player picked, which planet geometry cannot reliably reverse.",
+      "properties": {
+        "size": {
+          "type": "string",
+          "enum": [
+            "tiny",
+            "small",
+            "medium",
+            "large",
+            "huge"
+          ],
+          "description": "Universe size label chosen at creation."
+        },
+        "density": {
+          "type": "string",
+          "enum": [
+            "sparse",
+            "normal",
+            "dense",
+            "packed"
+          ],
+          "description": "Planet-density label chosen at creation."
+        },
+        "player_starting_distance": {
+          "type": "string",
+          "enum": [
+            "close",
+            "moderate",
+            "farther",
+            "distant"
+          ],
+          "description": "How far apart homeworlds are placed."
+        },
+        "random_events": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether random events (comets, mystery traders, etc.) can occur."
+        },
+        "ai_alliances": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether computer players form alliances (AI target-prioritisation, see docs/mechanics)."
+        },
+        "accelerated_play": {
+          "type": "boolean",
+          "default": false,
+          "description": "Accelerated BBS play (faster early growth)."
+        },
         "public_player_scores": {
           "type": "boolean",
           "default": false,
-          "description": "The game's 'Public Player Scores' option (set at game creation). When true, each player's turn file includes every other player's F10 score breakdown and rank; when false, only the player's own score and rank are exposed. player_view() gates opponent scores on this flag. Absent on pre-existing saves predating the option; treated as false."
+          "description": "The 'Public Player Scores' option. When true, each player's turn file includes every other player's F10 score breakdown and rank; when false, only the player's own score and rank are exposed. player_view() gates opponent scores on this flag."
+        },
+        "maximum_minerals": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether planets start with maximum mineral concentrations."
+        },
+        "slow_tech_advances": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether technology research costs are raised (slower advances)."
+        },
+        "galaxy_clumping": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether planets are clustered rather than evenly spread (see docs galaxy-clumping finding)."
+        },
+        "victory_conditions": {
+          "$ref": "#/definitions/victory-conditions",
+          "description": "The win conditions and how many must be met. Absent if the game uses no victory conditions."
+        }
+      }
+    },
+    "victory-conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The victory conditions configured at game creation. A player wins once at least `number_of_conditions_met` of the enabled conditions hold (and the game has run `minimum_years`). Each threshold field is present only when that condition is enabled.",
+      "properties": {
+        "minimum_years": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Earliest game year a victory can be declared."
+        },
+        "number_of_conditions_met": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7,
+          "format": "uint32",
+          "description": "How many of the enabled conditions a player must satisfy to win."
+        },
+        "percent_planets": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Own this percent of all planets."
+        },
+        "tech_level_required": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Reach this tech level in `tech_fields` fields."
+        },
+        "tech_fields": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "How many tech fields must reach `tech_level_required`."
+        },
+        "production_capacity": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Reach this total production capacity."
+        },
+        "capital_ships": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Own this many capital ships."
+        },
+        "score_exceeds": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Exceed this absolute score."
+        },
+        "exceeds_second_place_by_percent": {
+          "type": "integer",
+          "format": "uint32",
+          "description": "Exceed the second-place player's score by this percent."
         }
       }
     },
@@ -590,6 +720,16 @@
           "items": {
             "$ref": "#/definitions/ship-design"
           }
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "easy",
+            "normal",
+            "tough",
+            "expert"
+          ],
+          "description": "AI difficulty for a computer player, chosen at game creation; absent for a human player."
         }
       }
     },

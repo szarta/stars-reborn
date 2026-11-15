@@ -17,7 +17,7 @@ use std::num::NonZeroU32;
 use stars_engine::game::objects::fleet::{Fleet, FleetCargo, ShipStack};
 use stars_engine::game::objects::player::{Player, TechLevels};
 use stars_engine::game::objects::race_defaults::humanoid;
-use stars_engine::game::state::GameState;
+use stars_engine::game::state::{GameSettings, GameState};
 use stars_engine::game::universe::generate_universe;
 use stars_engine::game::view::{player_view, PlanetIntel, PlayerView};
 
@@ -68,6 +68,7 @@ fn two_player_game() -> GameState {
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
                 designs: vec![],
+                difficulty: None,
             },
             Player {
                 id: PLAYER_1,
@@ -76,12 +77,13 @@ fn two_player_game() -> GameState {
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
                 designs: vec![],
+                difficulty: None,
             },
         ],
         year: 2400,
         player_messages: Default::default(),
         fleets,
-        public_player_scores: false,
+        settings: None,
     }
 }
 
@@ -428,7 +430,10 @@ fn opponent_scores_hidden_when_flag_off() {
 #[test]
 fn opponent_scores_shown_when_flag_on() {
     let mut game = two_player_game();
-    game.public_player_scores = true;
+    game.settings = Some(GameSettings {
+        public_player_scores: true,
+        ..Default::default()
+    });
     let view = player_view(&game, PLAYER_0);
 
     assert!(view.public_player_scores);
@@ -451,7 +456,10 @@ fn rank_orders_by_total_score() {
     // Give player 0 a strictly higher score by adding population/resources: a
     // second owned, populated planet. Player 0 should then rank 1, player 1 rank 2.
     let mut game = two_player_game();
-    game.public_player_scores = true;
+    game.settings = Some(GameSettings {
+        public_player_scores: true,
+        ..Default::default()
+    });
 
     // Grant player 0 a second owned homeworld-grade planet (more planet + resource
     // points) by taking an unowned planet and colonising it for player 0.

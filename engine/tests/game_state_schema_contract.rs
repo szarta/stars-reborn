@@ -97,6 +97,7 @@ fn sample_game_state() -> GameState {
             tech: TechLevels::default(),
             race: Some(race),
             designs: vec![],
+            difficulty: None,
         });
     }
 
@@ -149,7 +150,7 @@ fn sample_game_state() -> GameState {
         year: 2400,
         player_messages: Default::default(),
         fleets,
-        public_player_scores: false,
+        settings: None,
     }
 }
 

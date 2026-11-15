@@ -51,6 +51,7 @@ fn two_player_game() -> GameState {
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
                 designs: vec![],
+                difficulty: None,
             },
             Player {
                 id: PLAYER_1,
@@ -59,12 +60,13 @@ fn two_player_game() -> GameState {
                 tech: TechLevels::default(),
                 race: Some(humanoid()),
                 designs: vec![],
+                difficulty: None,
             },
         ],
         year: 2400,
         player_messages: Default::default(),
         fleets: Default::default(),
-        public_player_scores: false,
+        settings: None,
     }
 }
 

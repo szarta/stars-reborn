@@ -143,11 +143,20 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         score: standing.own,
         rank: standing.rank,
         player_count: standing.player_count,
-        public_player_scores: state.public_player_scores,
+        public_player_scores: game_public_scores(state),
         opponent_scores: standing.opponents,
         // The viewing player's own race (None for a phantom/unknown player id).
         race: race.cloned(),
     }
+}
+
+/// Whether the game's 'Public Player Scores' option is on. Reads the persisted
+/// game settings; absent settings (older saves) default the option off.
+fn game_public_scores(state: &GameState) -> bool {
+    state
+        .settings
+        .as_ref()
+        .is_some_and(|s| s.public_player_scores)
 }
 
 /// The F10 scoreboard projection for one player: own breakdown, own rank, the
@@ -191,7 +200,7 @@ fn standings(state: &GameState, player_id: u32) -> Standings {
     let player_count = NonZeroU32::new(state.players.len().max(1) as u32)
         .expect("player count floored at 1 is >= 1");
 
-    let opponents = if state.public_player_scores {
+    let opponents = if game_public_scores(state) {
         let mut v: Vec<OpponentScore> = all
             .iter()
             .filter(|(id, _)| *id != player_id)
