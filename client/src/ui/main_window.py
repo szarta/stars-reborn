@@ -110,6 +110,7 @@ class MainWindow(QMainWindow):
         race=None,
         fleets=(),
         ship_designs=(),
+        scanned_fleets=(),
     ):
         super().__init__()
         self._planets = list(planets)
@@ -117,6 +118,9 @@ class MainWindow(QMainWindow):
         # overlay and the Idle Fleets filter. Empty until the engine serializes
         # fleets into the turn file (then populated by the loader in intro.py).
         self._fleets = list(fleets)
+        # Detected foreign fleets (ScannedFleetData), shown by the F3 Others'
+        # Fleets report. Empty until the engine models fleet scanning.
+        self._scanned_fleets = list(scanned_fleets)
         # The viewing player's own ship/starbase designs (ShipDesignData), shown
         # and edited by the F4 Ship Designer.
         self._ship_designs = list(ship_designs)
@@ -977,10 +981,30 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def _handle_fleets_report(self):
-        self.statusBar().showMessage("Fleets report — not yet implemented.")
+        from .dialogs.fleet_report import FleetReportDialog
+
+        dlg = FleetReportDialog(self._fleets, self._planets, parent=self)
+        dlg.fleet_goto.connect(self._on_fleet_report_goto)
+        dlg.exec()
 
     def _handle_others_fleets_report(self):
-        self.statusBar().showMessage("Others' Fleets report — not yet implemented.")
+        from .dialogs.fleet_report import OthersFleetReportDialog
+
+        dlg = OthersFleetReportDialog(self._scanned_fleets, self._planets, parent=self)
+        dlg.fleet_goto.connect(self._on_fleet_report_goto)
+        dlg.exec()
+
+    def _on_fleet_report_goto(self, planet_id: int):
+        """Goto from a fleet report: a fleet orbiting a known planet jumps the
+        map to that planet (fleets in deep space carry no planet id and so emit
+        no goto — they have no map marker yet)."""
+        if any(p.id == planet_id for p in self._planets):
+            self._on_planet_nav(planet_id)
+        else:
+            self.statusBar().showMessage(
+                "Fleet location is not a known planet — deep-space fleets are not yet on the map.",
+                4000,
+            )
 
     def _handle_battles_report(self):
         self.statusBar().showMessage("Battles report — not yet implemented.")

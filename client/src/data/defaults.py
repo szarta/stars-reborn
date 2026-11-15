@@ -291,6 +291,104 @@ class FleetData:
         )
 
 
+@dataclass
+class ScannedFleetData:
+    """Another player's fleet the viewing player has detected (mirrors the turn
+    file's ``scanned-fleets`` entry). Partial, scan-depth gated: position and
+    owner are always known; ``name`` and ``ship_count`` only when the scan is
+    close enough. See docs/mechanics/scanning.rst."""
+
+    id: int
+    owner_player_id: int
+    x: float
+    y: float
+    orbiting_planet_id: int | None = None
+    name: str | None = None
+    ship_count: int | None = None
+    years_since_last_scan: int = 0
+
+    @classmethod
+    def from_turn_scanned_fleet(cls, f: dict) -> ScannedFleetData:
+        return cls(
+            id=f["id"],
+            owner_player_id=f.get("owner-player-id", 0),
+            x=float(f["x"]),
+            y=float(f["y"]),
+            orbiting_planet_id=f.get("orbiting-planet-id"),
+            name=f.get("name"),
+            ship_count=f.get("ship-count"),
+            years_since_last_scan=f.get("years-since-last-scan", 0),
+        )
+
+
+def _fleet_location(fleet, planet_names: dict[int, str]) -> str:
+    """Human label for a fleet's position: the orbited planet's name when it is
+    in orbit, else bare deep-space coordinates."""
+    pid = getattr(fleet, "orbiting_planet_id", None)
+    if pid is not None and pid in planet_names:
+        return planet_names[pid]
+    return f"({int(fleet.x)}, {int(fleet.y)})"
+
+
+def fleet_report_rows(fleets, planets) -> list[dict]:
+    """Rows for the F3 Fleets report (the player's own fleets), sorted by name.
+
+    Each row carries the fleet ``id`` and its orbited planet id (for jump-to),
+    plus the columns the turn file provides: location, ship count, fuel, total
+    cargo (kT), and whether the fleet is idle or moving.
+    """
+    names = {p.id: p.name for p in planets}
+    rows: list[dict] = []
+    for f in fleets:
+        cargo = f.cargo or {}
+        cargo_total = sum(
+            int(cargo.get(k, 0) or 0) for k in ("ironium", "boranium", "germanium", "colonists")
+        )
+        ships = sum(int(s.get("count", 0) or 0) for s in f.ship_stacks)
+        if f.waypoints:
+            orders = f"Warp {f.waypoints[0].warp}"
+        else:
+            orders = "Idle"
+        rows.append(
+            {
+                "id": f.id,
+                "orbiting_planet_id": f.orbiting_planet_id,
+                "name": f.name,
+                "location": _fleet_location(f, names),
+                "ships": ships,
+                "fuel": f.fuel,
+                "cargo": cargo_total,
+                "orders": orders,
+            }
+        )
+    rows.sort(key=lambda r: r["name"])
+    return rows
+
+
+def scanned_fleet_report_rows(scanned_fleets, planets) -> list[dict]:
+    """Rows for the F3 Others' Fleets report (detected foreign fleets), sorted
+    by owner then name. Fields the scan did not reveal (name, ship count) are
+    carried as ``None`` and rendered as placeholders by the dialog.
+    """
+    names = {p.id: p.name for p in planets}
+    rows: list[dict] = []
+    for f in scanned_fleets:
+        rows.append(
+            {
+                "id": f.id,
+                "orbiting_planet_id": f.orbiting_planet_id,
+                "owner_id": f.owner_player_id,  # numeric, for sorting
+                "owner": f"Player {f.owner_player_id}",
+                "name": f.name or "(unknown)",
+                "location": _fleet_location(f, names),
+                "ships": f.ship_count,  # None when the scan could not count them
+                "age": f.years_since_last_scan,
+            }
+        )
+    rows.sort(key=lambda r: (r["owner_id"], r["name"]))
+    return rows
+
+
 def planets_with_idle_fleets(fleets) -> set[int]:
     """The ids of planets that have at least one idle fleet in orbit.
 

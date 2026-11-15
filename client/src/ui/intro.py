@@ -29,6 +29,7 @@ from ..data.defaults import (
     FleetData,
     MessageData,
     PlanetData,
+    ScannedFleetData,
     ScoreData,
     ShipDesignData,
     build_new_game_request,
@@ -222,6 +223,9 @@ class IntroUI(QDialog):
         # Positions come from the turn file; the xy file is saved as-is for the engine to serve.
         planets = [PlanetData.from_turn_planet(p) for p in turn["planets"]]
         fleets = [FleetData.from_turn_fleet(f) for f in turn.get("fleets", [])]
+        scanned_fleets = [
+            ScannedFleetData.from_turn_scanned_fleet(f) for f in turn.get("scanned-fleets", [])
+        ]
         ship_designs = [ShipDesignData.from_turn_design(d) for d in turn.get("ship-designs", [])]
         messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
         score = ScoreData.from_turn_score(turn.get("score"))
@@ -242,6 +246,7 @@ class IntroUI(QDialog):
             race=turn.get("race"),
             fleets=fleets,
             ship_designs=ship_designs,
+            scanned_fleets=scanned_fleets,
         )
         self._main_window.show()
         self.hide()
@@ -283,6 +288,9 @@ class IntroUI(QDialog):
 
         planets = [PlanetData.from_turn_planet(p) for p in turn.get("planets", [])]
         fleets = [FleetData.from_turn_fleet(f) for f in turn.get("fleets", [])]
+        scanned_fleets = [
+            ScannedFleetData.from_turn_scanned_fleet(f) for f in turn.get("scanned-fleets", [])
+        ]
         ship_designs = [ShipDesignData.from_turn_design(d) for d in turn.get("ship-designs", [])]
         messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
         score = ScoreData.from_turn_score(turn.get("score"))
@@ -301,6 +309,7 @@ class IntroUI(QDialog):
             race=turn.get("race"),
             fleets=fleets,
             ship_designs=ship_designs,
+            scanned_fleets=scanned_fleets,
         )
         self._main_window.show()
         self.hide()
