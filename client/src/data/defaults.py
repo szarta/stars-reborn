@@ -303,6 +303,90 @@ def planets_with_idle_fleets(fleets) -> set[int]:
 
 
 @dataclass
+class SlotAssignmentData:
+    """One filled hull slot in a ship design (mirrors the turn file's
+    ``slot-assignment``): the ``part_id`` component sits ``count`` times in the
+    hull slot at ``slot_index``. Empty slots are omitted."""
+
+    slot_index: int
+    part_id: int
+    count: int
+
+    @classmethod
+    def from_wire(cls, s: dict) -> SlotAssignmentData:
+        return cls(
+            slot_index=s["slot-index"],
+            part_id=s["part-id"],
+            count=s.get("count", 1),
+        )
+
+
+@dataclass
+class ShipDesignData:
+    """One of the viewing player's own ship/starbase designs (mirrors the turn
+    file's ``ship-designs`` entry). Only the player's OWN designs appear here;
+    scanned enemy designs arrive separately. See docs/mechanics/ship_design.rst.
+
+    ``built_count`` is the number of ships of this design in existence across
+    the player's fleets — it drives the 'N of N' badge and locks the slot
+    against editing while > 0 (0 until the engine models fleets' ship stacks).
+    """
+
+    slot: int
+    kind: str  # "ship" | "starbase"
+    name: str
+    hull_id: int
+    slot_assignments: list[SlotAssignmentData] = field(default_factory=list)
+    built_count: int = 0
+
+    @classmethod
+    def from_turn_design(cls, d: dict) -> ShipDesignData:
+        """Build a ``ShipDesignData`` from one entry in the turn file's
+        ``ship-designs`` array (kebab-case wire keys per the schema convention)."""
+        return cls(
+            slot=d["slot"],
+            kind=d.get("kind", "ship"),
+            name=d.get("name", ""),
+            hull_id=d["hull-id"],
+            slot_assignments=[
+                SlotAssignmentData.from_wire(s) for s in d.get("slot-assignments", [])
+            ],
+            built_count=d.get("built-count", 0),
+        )
+
+
+@dataclass
+class RaceInfo:
+    """The viewing player's race identity, as the Ship Designer and Technology
+    Browser need it: the trait codes that gate which hulls/components are
+    buildable. Parsed from the turn file's ``race`` block (the raw dict there is
+    not attribute-accessible, so the trait-gate helpers need this object).
+
+    Only the fields the catalog-gating logic reads are kept; the full race
+    (hab/economy/research) stays the raw dict used by the F8 Race view.
+    """
+
+    prt: str = ""
+    lrts: list[str] = field(default_factory=list)
+    name: str = ""
+    plural_name: str = ""
+
+    @classmethod
+    def from_turn_race(cls, r: dict | None) -> RaceInfo | None:
+        """Build a ``RaceInfo`` from the turn file's ``race`` dict, or ``None``
+        when the turn file carries no race. The race block uses snake-case keys
+        (no aliases in the schema's race object)."""
+        if not r:
+            return None
+        return cls(
+            prt=r.get("prt", "") or "",
+            lrts=list(r.get("lrts", []) or []),
+            name=r.get("name", "") or "",
+            plural_name=r.get("plural_name", "") or "",
+        )
+
+
+@dataclass
 class ScoreData:
     """The viewing player's F10 score breakdown from the turn file (see
     docs/mechanics/victory.rst).

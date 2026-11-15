@@ -30,6 +30,7 @@ from ..data.defaults import (
     MessageData,
     PlanetData,
     ScoreData,
+    ShipDesignData,
     build_new_game_request,
 )
 from ..data.loader import Language_Map
@@ -221,6 +222,7 @@ class IntroUI(QDialog):
         # Positions come from the turn file; the xy file is saved as-is for the engine to serve.
         planets = [PlanetData.from_turn_planet(p) for p in turn["planets"]]
         fleets = [FleetData.from_turn_fleet(f) for f in turn.get("fleets", [])]
+        ship_designs = [ShipDesignData.from_turn_design(d) for d in turn.get("ship-designs", [])]
         messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
         score = ScoreData.from_turn_score(turn.get("score"))
 
@@ -239,6 +241,7 @@ class IntroUI(QDialog):
             score=score,
             race=turn.get("race"),
             fleets=fleets,
+            ship_designs=ship_designs,
         )
         self._main_window.show()
         self.hide()
@@ -280,6 +283,7 @@ class IntroUI(QDialog):
 
         planets = [PlanetData.from_turn_planet(p) for p in turn.get("planets", [])]
         fleets = [FleetData.from_turn_fleet(f) for f in turn.get("fleets", [])]
+        ship_designs = [ShipDesignData.from_turn_design(d) for d in turn.get("ship-designs", [])]
         messages = [MessageData.from_turn_message(m) for m in turn.get("messages", [])]
         score = ScoreData.from_turn_score(turn.get("score"))
 
@@ -296,6 +300,7 @@ class IntroUI(QDialog):
             score=score,
             race=turn.get("race"),
             fleets=fleets,
+            ship_designs=ship_designs,
         )
         self._main_window.show()
         self.hide()

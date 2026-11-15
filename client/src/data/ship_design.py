@@ -200,3 +200,68 @@ class DesignModel:
     def filled_slot_count(self) -> int:
         """How many slots hold at least one part (drives the editor summary)."""
         return sum(1 for a in self.assignments if a is not None)
+
+
+# ── real-design ↔ wire-order bridge (Qt-free, unit-testable) ──────────────────
+
+
+def components_by_id(items: list[dict]) -> dict[int, dict]:
+    """Index a technology catalog (``GET /model/technologies`` items) by the
+    numeric ``id`` a slot-assignment's ``part-id`` references."""
+    return {item["id"]: item for item in items if "id" in item}
+
+
+def design_model_from_assignments(hull, slot_assignments, parts_by_id, name=""):
+    """Reconstruct an editable ``DesignModel`` for one of the player's stored
+    designs: lay its filled slots over the live ``hull`` layout.
+
+    ``slot_assignments`` are the stored fills (duck-typed ``slot_index``,
+    ``part_id``, ``count`` — e.g. ``SlotAssignmentData``); ``parts_by_id`` maps a
+    part id to its catalog component dict. A fill whose slot index is out of
+    range for this hull, or whose part is absent from the catalog, is skipped
+    rather than raising — the engine remains the authority on legality.
+    """
+    n = len(hull.get("slots", []))
+    assignments: list = [None] * n
+    for sa in slot_assignments:
+        idx = sa.slot_index
+        comp = parts_by_id.get(sa.part_id)
+        if comp is None or not (0 <= idx < n):
+            continue
+        assignments[idx] = {"component": comp, "count": sa.count}
+    return DesignModel(hull=hull, name=name, assignments=assignments)
+
+
+def model_to_wire_slot_assignments(model: DesignModel) -> list[dict]:
+    """The filled slots of a ``DesignModel`` as wire ``slot-assignment`` dicts
+    (``slot-index``/``part-id``/``count``), ready for a ``design.upsert`` order.
+    A component with no catalog ``id`` cannot be addressed and is skipped."""
+    out: list[dict] = []
+    for index, entry in enumerate(model.assignments):
+        if entry is None:
+            continue
+        part_id = entry["component"].get("id")
+        if part_id is None:
+            continue
+        out.append({"slot-index": index, "part-id": part_id, "count": entry["count"]})
+    return out
+
+
+def design_upsert_order(design_slot: int, kind: str, name: str, hull_id: int, model: DesignModel):
+    """Build a ``design.upsert`` order (create or replace a design in a slot).
+    ``kind`` is ``"ship"`` or ``"starbase"``."""
+    return {
+        "kind": "design.upsert",
+        "design_slot": design_slot,
+        "design": {
+            "kind": kind,
+            "name": name,
+            "hull-id": hull_id,
+            "slot-assignments": model_to_wire_slot_assignments(model),
+        },
+    }
+
+
+def design_delete_order(design_slot: int, kind: str):
+    """Build a ``design.delete`` order. ``kind`` is ``"ship"`` or ``"starbase"``."""
+    return {"kind": "design.delete", "design_slot": design_slot, "design_kind": kind}

@@ -33,12 +33,16 @@ What is wired here:
   is validated and the cost/mass preview updates live
   (``src.data.ship_design``).
 
-What is NOT wired yet (blocked on the engine host-side design model):
-persisting an edited design back to the engine, engine-computed combat
-stats (armor/shield totals, rating, cloak/jam), and the player's real
-*Existing Designs* (those remain illustrative placeholders until the turn file
-carries them). The editor therefore operates on an in-memory design; closing
-the editor discards it.
+- **Existing Designs** — the viewing player's real designs from the turn file
+  (``ship-designs``), rendered over the live hull layout, with Create / Copy /
+  Edit / Delete persisted to the engine as ``design.upsert`` / ``design.delete``
+  orders.
+
+What is NOT wired yet: engine-computed combat stats (armor/shield totals,
+rating, cloak/jam) are not served in the turn file, so a design's Existing/Edit
+footer shows cost, mass, and base hull armor but reads those derived combat
+stats as "n/a (engine)". The additive cost/mass preview is computed
+client-side; everything else defers to the engine.
 
 :author: Brandon Arrendondo
 :license: MIT, see LICENSE.txt for more details.
@@ -71,7 +75,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...data.ship_design import DesignModel, slot_accepts
+from ...data.ship_design import (
+    DesignModel,
+    components_by_id,
+    design_delete_order,
+    design_model_from_assignments,
+    design_upsert_order,
+    slot_accepts,
+)
 from ...data.technologies import CATEGORY_LABELS, component_available, group_by_category
 from ._components_common import available_hull_variants, component_icon, hull_icon
 
@@ -83,6 +94,11 @@ _VIEW_EXISTING = "existing"
 _VIEW_AVAILABLE = "available"
 _VIEW_ENEMY = "enemy"
 _VIEW_COMPONENTS = "components"
+
+# Dialog design-kind ("ships"/"starbases") → turn-file / order wire kind.
+_WIRE_KIND = {"ships": "ship", "starbases": "starbase"}
+# Number of design slots per kind (ships 0-15, starbases 0-9).
+_SLOT_LIMIT = {"ships": 16, "starbases": 10}
 
 # ── Slot-type display labels (what the empty-slot tile shows) ─────────────────
 
@@ -281,58 +297,6 @@ def _pixmap_icon(pix):
 
 # ── Placeholder Existing Designs (illustrative until the turn file carries them)
 
-_PLACEHOLDER_SHIP_DESIGNS = [
-    {
-        "name": "Armed Probe",
-        "hull": "Scout",
-        "fleet_count": 1,
-        "slots": [
-            (0, 0, "Engine", 1),
-            (0, 1, "Scanner", 1),
-            (0, 2, "Gen.Elec", 1),
-        ],
-        "cost": {"Ironium": "12kT", "Boranium": "8kT", "Germanium": "7kT", "Resources": "24"},
-        "stats": {
-            "Mass": "23kT",
-            "Max Fuel": "50mg",
-            "Armor": "20dp",
-            "Shields": "(none)",
-            "Rating": "13",
-            "Cloak/Jam": "0%/0%",
-            "Initiative/Moves": "1 / 1",
-            "Scanner Range": "66 / 30",
-        },
-    },
-]
-
-_PLACEHOLDER_STARBASE_DESIGNS = [
-    {
-        "name": "Starbase",
-        "hull": "Space Station",
-        "fleet_count": 1,
-        "slots": [
-            (0, 1, "Weapon", 16),
-            (0, 2, "Weapon", 16),
-            (1, 0, "Weapon", 16),
-            (1, 1, "Orbital or Elect", 1),
-            (1, 2, "Unlimited Space Dock", 1),
-            (1, 3, "Orbital or Elect", 1),
-            (1, 4, "Weapon", 16),
-            (2, 1, "Weapon", 16),
-            (2, 2, "Weapon", 16),
-        ],
-        "cost": {"Ironium": "122kT", "Boranium": "151kT", "Germanium": "236kT", "Resources": "656"},
-        "stats": {
-            "Armor": "500dp",
-            "Shields": "800dp",
-            "Rating": "192",
-            "Cloak/Jam": "0%/0%",
-            "Initiative/Moves": "14 / --",
-        },
-    },
-]
-
-
 # ── Dialog ───────────────────────────────────────────────────────────────────
 
 
@@ -349,23 +313,50 @@ class ShipDesignerDialog(QDialog):
         unavailable state.
     """
 
-    def __init__(self, player=None, engine_url=None, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        player=None,
+        engine_url=None,
+        parent: QWidget | None = None,
+        *,
+        race=None,
+        designs=None,
+        game_id=None,
+        player_id=None,
+        turn_year=None,
+    ) -> None:
         super().__init__(parent)
         self._player = player
-        self._race = getattr(player, "race", None) if player else None
+        # Race identity (prt/lrts) gates buildable hulls/components. Prefer the
+        # explicit race; fall back to player.race for older call sites.
+        self._race = (
+            race if race is not None else (getattr(player, "race", None) if player else None)
+        )
         self._engine_url = engine_url.rstrip("/") if engine_url else None
+
+        # The player's own designs (ShipDesignData), both kinds. Order-submission
+        # context lets Create/Copy/Edit/Delete persist to the engine; without a
+        # full (engine_url, game_id, player_id, turn_year) the actions stay local.
+        self._designs: list = list(designs or [])
+        self._game_id = game_id
+        self._player_id = player_id
+        self._turn_year = turn_year
 
         self._design_kind: str = "ships"  # "ships" | "starbases"
         self._view_mode: str = _VIEW_EXISTING
         self._current_design_index: int = 0
         self._current_hull_index: int = 0
         self._editing: DesignModel | None = None
+        # Slot the editor will save into: an existing design's slot, or None for
+        # a brand-new/copied design (a free slot is chosen at save time).
+        self._editing_slot: int | None = None
         self._pending_component: dict | None = None
         self._ready: bool = False
 
         # Catalogs (populated from the engine; empty if unavailable).
         self._tech_by_cat: dict[str, list[dict]] = {}
         self._tech_cats: list[str] = []
+        self._parts_by_id: dict[int, dict] = {}
         self._ship_hulls: list[dict] = []
         self._starbase_hulls: list[dict] = []
         self._load_catalogs()
@@ -382,6 +373,7 @@ class ShipDesignerDialog(QDialog):
             return
         items = self._get_json("/model/technologies", "technologies")
         self._tech_by_cat, self._tech_cats = group_by_category(items)
+        self._parts_by_id = components_by_id(items)
         self._ship_hulls = self._get_json("/model/ships/hulls", "hulls")
         self._starbase_hulls = self._get_json("/model/starbase/hulls", "hulls")
 
@@ -644,10 +636,13 @@ class ShipDesignerDialog(QDialog):
         body.addWidget(right, 1)
         outer.addLayout(body, 1)
 
+        save = QPushButton("&Save Design", page)
+        save.clicked.connect(self._save_edit)
         stop = QPushButton("&Stop Editing", page)
         stop.clicked.connect(self._stop_editing)
         stop_row = QHBoxLayout()
         stop_row.addStretch(1)
+        stop_row.addWidget(save)
         stop_row.addWidget(stop)
         outer.addLayout(stop_row)
 
@@ -680,15 +675,94 @@ class ShipDesignerDialog(QDialog):
 
     # ── Data accessors ────────────────────────────────────────────────────────
 
-    def _existing_designs(self) -> list[dict]:
-        if self._design_kind == "ships":
-            return list(_PLACEHOLDER_SHIP_DESIGNS)
-        return list(_PLACEHOLDER_STARBASE_DESIGNS)
+    def _designs_for_kind(self) -> list:
+        """The player's own designs for the current kind, ordered by slot."""
+        wire = _WIRE_KIND[self._design_kind]
+        return sorted((d for d in self._designs if d.kind == wire), key=lambda d: d.slot)
+
+    def _hulls_for_kind(self) -> list[dict]:
+        return self._ship_hulls if self._design_kind == "ships" else self._starbase_hulls
+
+    def _hull_by_id(self, hull_id: int) -> dict | None:
+        return next((h for h in self._hulls_for_kind() if h.get("id") == hull_id), None)
+
+    def _model_for_design(self, design) -> tuple[DesignModel | None, dict | None]:
+        """Reconstruct a design's editable DesignModel over its live hull, or
+        ``(None, None)`` when the hull is not in the catalog (no engine)."""
+        hull = self._hull_by_id(design.hull_id)
+        if hull is None:
+            return None, None
+        model = design_model_from_assignments(
+            hull, design.slot_assignments, self._parts_by_id, design.name
+        )
+        return model, hull
+
+    def _free_slot(self) -> int | None:
+        """Lowest unused design slot for the current kind, or None when full."""
+        used = {d.slot for d in self._designs_for_kind()}
+        for s in range(_SLOT_LIMIT[self._design_kind]):
+            if s not in used:
+                return s
+        return None
+
+    def _can_submit(self) -> bool:
+        return bool(
+            self._engine_url
+            and self._game_id
+            and self._player_id is not None
+            and self._turn_year is not None
+        )
+
+    def _submit_order(self, order: dict) -> bool:
+        """PUT one design order to the engine's orders choke point. Returns True
+        on success; shows a message box on failure."""
+        if not self._can_submit():
+            QMessageBox.information(
+                self,
+                "Not Connected",
+                "Design changes need a running engine game to save to. This "
+                "turn file was opened locally, so the design editor is read-only.",
+            )
+            return False
+        url = (
+            f"{self._engine_url}/games/{self._game_id}"
+            f"/turns/{self._turn_year}/orders/{self._player_id}"
+        )
+        body = {
+            "player_id": self._player_id,
+            "turn_year": self._turn_year,
+            "orders": [order],
+        }
+        try:
+            resp = requests.put(url, json=body, timeout=15)
+            resp.raise_for_status()
+            return True
+        except requests.exceptions.RequestException as exc:
+            log.error("Design order submission failed: %s", exc)
+            detail = ""
+            resp = getattr(exc, "response", None)
+            if resp is not None:
+                try:
+                    detail = resp.json().get("error", "")
+                except ValueError:
+                    detail = resp.text
+            QMessageBox.warning(
+                self, "Save Failed", f"The engine rejected the design change.\n\n{detail or exc}"
+            )
+            return False
+
+    def _select_view(self, view: str) -> None:
+        """Programmatically switch the View radio (and pane) to ``view``."""
+        for btn in self._view_group.buttons():
+            if btn.property("value") == view:
+                btn.setChecked(True)
+                break
+        self._view_mode = view
+        self._refresh_right_pane()
 
     def _available_hulls(self) -> list[dict]:
         """Live hull catalog for the current kind, filtered to buildable hulls."""
-        hulls = self._ship_hulls if self._design_kind == "ships" else self._starbase_hulls
-        return [h for h in hulls if self._hull_available(h)]
+        return [h for h in self._hulls_for_kind() if self._hull_available(h)]
 
     def _hull_available(self, hull: dict) -> bool:
         """Whether the player's race can build ``hull`` (trait gate only).
@@ -747,11 +821,12 @@ class ShipDesignerDialog(QDialog):
         self._name_combo.blockSignals(True)
         self._name_combo.clear()
         if self._view_mode == _VIEW_EXISTING:
-            for d in self._existing_designs():
-                self._name_combo.addItem(d["name"])
-            self._name_combo.setCurrentIndex(
-                min(self._current_design_index, self._name_combo.count() - 1)
-            )
+            for d in self._designs_for_kind():
+                self._name_combo.addItem(d.name)
+            if self._name_combo.count():
+                self._name_combo.setCurrentIndex(
+                    min(self._current_design_index, self._name_combo.count() - 1)
+                )
         elif self._view_mode == _VIEW_AVAILABLE:
             for h in self._available_hulls():
                 self._name_combo.addItem(h.get("name", "?"))
@@ -772,10 +847,14 @@ class ShipDesignerDialog(QDialog):
         self._copy_btn.setEnabled(has_existing or has_hull)
         self._delete_btn.setEnabled(has_existing)
 
+        # Edit is blocked while any ship of the design exists (the slot is
+        # locked until the last one is gone), matching the engine's slot-lock.
         edit_enabled = False
         if has_existing:
-            d = self._existing_designs()[self._name_combo.currentIndex()]
-            edit_enabled = d.get("fleet_count", 0) == 0
+            designs = self._designs_for_kind()
+            idx = self._name_combo.currentIndex()
+            if 0 <= idx < len(designs):
+                edit_enabled = designs[idx].built_count == 0
         self._edit_btn.setEnabled(edit_enabled)
 
     def _set_hull_thumb(self, slug: str) -> None:
@@ -797,27 +876,60 @@ class ShipDesignerDialog(QDialog):
         )
 
     def _populate_existing_page(self) -> None:
-        self._hull_thumb.setText("(hull)")  # placeholder designs have no real hull slug
+        self._hull_thumb.setText("(hull)")
         page = self._page_existing
         _clear_layout(page._slot_layout)  # type: ignore[attr-defined]
         _clear_layout(page._footer_layout)  # type: ignore[attr-defined]
-        items = self._existing_designs()
+        designs = self._designs_for_kind()
         idx = self._name_combo.currentIndex()
-        if idx < 0 or idx >= len(items):
+        if idx < 0 or idx >= len(designs):
             page._badge.setText("")  # type: ignore[attr-defined]
+            if not self._has_catalog:
+                page._footer_layout.addWidget(  # type: ignore[attr-defined]
+                    self._catalog_unavailable_label(), 0, 0
+                )
             return
-        entry = items[idx]
-        page._badge.setText(  # type: ignore[attr-defined]
-            f"{entry['fleet_count']} of {entry['fleet_count']}"
-        )
-        for row, col, label, max_count in entry["slots"]:
-            tile = _SlotTile(-1, label, count_text=f"{max_count} of {max_count}", filled=True)
-            page._slot_layout.addWidget(tile, row, col)  # type: ignore[attr-defined]
+        design = designs[idx]
+        page._badge.setText(f"Built: {design.built_count}")  # type: ignore[attr-defined]
+
+        model, hull = self._model_for_design(design)
+        if model is None or hull is None:
+            # Hull catalog unavailable (offline): name the design but cannot
+            # render its slots over a hull layout.
+            page._footer_layout.addWidget(  # type: ignore[attr-defined]
+                self._catalog_unavailable_label(), 0, 0
+            )
+            return
+
+        self._set_hull_thumb(hull.get("slug", ""))
+        for i, slot in enumerate(model.slots):
+            pos = slot.get("position", {})
+            assignment = model.assignments[i]
+            if assignment is not None:
+                title = assignment["component"].get("name", "?")
+                count_text = f"{assignment['count']} of {model.slot_max(i)}"
+                filled = True
+            else:
+                title = _slot_label(slot.get("slot-type", ""))
+                mx = model.slot_max(i)
+                count_text = f"up to {mx}" if mx > 1 else ""
+                filled = False
+            tile = _SlotTile(-1, title, count_text=count_text, filled=filled)
+            page._slot_layout.addWidget(  # type: ignore[attr-defined]
+                tile, int(pos.get("row", 0)), int(pos.get("col", i))
+            )
+
+        cost = _wire_cost_to_display(model.total_cost())
+        stats = {
+            "Mass": f"{model.total_mass()}kT",
+            "Armor": f"{hull.get('armor', 0)}dp",
+            "Rating": "n/a (engine)",
+        }
         self._fill_cost_stats(
             page._footer_layout,  # type: ignore[attr-defined]
-            f"Cost of one {entry['name']}",
-            entry["cost"],
-            entry["stats"],
+            f"Cost of one {design.name}",
+            cost,
+            stats,
         )
 
     def _populate_available_page(self) -> None:
@@ -884,8 +996,12 @@ class ShipDesignerDialog(QDialog):
 
     # ── Editor ──────────────────────────────────────────────────────────────
 
-    def _start_editing(self, hull: dict, name: str) -> None:
-        self._editing = DesignModel(hull=hull, name=name)
+    def _start_editing(self, model: DesignModel, slot: int | None) -> None:
+        """Open the slot editor on ``model``. ``slot`` is the existing design
+        slot being edited, or ``None`` for a new/copied design (a free slot is
+        picked when it is saved)."""
+        self._editing = model
+        self._editing_slot = slot
         self._pending_component = None
         if self._edit_palette is not None:
             self._pending_component = self._edit_palette.current_component()
@@ -896,9 +1012,73 @@ class ShipDesignerDialog(QDialog):
 
     def _stop_editing(self) -> None:
         self._editing = None
+        self._editing_slot = None
         self._pending_component = None
         self._set_rail_enabled(True)
         self._refresh_right_pane()
+
+    def _save_edit(self) -> None:
+        """Persist the in-progress design via a ``design.upsert`` order, then
+        return to the Existing Designs view showing it."""
+        model = self._editing
+        if model is None:
+            return
+        slot = self._editing_slot
+        if slot is None:
+            slot = self._free_slot()
+            if slot is None:
+                QMessageBox.information(
+                    self,
+                    "No Free Slot",
+                    f"All {_SLOT_LIMIT[self._design_kind]} {self._design_kind} design slots "
+                    "are in use. Delete a design to free a slot.",
+                )
+                return
+        hull_id = model.hull.get("id")
+        if hull_id is None:
+            return
+        name = model.name or model.hull.get("name", "Design")
+        wire_kind = _WIRE_KIND[self._design_kind]
+        order = design_upsert_order(slot, wire_kind, name, hull_id, model)
+        if not self._submit_order(order):
+            return
+        self._apply_local_upsert(slot, wire_kind, name, hull_id, model)
+        self._editing = None
+        self._editing_slot = None
+        self._pending_component = None
+        self._set_rail_enabled(True)
+        self._current_design_index = next(
+            (i for i, d in enumerate(self._designs_for_kind()) if d.slot == slot), 0
+        )
+        self._select_view(_VIEW_EXISTING)
+
+    def _apply_local_upsert(self, slot, wire_kind, name, hull_id, model: DesignModel) -> None:
+        """Mirror a saved design into the in-memory list so the Existing view
+        reflects it without a turn refetch. built_count stays as-is (an edit) or
+        0 (a new design); the engine recomputes it next turn."""
+        from ...data.defaults import ShipDesignData, SlotAssignmentData
+
+        assignments = [
+            SlotAssignmentData(slot_index=i, part_id=e["component"]["id"], count=e["count"])
+            for i, e in enumerate(model.assignments)
+            if e is not None and e["component"].get("id") is not None
+        ]
+        existing = next((d for d in self._designs if d.kind == wire_kind and d.slot == slot), None)
+        if existing is not None:
+            existing.name = name
+            existing.hull_id = hull_id
+            existing.slot_assignments = assignments
+        else:
+            self._designs.append(
+                ShipDesignData(
+                    slot=slot,
+                    kind=wire_kind,
+                    name=name,
+                    hull_id=hull_id,
+                    slot_assignments=assignments,
+                    built_count=0,
+                )
+            )
 
     def _set_rail_enabled(self, enabled: bool) -> None:
         self._view_box.setEnabled(enabled)
@@ -940,10 +1120,11 @@ class ShipDesignerDialog(QDialog):
             return
 
         name = design.name or design.hull.get("name", "Design")
+        slot_note = "new design" if self._editing_slot is None else f"slot {self._editing_slot}"
         page._banner.setText(  # type: ignore[attr-defined]
-            f"Editing “{name}” on the {design.hull.get('name', '?')} hull. "
-            "Changes are previewed here but not yet saved — persisting designs "
-            "and engine-computed combat stats arrive with the host design model."
+            f"Editing “{name}” on the {design.hull.get('name', '?')} hull ({slot_note}). "
+            "Click Save Design to persist it; engine-computed combat stats are not "
+            "shown here (the turn file does not carry them)."
         )
 
         if self._pending_component is not None:
@@ -1073,49 +1254,88 @@ class ShipDesignerDialog(QDialog):
             idx = self._name_combo.currentIndex()
             if 0 <= idx < len(hulls):
                 hull = hulls[idx]
-                self._start_editing(hull, f"New {hull.get('name', 'Design')}")
+                self._start_editing(
+                    DesignModel(hull=hull, name=f"New {hull.get('name', 'Design')}"), slot=None
+                )
             return
-        # Copying an existing (placeholder) design needs the host design model.
-        QMessageBox.information(
-            self,
-            "Copy Design",
-            "Copying an existing design will be available once the engine serves "
-            "your designs (host design model). For now, choose Available Hull "
-            "Types and Create New Design to try the slot editor.",
-        )
+        # Copy the selected existing design into a fresh editor (a free slot is
+        # assigned at save). built_count does not matter — the copy is new.
+        designs = self._designs_for_kind()
+        idx = self._name_combo.currentIndex()
+        if not (0 <= idx < len(designs)):
+            return
+        design = designs[idx]
+        model, _hull = self._model_for_design(design)
+        if model is None:
+            QMessageBox.information(
+                self,
+                "Copy Design",
+                "Copying needs the hull catalog from a running engine.",
+            )
+            return
+        if self._free_slot() is None:
+            QMessageBox.information(
+                self,
+                "No Free Slot",
+                f"All {_SLOT_LIMIT[self._design_kind]} {self._design_kind} design slots are "
+                "in use. Delete a design before copying.",
+            )
+            return
+        model.name = f"Copy of {design.name}"
+        self._start_editing(model, slot=None)
 
     def _on_delete_design(self) -> None:
-        designs = self._existing_designs()
+        designs = self._designs_for_kind()
         idx = self._name_combo.currentIndex()
         if idx < 0 or idx >= len(designs):
             return
-        entry = designs[idx]
-        n = entry.get("fleet_count", 0)
+        design = designs[idx]
+        n = design.built_count
         if n > 0:
             answer = QMessageBox.question(
                 self,
                 "Delete Design",
-                f"You currently have {n} {entry['name']}. If you delete this "
+                f"You currently have {n} {design.name}. If you delete this "
                 f"design, these ships will be destroyed. Are you sure?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
-        QMessageBox.information(
-            self,
-            "Delete Design",
-            "Design deletion is not yet wired to the engine (host design model).",
-        )
+        order = design_delete_order(design.slot, _WIRE_KIND[self._design_kind])
+        if not self._submit_order(order):
+            return
+        self._designs = [
+            d
+            for d in self._designs
+            if not (d.kind == _WIRE_KIND[self._design_kind] and d.slot == design.slot)
+        ]
+        self._current_design_index = 0
+        self._refresh_right_pane()
 
     def _on_edit_design(self) -> None:
-        QMessageBox.information(
-            self,
-            "Edit Design",
-            "Editing an existing design will be available once the engine serves "
-            "your designs (host design model). For now, choose Available Hull "
-            "Types and Create New Design to try the slot editor.",
-        )
+        designs = self._designs_for_kind()
+        idx = self._name_combo.currentIndex()
+        if not (0 <= idx < len(designs)):
+            return
+        design = designs[idx]
+        if design.built_count > 0:
+            QMessageBox.information(
+                self,
+                "Edit Design",
+                f"“{design.name}” cannot be edited while {design.built_count} of its "
+                "ships exist — the slot is locked until the last one is gone.",
+            )
+            return
+        model, _hull = self._model_for_design(design)
+        if model is None:
+            QMessageBox.information(
+                self,
+                "Edit Design",
+                "Editing needs the hull catalog from a running engine.",
+            )
+            return
+        self._start_editing(model, slot=design.slot)
 
     def _on_help(self) -> None:
         QMessageBox.information(

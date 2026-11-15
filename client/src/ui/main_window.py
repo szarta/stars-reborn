@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..data.defaults import planets_with_idle_fleets
+from ..data.defaults import RaceInfo, planets_with_idle_fleets
 from ..rendering.enumerations import NeverSeenPlanet, PlanetView, ResourcePaths, ZoomLevel
 from .info_panel import LeftPanel, build_buildables_map
 from .planet_summary import PlanetSummaryWidget
@@ -109,6 +109,7 @@ class MainWindow(QMainWindow):
         score=None,
         race=None,
         fleets=(),
+        ship_designs=(),
     ):
         super().__init__()
         self._planets = list(planets)
@@ -116,6 +117,9 @@ class MainWindow(QMainWindow):
         # overlay and the Idle Fleets filter. Empty until the engine serializes
         # fleets into the turn file (then populated by the loader in intro.py).
         self._fleets = list(fleets)
+        # The viewing player's own ship/starbase designs (ShipDesignData), shown
+        # and edited by the F4 Ship Designer.
+        self._ship_designs = list(ship_designs)
         # The viewing player's race (raw turn-file dict), shown by the F8 Race
         # view, or None when the turn file carries no race.
         self._race = race
@@ -932,7 +936,16 @@ class MainWindow(QMainWindow):
         try:
             from .dialogs.ship_designer import ShipDesignerDialog
 
-            dlg = ShipDesignerDialog(self._player, self._engine_url, self)
+            dlg = ShipDesignerDialog(
+                self._player,
+                self._engine_url,
+                self,
+                race=RaceInfo.from_turn_race(self._race),
+                designs=self._ship_designs,
+                game_id=self._game_id,
+                player_id=self._player_id,
+                turn_year=self._game_year,
+            )
             dlg.exec()
             return
         except ImportError:
