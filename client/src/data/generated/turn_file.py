@@ -441,7 +441,7 @@ class TurnMessage(BaseModel):
 
 class TurnScore(BaseModel):
     """
-    The viewing player's F10 score breakdown for this year (see docs/mechanics/victory.rst). Own score only; opponents' scores and ranks are gated on the public-player-scores game flag, which is not modelled yet. Each category carries its raw count and the points it contributes; `total` is their sum. The ship categories read 0 until ship combat-power classification lands (the fleet model exists, but a ship's power rating is a combat-model concern).
+    An F10 score breakdown (see docs/mechanics/victory.rst): the viewing player's own score in `score`, or an opponent's in an `opponent-score`. Each category carries its raw count and the points it contributes; `total` is their sum. The viewing player's rank, the player count, and — when the game's public-player-scores option is on — opponents' breakdowns ride alongside in the turn file. The ship categories read 0 until ship combat-power classification lands (the fleet model exists, but a ship's power rating is a combat-model concern).
     """
 
     model_config = ConfigDict(
@@ -486,6 +486,24 @@ class TurnScore(BaseModel):
         ..., alias="resource-amount", description="Annual resources the player's planets generate."
     )
     resource_points: conint(le=4294967295) = Field(..., alias="resource-points")
+
+
+class OpponentScore(BaseModel):
+    """
+    One other player's F10 score and rank, exposed only when the game's public-player-scores option is on. When the option is off this never appears (opponent-scores is empty), so an opponent's score cannot leak.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    player_id: conint(ge=0, le=65535) = Field(
+        ..., alias="player-id", description="The opponent's player id."
+    )
+    rank: conint(ge=1, le=65535) = Field(
+        ...,
+        description="The opponent's 1-based rank by total F10 score (1 = highest); ties share the higher rank.",
+    )
+    score: TurnScore
 
 
 class ResearchCosts(BaseModel):
@@ -725,6 +743,25 @@ class PlayerView(BaseModel):
         description="This player's messages for this turn, in display order. Per-turn: regenerated every year, never accumulated. Carries only messages the engine can produce from the state it models today (e.g. an empty production queue); event messages (combat, bombing, colonisation, growth, mining, research, minefields, packets, random events) are added as turn resolution and each mechanic land.",
     )
     score: TurnScore
+    rank: conint(ge=1, le=65535) = Field(
+        ...,
+        description="The viewing player's 1-based rank among all players by total F10 score (1 = highest). Always present — a player's own rank is not a leak. Ties share the higher rank.",
+    )
+    player_count: conint(ge=1, le=65535) = Field(
+        ...,
+        alias="player-count",
+        description="Total number of players in the game — the denominator for rank.",
+    )
+    public_player_scores: bool = Field(
+        ...,
+        alias="public-player-scores",
+        description="Whether the game's 'Public Player Scores' option is on. When true, opponent-scores carries every other player's breakdown; when false it is empty and no opponent score is exposed.",
+    )
+    opponent_scores: list[OpponentScore] = Field(
+        ...,
+        alias="opponent-scores",
+        description="Other players' F10 score breakdowns with their ranks, sorted by rank then player id. Populated only when public-player-scores is true; empty otherwise, so an opponent's score never leaks when the option is off.",
+    )
     race: Race | None = Field(
         None,
         description="The viewing player's own race (PRT, LRTs, hab preferences, economy, research costs). Always the player's own race, never another player's. Absent only when the player has no race (e.g. a phantom/unknown player id).",

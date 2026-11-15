@@ -65,6 +65,11 @@
           "additionalProperties": {
             "$ref": "#/definitions/fleet"
           }
+        },
+        "public_player_scores": {
+          "type": "boolean",
+          "default": false,
+          "description": "The game's 'Public Player Scores' option (set at game creation). When true, each player's turn file includes every other player's F10 score breakdown and rank; when false, only the player's own score and rank are exposed. player_view() gates opponent scores on this flag. Absent on pre-existing saves predating the option; treated as false."
         }
       }
     },

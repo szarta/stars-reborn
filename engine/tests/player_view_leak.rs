@@ -81,6 +81,7 @@ fn two_player_game() -> GameState {
         year: 2400,
         player_messages: Default::default(),
         fleets,
+        public_player_scores: false,
     }
 }
 
@@ -389,4 +390,98 @@ fn unknown_player_id_yields_empty_homeworld() {
             "phantom caller must see only Unobserved planets"
         );
     }
+}
+
+// ── F10 scoreboard (rank + opponent gating) ─────────────────────────────────
+
+#[test]
+fn scoreboard_reports_rank_and_player_count() {
+    let game = two_player_game();
+    let view = player_view(&game, PLAYER_0);
+    // Two symmetric homeworlds → both score the same → both rank 1 (ties share
+    // the higher rank). Player count is the roster size.
+    assert_eq!(view.player_count.get(), 2);
+    assert_eq!(view.rank.get(), 1);
+}
+
+#[test]
+fn opponent_scores_hidden_when_flag_off() {
+    // Default fixture has public_player_scores = false: a player's turn file
+    // carries its own score and rank but NO opponent breakdown.
+    let game = two_player_game();
+    let view = player_view(&game, PLAYER_0);
+    assert!(!view.public_player_scores);
+    assert!(
+        view.opponent_scores.is_empty(),
+        "opponent scores must not be exposed when the option is off"
+    );
+
+    // And nothing opponent-scoped leaks on the wire either.
+    let json = serde_json::to_value(&view).expect("serialise");
+    assert_eq!(json["public-player-scores"], serde_json::json!(false));
+    assert!(
+        json["opponent-scores"].as_array().unwrap().is_empty(),
+        "opponent-scores array must be empty on the wire when the option is off"
+    );
+}
+
+#[test]
+fn opponent_scores_shown_when_flag_on() {
+    let mut game = two_player_game();
+    game.public_player_scores = true;
+    let view = player_view(&game, PLAYER_0);
+
+    assert!(view.public_player_scores);
+    assert_eq!(
+        view.opponent_scores.len(),
+        1,
+        "with the option on, player 0 sees player 1's breakdown"
+    );
+    let opp = &view.opponent_scores[0];
+    assert_eq!(opp.player_id, PLAYER_1);
+    // Symmetric homeworlds → the opponent's own breakdown matches ours.
+    assert_eq!(opp.score.total, view.score.total);
+    assert_eq!(opp.rank.get(), 1);
+    // The viewing player never appears in its own opponent list.
+    assert!(view.opponent_scores.iter().all(|o| o.player_id != PLAYER_0));
+}
+
+#[test]
+fn rank_orders_by_total_score() {
+    // Give player 0 a strictly higher score by adding population/resources: a
+    // second owned, populated planet. Player 0 should then rank 1, player 1 rank 2.
+    let mut game = two_player_game();
+    game.public_player_scores = true;
+
+    // Grant player 0 a second owned homeworld-grade planet (more planet + resource
+    // points) by taking an unowned planet and colonising it for player 0.
+    let extra = *game
+        .universe
+        .planets
+        .keys()
+        .find(|id| {
+            game.planet_states
+                .get(id)
+                .map(|s| s.owner)
+                .unwrap_or(None)
+                .is_none()
+        })
+        .expect("an unowned planet exists");
+    {
+        let s = game.planet_states.get_mut(&extra).unwrap();
+        s.owner = Some(PLAYER_0);
+        s.population = 25_000;
+        s.factories = 10;
+        s.mines = 10;
+        s.set_homeworld_hab(&humanoid());
+    }
+
+    let view0 = player_view(&game, PLAYER_0);
+    let view1 = player_view(&game, PLAYER_1);
+    assert!(
+        view0.score.total > view1.score.total,
+        "player 0 now outscores player 1"
+    );
+    assert_eq!(view0.rank.get(), 1, "higher score ranks first");
+    assert_eq!(view1.rank.get(), 2, "lower score ranks second");
 }

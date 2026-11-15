@@ -588,6 +588,11 @@ struct GameParams {
     human_players: Vec<HumanPlayerRequest>,
     ai_players: Option<Vec<AiPlayerRequest>>,
     universe: UniverseParams,
+    // The 'Public Player Scores' option. Other game-setup flags are not modelled
+    // yet (see the game-settings persistence follow-up); this one gates the F10
+    // scoreboard, so it is plumbed into GameState. Absent in a request = off.
+    #[serde(default)]
+    public_player_scores: bool,
 }
 
 #[derive(Deserialize)]
@@ -735,6 +740,7 @@ fn build_tutorial_game() -> GameState {
         year: scenario.year,
         player_messages: Default::default(),
         fleets: Default::default(),
+        public_player_scores: false,
     }
 }
 
@@ -886,6 +892,7 @@ async fn create_game(
         year: 2400,
         player_messages: Default::default(),
         fleets: Default::default(),
+        public_player_scores: gp.public_player_scores,
     };
 
     if let Err(e) = crate::store::save_game(&game) {

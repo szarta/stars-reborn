@@ -149,6 +149,7 @@ fn sample_game_state() -> GameState {
         year: 2400,
         player_messages: Default::default(),
         fleets,
+        public_player_scores: false,
     }
 }
 

@@ -147,6 +147,10 @@ TURN_FILE = {
         "resource-amount": 125,
         "resource-points": 4,
     },
+    "rank": 1,
+    "player-count": 2,
+    "public-player-scores": False,
+    "opponent-scores": [],
     "race": {
         "format_version": 1,
         "name": "Humanoid",

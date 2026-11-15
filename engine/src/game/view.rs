@@ -38,9 +38,9 @@ use crate::game::state::GameState;
 use crate::game::objects::fleet::{Fleet, FleetWaypointTask};
 pub use crate::game::objects::generated::turn_file::{
     BuildItem, Fleet as WireFleet, FleetCargo as WireFleetCargo,
-    FleetWaypoint as WireFleetWaypoint, FleetWaypointTask as WireFleetWaypointTask, PlanetIntel,
-    PlanetObserved, PlanetUnobserved, PlayerView, ScannedFleet, ShipStack as WireShipStack,
-    StarbaseStatus, TurnMessage, TurnScore,
+    FleetWaypoint as WireFleetWaypoint, FleetWaypointTask as WireFleetWaypointTask, OpponentScore,
+    PlanetIntel, PlanetObserved, PlanetUnobserved, PlayerView, ScannedFleet,
+    ShipStack as WireShipStack, StarbaseStatus, TurnMessage, TurnScore,
 };
 use crate::game::objects::generated::turn_file::{
     ShipDesign as WireShipDesign, ShipDesignKind as WireShipDesignKind,
@@ -53,6 +53,8 @@ use crate::game::objects::technology_catalog::{technology_catalog, PlanetaryKind
 use crate::game::orders::design_built_count;
 
 use crate::game::score;
+
+use std::num::NonZeroU32;
 
 /// Project a `PlayerView` for `player_id` from the host-side `GameState`.
 ///
@@ -74,6 +76,8 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
             Some(intel_for(static_, pstate, player_id, player, race))
         })
         .collect();
+
+    let standing = standings(state, player_id);
 
     PlayerView {
         year: state.year,
@@ -133,9 +137,81 @@ pub fn player_view(state: &GameState, player_id: u32) -> PlayerView {
         // docs/mechanics/scanning.rst 'Enemy Design Intel'.
         scanned_designs: vec![],
         messages: turn_messages(state, player_id),
-        score: compute_score(state, player_id),
+        // F10 scoreboard: the viewing player's own breakdown and rank are always
+        // present (own score is not a leak); opponents' breakdowns ride along
+        // only when the game's public-player-scores option is on. See `standings`.
+        score: standing.own,
+        rank: standing.rank,
+        player_count: standing.player_count,
+        public_player_scores: state.public_player_scores,
+        opponent_scores: standing.opponents,
         // The viewing player's own race (None for a phantom/unknown player id).
         race: race.cloned(),
+    }
+}
+
+/// The F10 scoreboard projection for one player: own breakdown, own rank, the
+/// player count, and (only when public scores are on) opponents' breakdowns.
+struct Standings {
+    own: TurnScore,
+    rank: NonZeroU32,
+    player_count: NonZeroU32,
+    opponents: Vec<OpponentScore>,
+}
+
+/// Build the scoreboard standings for `player_id`.
+///
+/// Rank is 1-based by total score (1 = highest); ties share the higher rank, so
+/// two players tied for the top are both rank 1 and the next is rank 3. A
+/// phantom player (absent from the roster) scores 0 and ranks behind every
+/// scoring player. Opponents' breakdowns are emitted ONLY when the game's
+/// public-player-scores option is on — otherwise the list is empty, which is
+/// the gate that keeps an opponent's score from leaking (asserted in
+/// tests/player_view_leak.rs).
+fn standings(state: &GameState, player_id: u32) -> Standings {
+    let all: Vec<(u32, TurnScore)> = state
+        .players
+        .iter()
+        .map(|p| (p.id, compute_score(state, p.id)))
+        .collect();
+
+    let rank_of = |total: u32| -> NonZeroU32 {
+        let ahead = all.iter().filter(|(_, s)| s.total > total).count();
+        NonZeroU32::new(ahead as u32 + 1).expect("rank is always >= 1")
+    };
+
+    // Own score: reuse the roster entry when present, else compute it directly
+    // (a phantom/unknown player id yields an all-zero score).
+    let own = all
+        .iter()
+        .find(|(id, _)| *id == player_id)
+        .map(|(_, s)| s.clone())
+        .unwrap_or_else(|| compute_score(state, player_id));
+    let rank = rank_of(own.total);
+    let player_count = NonZeroU32::new(state.players.len().max(1) as u32)
+        .expect("player count floored at 1 is >= 1");
+
+    let opponents = if state.public_player_scores {
+        let mut v: Vec<OpponentScore> = all
+            .iter()
+            .filter(|(id, _)| *id != player_id)
+            .map(|(id, s)| OpponentScore {
+                player_id: *id,
+                rank: rank_of(s.total),
+                score: s.clone(),
+            })
+            .collect();
+        v.sort_by_key(|o| (o.rank.get(), o.player_id));
+        v
+    } else {
+        Vec::new()
+    };
+
+    Standings {
+        own,
+        rank,
+        player_count,
+        opponents,
     }
 }
 
