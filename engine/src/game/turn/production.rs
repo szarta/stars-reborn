@@ -38,7 +38,9 @@ use crate::game::objects::ship_cost::design_cost;
 use crate::game::objects::ship_hull_catalog::ship_hull_catalog;
 use crate::game::objects::starbase_hull_catalog::starbase_hull_catalog;
 use crate::game::objects::technology::{ShipHull, StarbaseHull};
-use crate::game::objects::technology_catalog::{technology_catalog, TechItem};
+use crate::game::objects::technology_catalog::{
+    technology_catalog, PlanetaryKind, Props, TechItem,
+};
 use crate::game::state::GameState;
 
 /// Travel warp a built ship uses for its Route-To waypoint. A placeholder until
@@ -51,7 +53,12 @@ const ROUTE_WARP: u32 = 7;
 enum Installation {
     Factory,
     Mine,
+    Defenses,
 }
+
+/// Planetary defenses are hard-capped at 100 per planet (planetary_tech.rst);
+/// factories and mines have no such structural cap (only an operating one).
+const MAX_DEFENSES: u32 = 100;
 
 /// Per-unit cost of a buildable, in every dimension production spends.
 /// Installations (factory/mine) use only resources + germanium; ship designs
@@ -87,8 +94,14 @@ fn spend_minerals(cost: &UnitCost, built: u32, planet: &mut PlanetState) {
 
 /// Classify a queue item for this slice: which installation it builds, whether
 /// it is an auto (capacity-bounded, repeating) item, and its per-unit cost.
-/// Returns `None` for any id this slice does not yet build (caller stops).
-fn classify(id: u32, race: &Race) -> Option<(Installation, bool, UnitCost)> {
+/// `defense_cost` is the catalog cost of one defense (shared across all defense
+/// types); `None` leaves defenses unbuildable. Returns `None` for any id this
+/// slice does not yet build (caller stops).
+fn classify(
+    id: u32,
+    race: &Race,
+    defense_cost: Option<UnitCost>,
+) -> Option<(Installation, bool, UnitCost)> {
     let b = fixed_by_id(id)?;
     let is_auto = b.category == Category::Auto;
     let eco = &race.economy;
@@ -114,20 +127,63 @@ fn classify(id: u32, race: &Race) -> Option<(Installation, bool, UnitCost)> {
                 resources: eco.mine_cost,
             },
         )),
-        // defenses / alchemy / terraform / ship designs: not built in this slice.
+        "defenses" | "auto_defenses" => {
+            let mut cost = defense_cost?;
+            // Inner Strength: planetary defenses cost 40% less (STARS help).
+            if race.prt == Prt::Is {
+                cost = scale_cost(cost, 60);
+            }
+            Some((Installation::Defenses, is_auto, cost))
+        }
+        // alchemy / terraform / ship designs: not built in this slice.
         _ => None,
     }
 }
 
-/// Colonist-operated capacity for an installation: ``(pop / 10_000) × colonists_operate_*``.
-/// Installations beyond this sit idle (factories) / cannot mine (mines); auto
-/// items stop building at it.
+/// `cost` scaled to `percent`% in every dimension (integer, floored). Backs the
+/// flat trait cost modifiers (e.g. Inner Strength defenses at 60%).
+fn scale_cost(cost: UnitCost, percent: u32) -> UnitCost {
+    let s = |n: u32| n * percent / 100;
+    UnitCost {
+        ironium: s(cost.ironium),
+        boranium: s(cost.boranium),
+        germanium: s(cost.germanium),
+        resources: s(cost.resources),
+    }
+}
+
+/// The catalog build cost of one planetary defense (all defense types share one
+/// cost, per planetary_tech.rst), or `None` if the catalog has no defense item.
+fn defense_unit_cost(parts: &[TechItem]) -> Option<UnitCost> {
+    parts.iter().find_map(|t| match &t.props {
+        Props::Planetary(PlanetaryKind::Defense { .. }) => Some(UnitCost {
+            ironium: t.cost.ironium,
+            boranium: t.cost.boranium,
+            germanium: t.cost.germanium,
+            resources: t.cost.resources,
+        }),
+        _ => None,
+    })
+}
+
+/// How many of an installation an auto item builds toward. Factories/mines stop
+/// at the colonist-operated capacity ``(pop / 10_000) × colonists_operate_*``;
+/// defenses have no operating capacity — they build to the hard cap of 100.
 fn capacity(install: Installation, population: u32, race: &Race) -> u32 {
-    let per_10k = match install {
-        Installation::Factory => race.economy.colonists_operate_factories,
-        Installation::Mine => race.economy.colonists_operate_mines,
-    };
-    (population / 10_000) * per_10k
+    match install {
+        Installation::Factory => (population / 10_000) * race.economy.colonists_operate_factories,
+        Installation::Mine => (population / 10_000) * race.economy.colonists_operate_mines,
+        Installation::Defenses => MAX_DEFENSES,
+    }
+}
+
+/// Structural maximum of an installation on a planet, if any. Defenses cap at
+/// 100; factories/mines have no cap (unoperated ones simply sit idle).
+fn hard_cap(install: Installation) -> Option<u32> {
+    match install {
+        Installation::Defenses => Some(MAX_DEFENSES),
+        Installation::Factory | Installation::Mine => None,
+    }
 }
 
 /// Current count of an installation on the planet.
@@ -135,6 +191,7 @@ fn current(install: Installation, planet: &PlanetState) -> u32 {
     match install {
         Installation::Factory => planet.factories,
         Installation::Mine => planet.mines,
+        Installation::Defenses => planet.defenses,
     }
 }
 
@@ -143,6 +200,7 @@ fn add(install: Installation, planet: &mut PlanetState, n: u32) {
     match install {
         Installation::Factory => planet.factories += n,
         Installation::Mine => planet.mines += n,
+        Installation::Defenses => planet.defenses += n,
     }
 }
 
@@ -180,6 +238,7 @@ fn produce_planet(
     ship_hulls: &[ShipHull],
     starbase_hulls: &[StarbaseHull],
     parts: &[TechItem],
+    defense_cost: Option<UnitCost>,
     builds: &mut Vec<ShipBuild>,
 ) {
     if race.prt == Prt::Ar || planet.population == 0 {
@@ -255,7 +314,7 @@ fn produce_planet(
             return;
         }
 
-        let Some((install, is_auto, cost)) = classify(id, race) else {
+        let Some((install, is_auto, cost)) = classify(id, race, defense_cost) else {
             break; // unhandled item type blocks the queue (see module scope note)
         };
         if cost.resources == 0 {
@@ -263,11 +322,16 @@ fn produce_planet(
         }
 
         // How many units this item still wants: an auto item builds up to the
-        // remaining colonist capacity; an explicit item builds its quantity.
+        // remaining colonist capacity; an explicit item builds its quantity,
+        // clamped to any structural cap (defenses stop at 100 per planet).
         let want = if is_auto {
             capacity(install, planet.population, race).saturating_sub(current(install, planet))
         } else {
-            planet.build_queue[i].build_quantity
+            let requested = planet.build_queue[i].build_quantity;
+            match hard_cap(install) {
+                Some(cap) => requested.min(cap.saturating_sub(current(install, planet))),
+                None => requested,
+            }
         };
         if want == 0 {
             if is_auto {
@@ -338,6 +402,7 @@ pub fn run_production(game: &mut GameState) {
     let ship_hulls = ship_hull_catalog();
     let starbase_hulls = starbase_hull_catalog();
     let parts = technology_catalog();
+    let defense_cost = defense_unit_cost(&parts);
 
     let empty: Vec<ShipDesign> = Vec::new();
     let mut builds: Vec<ShipBuild> = Vec::new();
@@ -355,6 +420,7 @@ pub fn run_production(game: &mut GameState) {
             &ship_hulls,
             &starbase_hulls,
             &parts,
+            defense_cost,
             &mut builds,
         );
     }
@@ -805,5 +871,99 @@ mod tests {
         run_production(&mut game);
         assert!(game.fleets.is_empty());
         assert_eq!(game.planet_states[&hw].build_queue.len(), 1, "blocked");
+    }
+
+    // ── defenses (id 9 explicit, 22 auto; cost 5/5/5/15; cap 100) ────────────
+
+    const DEFENSES: u32 = 9;
+    const AUTO_DEFENSES: u32 = 22;
+
+    /// Give the homeworld ample surface minerals so defense builds are bounded
+    /// by resources, not minerals.
+    fn stock_minerals(game: &mut GameState, hw: u32) {
+        let s = game.planet_states.get_mut(&hw).unwrap();
+        s.surface_ironium = 100_000;
+        s.surface_boranium = 100_000;
+        s.surface_germanium = 100_000;
+    }
+
+    #[test]
+    fn explicit_defenses_build_what_resources_allow_and_bank_the_rest() {
+        // 125 resources / 15 per defense = 8 defenses; minerals ample.
+        let (mut game, hw) = homeworld_game(vec![item(DEFENSES, 16)]);
+        stock_minerals(&mut game, hw);
+        run_production(&mut game);
+        let p = &game.planet_states[&hw];
+        assert_eq!(p.defenses, 8, "8 defenses built from 125 resources");
+        assert_eq!(p.surface_ironium, 100_000 - 8 * 5);
+        assert_eq!(p.surface_boranium, 100_000 - 8 * 5);
+        assert_eq!(p.surface_germanium, 100_000 - 8 * 5);
+        assert_eq!(p.build_queue[0].build_quantity, 8, "8 of 16 remain");
+        assert_eq!(
+            p.build_queue[0].build_progress,
+            125 - 8 * 15,
+            "resource leftover banked"
+        );
+    }
+
+    #[test]
+    fn defenses_cap_at_100_per_planet() {
+        let (mut game, hw) = homeworld_game(vec![item(DEFENSES, 16)]);
+        stock_minerals(&mut game, hw);
+        game.planet_states.get_mut(&hw).unwrap().defenses = 98;
+        run_production(&mut game);
+        let p = &game.planet_states[&hw];
+        assert_eq!(p.defenses, 100, "only 2 of the 16 fit under the cap");
+        assert!(
+            p.build_queue.is_empty(),
+            "item dropped once the cap is reached"
+        );
+    }
+
+    #[test]
+    fn auto_defenses_build_toward_the_cap_and_stay_queued() {
+        let (mut game, hw) = homeworld_game(vec![item(AUTO_DEFENSES, 0)]);
+        stock_minerals(&mut game, hw);
+        run_production(&mut game);
+        let p = &game.planet_states[&hw];
+        assert_eq!(p.defenses, 8, "125 resources / 15 = 8 this turn");
+        assert_eq!(p.build_queue.len(), 1, "auto item is never removed");
+    }
+
+    #[test]
+    fn defenses_blocked_without_a_mineral() {
+        // Defenses cost ironium; with none on hand none build.
+        let (mut game, hw) = homeworld_game(vec![item(DEFENSES, 5)]);
+        game.planet_states.get_mut(&hw).unwrap().surface_ironium = 0;
+        run_production(&mut game);
+        assert_eq!(
+            game.planet_states[&hw].defenses, 0,
+            "no ironium -> no defenses"
+        );
+    }
+
+    #[test]
+    fn inner_strength_defenses_cost_40_percent_less() {
+        // IS pays 60% of 5/5/5/15 = 3/3/3/9 per defense, so 125 resources buys
+        // 13 (125/9) instead of the 8 (125/15) other races get.
+        let (mut game, hw) = homeworld_game(vec![item(DEFENSES, 16)]);
+        stock_minerals(&mut game, hw);
+        game.players[0].race.as_mut().unwrap().prt = Prt::Is;
+        run_production(&mut game);
+        let p = &game.planet_states[&hw];
+        assert_eq!(p.defenses, 13, "cheaper IS defenses: 125/9 = 13");
+        assert_eq!(p.surface_ironium, 100_000 - 13 * 3, "3 ironium each for IS");
+        assert_eq!(p.surface_germanium, 100_000 - 13 * 3);
+    }
+
+    #[test]
+    fn ar_planets_build_no_defenses() {
+        // AR builds nothing in this economy, defenses included (AR does not use
+        // planetary defenses).
+        let (mut game, hw) = homeworld_game(vec![item(DEFENSES, 16)]);
+        stock_minerals(&mut game, hw);
+        game.players[0].race.as_mut().unwrap().prt = Prt::Ar;
+        run_production(&mut game);
+        assert_eq!(game.planet_states[&hw].defenses, 0, "AR builds no defenses");
     }
 }

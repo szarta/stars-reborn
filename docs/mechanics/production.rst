@@ -279,16 +279,26 @@ Queue item types:
 * **Factory** — costs (factory_cost) resources + 4 germanium; limited by
   colonists_per_factory
 * **Mine** — costs (mine_cost) resources; limited by colonists_per_mine
-* **Defense** — costs 5 resources; up to 100 defenses per planet
+* **Defense** — costs 5 ironium, 5 boranium, 5 germanium, 15 resources per unit
+  (all defense types share one cost, see
+  ``docs/reference/planetary_tech.rst``), or 40% less (3/3/3/9) for Inner
+  Strength; up to 100 defenses per planet
 * **Ship** — costs vary by hull + installed parts (hull cost + sum of part
   costs)
-* **Starbase** — same as ship but immobile; upgrades existing starbase
-* **Mineral Alchemy** — converts resources to minerals:
 
-  - With MA trait: **25 resources → 1 kT each** of Ironium, Boranium, Germanium
-  - Without MA trait: **100 resources → 1 kT each** (much less efficient)
+Alternate Reality (AR) builds **no planetary installations** at all — no
+factories, mines, defenses, or planetary scanners — since AR colonies live on
+their orbital starbase rather than on the planet surface. AR homeworlds
+therefore start with none of these, and AR planets are skipped by the
+production queue's installation economy.  * **Starbase** — same as ship but
+immobile; upgrades existing starbase * **Mineral Alchemy** — converts resources
+to minerals:
 
-  *Source: Stars! in-game help.*
+   - With MA trait: **25 resources → 1 kT each** of Ironium, Boranium,
+     Germanium
+   - Without MA trait: **100 resources → 1 kT each** (much less efficient)
+
+   *Source: Stars! in-game help.*
 
 * **Terraforming** — 100 resources → 1 unit shift on one hab axis
 

@@ -52,7 +52,7 @@ use crate::game::objects::{
     advantage_points::advantage_points,
     planet::PlanetState,
     player::{Player, ShipDesign, ShipDesignKind},
-    race::Race,
+    race::{Prt, Race},
     race_defaults::default_race_by_name,
     ship_hull_catalog::{
         hull_category_slug, hull_requirement_slug, ship_hull_catalog, slot_type_slug,
@@ -946,8 +946,12 @@ async fn create_game(
                 state.homeworld = true;
                 state.owner = Some(hp.id);
                 state.population = 25_000;
-                state.factories = 10;
-                state.mines = 10;
+                // AR homeworlds have no factories/mines/defenses (initial_state.rst).
+                if race.prt != Prt::Ar {
+                    state.factories = 10;
+                    state.mines = 10;
+                    state.defenses = 10;
+                }
                 state.set_homeworld_hab(&race);
                 place_homeworld_starbase(&mut designs, state);
             }
@@ -978,8 +982,12 @@ async fn create_game(
                 state.homeworld = true;
                 state.owner = Some(ai_id);
                 state.population = 25_000;
-                state.factories = 10;
-                state.mines = 10;
+                // AR homeworlds have no factories/mines/defenses (initial_state.rst).
+                if race.prt != Prt::Ar {
+                    state.factories = 10;
+                    state.mines = 10;
+                    state.defenses = 10;
+                }
                 state.set_homeworld_hab(&race);
                 place_homeworld_starbase(&mut designs, state);
             }
