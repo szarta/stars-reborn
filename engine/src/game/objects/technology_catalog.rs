@@ -43,11 +43,13 @@ use super::technology::{FuelTable, TechCost, TechRequirements};
 //   Hulls, for reference only (separate catalogs, separate namespace):
 //     starbase hulls 157–161      ship hulls    162–299 (reserved headroom)
 //
+//     scanners      450–499   (landed; defined in this file)
+//
 //   Remaining ship components (one block each; filled by later slices):
 pub const BEAM_WEAPON_ID_BASE: u16 = 300; // 300–349
 pub const TORPEDO_ID_BASE: u16 = 350; // 350–399
 pub const BOMB_ID_BASE: u16 = 400; // 400–449
-pub const SCANNER_ID_BASE: u16 = 450; // 450–499
+pub const SCANNER_ID_BASE: u16 = 450; // 450–465 (landed)
 pub const ELECTRICAL_ID_BASE: u16 = 500; // 500–549
 pub const MECHANICAL_ID_BASE: u16 = 550; // 550–599
 pub const MINE_LAYER_ID_BASE: u16 = 600; // 600–649
@@ -111,6 +113,14 @@ pub enum Props {
         scanner_basic_range: u32,
         scanner_penetrating_range: u32,
     },
+    /// Ship scanner. `basic_range` is normal scan range; `penetrating_range`
+    /// is the range at which enemy planet surfaces are visible (0 = no pen
+    /// coverage). `cloaking` is the Chameleon Scanner's 20% bonus.
+    Scanner {
+        basic_range: u32,
+        penetrating_range: u32,
+        cloaking: u8,
+    },
     /// Orbital structure (starbase-only). Stargate carries safe mass/range
     /// (None = unlimited / "any"); MassDriver carries its launch warp.
     Stargate {
@@ -156,6 +166,7 @@ impl Props {
             Props::Engine { .. } => "engines",
             Props::Armor { .. } => "armor",
             Props::Shield { .. } => "shields",
+            Props::Scanner { .. } => "scanners",
             Props::Stargate { .. } | Props::MassDriver { .. } => "orbital",
             Props::Planetary(_) => "planetary",
         }
@@ -221,6 +232,7 @@ pub fn technology_catalog() -> Vec<TechItem> {
     items.extend(engines());
     items.extend(armors());
     items.extend(shields());
+    items.extend(scanners());
     items.extend(orbitals());
     items.extend(planetaries());
     items
@@ -782,6 +794,256 @@ fn shields() -> Vec<TechItem> {
             1,
             cost(12, 0, 15, 20),
             tr(22, 0, 0, 0, 0, 0),
+            500,
+            0,
+            0,
+        ),
+    ]
+}
+
+// ---------------------------------------------------------------------------
+// Scanners (docs/reference/components.rst — "Ship Scanners")
+// ---------------------------------------------------------------------------
+//
+// Penetrating range is non-zero only for the pen-capable scanners; it is the
+// range at which colonists/minerals on enemy planets are visible. Cloaking is
+// the Chameleon Scanner's 20% bonus (the only scanner with one).
+//
+// Three scanners (Ferret, Dolphin, Elephant) are *removed* when the race has
+// the No-Advanced-Scanners (NAS) Lesser Racial Trait. That is an exclusion, not
+// an inclusion gate the simple TraitReq model can express, so they are left
+// ungated here; per-race research access (NAS removal) is governed by the
+// technology-access system (docs/reference/technology_access.rst), tracked
+// separately. The three SS-exclusive scanners (Pick Pocket, Chameleon, Robber
+// Baron) *are* a single-PRT inclusion gate, so they carry TraitReq::Prt("SS").
+
+#[allow(clippy::too_many_arguments)]
+fn scanner(
+    id: u16,
+    slug: &'static str,
+    name: &'static str,
+    requirement: Option<TraitReq>,
+    mass: u32,
+    cost: TechCost,
+    tech_requirements: TechRequirements,
+    basic_range: u32,
+    penetrating_range: u32,
+    cloaking: u8,
+) -> TechItem {
+    TechItem {
+        id,
+        slug,
+        name,
+        requirement,
+        mass: Some(mass),
+        cost,
+        tech_requirements,
+        props: Props::Scanner {
+            basic_range,
+            penetrating_range,
+            cloaking,
+        },
+    }
+}
+
+fn scanners() -> Vec<TechItem> {
+    let b = SCANNER_ID_BASE;
+    let ss = Some(TraitReq::Prt("SS"));
+    vec![
+        scanner(
+            b,
+            "bat_scanner",
+            "Bat Scanner",
+            None,
+            2,
+            cost(1, 0, 1, 1),
+            tr(0, 0, 0, 0, 0, 0),
+            0,
+            0,
+            0,
+        ),
+        scanner(
+            b + 1,
+            "rhino_scanner",
+            "Rhino Scanner",
+            None,
+            5,
+            cost(3, 0, 2, 3),
+            tr(0, 0, 0, 0, 1, 0),
+            50,
+            0,
+            0,
+        ),
+        scanner(
+            b + 2,
+            "mole_scanner",
+            "Mole Scanner",
+            None,
+            2,
+            cost(2, 0, 2, 9),
+            tr(0, 0, 0, 0, 4, 0),
+            100,
+            0,
+            0,
+        ),
+        scanner(
+            b + 3,
+            "dna_scanner",
+            "DNA Scanner",
+            None,
+            2,
+            cost(1, 1, 1, 5),
+            tr(0, 0, 3, 0, 0, 6),
+            125,
+            0,
+            0,
+        ),
+        scanner(
+            b + 4,
+            "possum_scanner",
+            "Possum Scanner",
+            None,
+            3,
+            cost(3, 0, 3, 18),
+            tr(0, 0, 0, 0, 5, 0),
+            150,
+            0,
+            0,
+        ),
+        // Pick Pocket: SS exclusive; steals minerals from enemy fleets.
+        scanner(
+            b + 5,
+            "pick_pocket_scanner",
+            "Pick Pocket Scanner",
+            ss,
+            15,
+            cost(8, 10, 6, 35),
+            tr(4, 0, 0, 0, 4, 4),
+            80,
+            0,
+            0,
+        ),
+        // Chameleon: SS exclusive; 20% cloaking.
+        scanner(
+            b + 6,
+            "chameleon_scanner",
+            "Chameleon Scanner",
+            ss,
+            6,
+            cost(4, 6, 4, 25),
+            tr(3, 0, 0, 0, 6, 0),
+            160,
+            45,
+            20,
+        ),
+        // Ferret: removed if NAS (exclusion, not gated here).
+        scanner(
+            b + 7,
+            "ferret_scanner",
+            "Ferret Scanner",
+            None,
+            2,
+            cost(2, 0, 8, 36),
+            tr(3, 0, 0, 0, 7, 2),
+            185,
+            50,
+            0,
+        ),
+        // Dolphin: removed if NAS.
+        scanner(
+            b + 8,
+            "dolphin_scanner",
+            "Dolphin Scanner",
+            None,
+            4,
+            cost(5, 5, 10, 40),
+            tr(5, 0, 0, 0, 10, 4),
+            220,
+            100,
+            0,
+        ),
+        scanner(
+            b + 9,
+            "gazelle_scanner",
+            "Gazelle Scanner",
+            None,
+            4,
+            cost(4, 0, 5, 24),
+            tr(0, 0, 0, 0, 8, 0),
+            225,
+            0,
+            0,
+        ),
+        scanner(
+            b + 10,
+            "rna_scanner",
+            "RNA Scanner",
+            None,
+            2,
+            cost(1, 1, 2, 20),
+            tr(0, 0, 5, 0, 0, 10),
+            230,
+            0,
+            0,
+        ),
+        scanner(
+            b + 11,
+            "cheetah_scanner",
+            "Cheetah Scanner",
+            None,
+            4,
+            cost(3, 1, 13, 50),
+            tr(0, 0, 0, 0, 11, 0),
+            275,
+            0,
+            0,
+        ),
+        // Elephant: removed if NAS.
+        scanner(
+            b + 12,
+            "elephant_scanner",
+            "Elephant Scanner",
+            None,
+            6,
+            cost(8, 5, 14, 70),
+            tr(6, 0, 0, 0, 16, 7),
+            300,
+            200,
+            0,
+        ),
+        scanner(
+            b + 13,
+            "eagle_eye_scanner",
+            "Eagle Eye Scanner",
+            None,
+            3,
+            cost(3, 2, 21, 64),
+            tr(0, 0, 0, 0, 14, 0),
+            335,
+            0,
+            0,
+        ),
+        // Robber Baron: SS exclusive; steals minerals from enemy planets.
+        scanner(
+            b + 14,
+            "robber_baron_scanner",
+            "Robber Baron Scanner",
+            ss,
+            20,
+            cost(10, 10, 10, 90),
+            tr(10, 0, 0, 0, 15, 10),
+            220,
+            120,
+            0,
+        ),
+        scanner(
+            b + 15,
+            "peerless_scanner",
+            "Peerless Scanner",
+            None,
+            4,
+            cost(3, 2, 30, 90),
+            tr(0, 0, 0, 0, 24, 0),
             500,
             0,
             0,
@@ -1446,6 +1708,7 @@ mod id_allocation_tests {
             ("shields", 25, 33),
             ("engines", 112, 127),
             ("orbital", 141, 156),
+            ("scanners", 450, 499),
             ("planetary", 700, 799),
         ];
         for item in technology_catalog() {

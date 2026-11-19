@@ -290,6 +290,20 @@ fn props_to_json(props: &Props) -> Value {
             }
             p
         }
+        Props::Scanner {
+            basic_range,
+            penetrating_range,
+            cloaking,
+        } => {
+            let mut p = json!({
+                "basic-range": basic_range,
+                "penetrating-range": penetrating_range,
+            });
+            if *cloaking != 0 {
+                p["cloaking"] = json!(cloaking);
+            }
+            p
+        }
         Props::Stargate {
             safe_mass,
             safe_range,

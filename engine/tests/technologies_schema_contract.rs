@@ -205,15 +205,23 @@ fn engine_output_matches_the_schema() {
         errors.join("\n  ")
     );
 
-    // Guard against a vacuous pass. The catalog ships 86 items:
+    // Guard against a vacuous pass. The catalog ships 102 items:
     //   16 engines, 11 armor, 9 shields, 16 orbital  (first slice)
-    //   34 planetary (9 scanners + 5 defenses + 20 terraforming)  (this slice)
+    //   34 planetary (9 scanners + 5 defenses + 20 terraforming)  (planetary slice)
+    //   16 scanners  (this slice)
     let techs = instance["technologies"]
         .as_array()
         .expect("technologies array");
-    assert_eq!(techs.len(), 86, "unexpected catalog size");
+    assert_eq!(techs.len(), 102, "unexpected catalog size");
     let has = |cat: &str| techs.iter().any(|t| t["category"] == cat);
-    for cat in ["engines", "armor", "shields", "orbital", "planetary"] {
+    for cat in [
+        "engines",
+        "armor",
+        "shields",
+        "orbital",
+        "planetary",
+        "scanners",
+    ] {
         assert!(has(cat), "catalog is missing category {cat}");
     }
 
@@ -239,6 +247,31 @@ fn engine_output_matches_the_schema() {
         planetary_kind("terraforming"),
         20,
         "expected 20 terraforming items"
+    );
+
+    // All 16 ship scanners are present; 3 are SS-gated (Pick Pocket,
+    // Chameleon, Robber Baron) and exactly one carries a cloaking bonus
+    // (Chameleon's 20%).
+    let scanners: Vec<&Value> = techs
+        .iter()
+        .filter(|t| t["category"] == "scanners")
+        .collect();
+    assert_eq!(scanners.len(), 16, "expected 16 ship scanners");
+    assert_eq!(
+        scanners
+            .iter()
+            .filter(|t| t["requirement"]["prt"] == json!(["SS"]))
+            .count(),
+        3,
+        "expected 3 SS-exclusive scanners"
+    );
+    assert_eq!(
+        scanners
+            .iter()
+            .filter(|t| t["properties"].get("cloaking").is_some())
+            .count(),
+        1,
+        "expected exactly one cloaking scanner (Chameleon)"
     );
 
     // Orbital and planetary items carry no mass; installable parts do.
